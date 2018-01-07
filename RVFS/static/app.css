@@ -1,0 +1,101 @@
+body {
+    background: radial-gradient(rgb(190, 220, 10), rgb(215, 20, 50));
+}
+
+nav {
+    background: radial-gradient(black, grey);
+}
+
+footer {
+    background: radial-gradient(black, grey);
+}
+
+.main {
+    background-color: grey;
+}
+
+.cp-box {
+    background-color: rgb(130, 20, 29);
+}
+
+.cp {
+    margin-bottom: 0;
+}
+
+.banner-text {
+    color: #bfbfbf;
+}
+
+.footer-text {
+    color: #bfbfbf;
+}
+
+.info {
+    text-align: right;
+    list-style: none;
+}
+
+.info li {
+    display: inline;
+}
+
+.links {
+    margin-left: -25px;
+}
+
+.links li {
+    display: inline;
+}
+
+.info h5 {
+    color: #bfbfbf;
+}
+
+#collapse-left {
+    padding-right: 10px;
+    width: 25%;
+}
+
+#collapse-right {
+    padding-left: 10px;
+    width: 25%;
+}
+
+.banner {
+    z-index: 99;
+    width: 50%;
+    margin: 0;
+    padding: 0 10px;
+}
+
+.navbar {
+    padding: 0 15px;
+    margin-bottom: 2rem;
+}
+
+
+@media (max-width: 355px) {
+    .reg_form ul {
+        margin-left: -35px;
+    }
+}
+
+@media (max-width: 565px) {
+    .reg_button {
+        float: none !important;
+    }
+}
+
+.reg_form h4 {
+    margin: 15px;
+    margin-top: 25px;
+}
+
+.reg_form li {
+    list-style: none;
+    margin: 10px;
+}
+
+.reg_button {
+    float: right;
+}

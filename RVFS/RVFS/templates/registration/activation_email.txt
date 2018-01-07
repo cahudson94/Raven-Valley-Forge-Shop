@@ -1,0 +1,5 @@
+You should activate your account with the link below:
+
+{{ site }}/accounts/activate/{{ activation_key }}
+
+This link will expire in {{ expiration_days }}.
