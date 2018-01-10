@@ -102,5 +102,5 @@ ENV/
 
 __pycache__
 
-imagersite/MEDIA/*
-!imagersite/MEDIA/.gitkeep
+imagersite/media/*
+!imagersite/media/.gitkeep
