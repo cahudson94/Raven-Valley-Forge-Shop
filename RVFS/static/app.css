@@ -6,21 +6,22 @@ nav {
     background: radial-gradient(black, grey);
 }
 
-footer {
+.footer {
     background: radial-gradient(black, grey);
+    padding-top: 128px;
 }
 
 .main {
     background-color: grey;
 }
 
-.cp-box {
+/*.cp-box {
     background-color: rgb(130, 20, 29);
 }
 
 .cp {
     margin-bottom: 0;
-}
+}*/
 
 .banner-text {
     color: #bfbfbf;
@@ -62,10 +63,7 @@ footer {
 }
 
 .banner {
-    z-index: 99;
     width: 50%;
-    margin: 0;
-    padding: 0 10px;
 }
 
 .navbar {
@@ -83,6 +81,19 @@ footer {
 @media (max-width: 565px) {
     .reg_button {
         float: none !important;
+    }
+}
+
+@media (max-width: 730px) {
+    .info {
+        padding-left: 0;
+        text-align: left !important;
+    }
+}
+
+@media (max-width: 505px) {
+    .email {
+        visibility: hidden;
     }
 }
 

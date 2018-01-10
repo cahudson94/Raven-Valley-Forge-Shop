@@ -25,13 +25,20 @@ SECRET_KEY = os.environ.get('SECRET_KEY', '')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('DEBUG', ''))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [i for i in os.environ.get('ALLOWED_HOSTS', '')]
 
 ACCOUNT_ACTIVATION_DAYS = 7
 
 LOGIN_REDIRECT_URL = '/account/'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'rvfmsite@gmail.com'
+EMAIL_HOST_PASSWORD = os.environ.get('GMAIL_PW')
+EMAIL_PORT = 587
+DEFAULT_FROM_EMAIL = 'rvfmsite@gmail.com'
+SERVER_EMAIL = 'rvfmsite@gmail.com'
 
 # Application definition
 
@@ -49,6 +56,7 @@ INSTALLED_APPS = [
     'services',
     'multiselectfield',
     'taggit',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -136,10 +144,36 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
-STATIC_URL = '/static/'
+if DEBUG:
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+    STATIC_URL = '/static/'
 
-MEDIA_URL = '/MEDIA/'
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'MEDIA')
+    MEDIA_URL = '/media/'
+
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+else:
+
+    AWS_STORAGE_BUCKET_NAME = 'rvfm'
+    AWS_ACCESS_KEY_ID = os.environ.get('IAM_USER_ACCESS_KEY_ID')
+
+    AWS_SECRET_ACCESS_KEY = os.environ.get('IAM_USER_SECRET_ACCESS_KEY')
+
+    AWS_S3_CUSTOM_DOMAIN = '{}.s3.amazonaws.com'.format(
+        AWS_STORAGE_BUCKET_NAME
+    )
+
+    STATICFILES_LOCATION = 'static'
+    STATICFILES_STORAGE = 'RVFS.custom_storages.StaticStorage'
+    STATIC_URL = 'https://{}/{}/'.format(
+        AWS_S3_CUSTOM_DOMAIN, STATICFILES_LOCATION
+    )
+
+    MEDIAFILES_LOCATION = 'media'
+    DEFAULT_FILE_STORAGE = 'RVFS.custom_storages.MediaStorage'
+    MEDIA_URL = 'https://{}/{}/'.format(
+        AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION
+    )
+
