@@ -1,27 +1,35 @@
+html {
+    position: relative;
+    min-height: 100%
+}
+
 body {
     background: radial-gradient(rgb(190, 220, 10), rgb(215, 20, 50));
+    margin-bottom: 155px;
 }
 
 nav {
     background: radial-gradient(black, grey);
 }
 
-.footer {
-    background: radial-gradient(black, grey);
-    padding-top: 128px;
-}
-
 .main {
     background-color: grey;
 }
 
-/*.cp-box {
-    background-color: rgb(130, 20, 29);
+.footer {
+    background: radial-gradient(black, grey);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
 }
 
-.cp {
-    margin-bottom: 0;
-}*/
+.cp-box {
+    background: radial-gradient(red, darkred);
+}
+
+.hide-nav {
+    visibility: hidden;
+}
 
 .banner-text {
     color: #bfbfbf;
@@ -93,7 +101,37 @@ nav {
 
 @media (max-width: 505px) {
     .email {
-        visibility: hidden;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 425px) {
+    .email {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 770px) {
+    body {
+        margin-bottom: 200px;
+    }
+}
+
+@media (max-width: 441px) {
+    body {
+        margin-bottom: 240px;
+    }
+}
+
+@media (max-width: 388px) {
+    body {
+        margin-bottom: 260px;
+    }
+}
+
+@media (max-width: 331px) {
+    body {
+        margin-bottom: 290px;
     }
 }
 
