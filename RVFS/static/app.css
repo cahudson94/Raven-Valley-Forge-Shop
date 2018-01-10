@@ -1,30 +1,45 @@
+html {
+    position: relative;
+    min-height: 100%
+}
+
 body {
-    background: radial-gradient(rgb(190, 220, 10), rgb(215, 20, 50));
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-image: url('Backgroundonly.png');
+    margin-bottom: 155px;
 }
 
-nav {
-    background: radial-gradient(black, grey);
-}
-
-.footer {
-    background: radial-gradient(black, grey);
-    padding-top: 128px;
+.nav-back {
+    background-color: rgb(120, 0, 0);
 }
 
 .main {
     background-color: grey;
 }
 
-/*.cp-box {
-    background-color: rgb(130, 20, 29);
+.footer {
+    background: radial-gradient(black, grey);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
 }
 
-.cp {
-    margin-bottom: 0;
-}*/
+.cp-box {
+    background: radial-gradient(red, darkred);
+}
+
+.hide-nav {
+    visibility: hidden;
+}
 
 .banner-text {
     color: #bfbfbf;
+}
+
+.banner-img {
+    width: 100px;
+    height: 100px;
 }
 
 .footer-text {
@@ -71,6 +86,10 @@ nav {
     margin-bottom: 2rem;
 }
 
+.page-text {
+    color: white;
+}
+
 
 @media (max-width: 355px) {
     .reg_form ul {
@@ -93,7 +112,37 @@ nav {
 
 @media (max-width: 505px) {
     .email {
-        visibility: hidden;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 425px) {
+    .email {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 770px) {
+    body {
+        margin-bottom: 200px;
+    }
+}
+
+@media (max-width: 441px) {
+    body {
+        margin-bottom: 240px;
+    }
+}
+
+@media (max-width: 388px) {
+    body {
+        margin-bottom: 260px;
+    }
+}
+
+@media (max-width: 331px) {
+    body {
+        margin-bottom: 290px;
     }
 }
 
