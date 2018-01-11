@@ -1,0 +1,10 @@
+{% extends 'RVFS/base.html' %}
+
+{% block content %}
+<div>
+    <form type="submit" enctype="multipart/form-data" method="post">
+        {{ form.as_p }}
+        <button type="submit">Create</button>
+    </form>
+</div>
+{% endblock %}
