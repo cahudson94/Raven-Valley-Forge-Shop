@@ -94,14 +94,14 @@
                   <li class="nav-item"><a class="nav-link" href="{% url 'admin:login' %}">Admin</a></li>
                 {% endif %}
                 </ul>
+              </div>
+            </div>
             {% elif user.is_authenticated %}
               <div id="collapse-right" class="collapse navbar-collapse"></div>
                 <button class="navbar-toggler collapsed hide-nav" type="button" data-toggle="collapse" data-target="#collapse-right" aria-controls="#collapse-right" aria-expanded="false" aria-label="Toggle navigation">
                   <span class="navbar-toggler-icon">
                   </span>
                 </button>
-              </div>
-            </div>
           {% endif %}
         </div>
       </nav>
