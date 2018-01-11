@@ -27,7 +27,8 @@ def about(request):
 
 def account(request):
     """."""
-    context = {'Hello': "Hello, world. This is the account page."}
+    context = {'Hello': "Hello, world. This is the account page.",
+               'nbar': 'account'}
     return render(request, 'account/account.html', context)
 
 
