@@ -1,8 +1,8 @@
 """."""
 from django.urls import path
-
-from . import views
+from account.views import AccountView, InfoFormView
 
 urlpatterns = [
-    path('', views.account, name='account'),
+    path('', AccountView.as_view(), name='account'),
+    path('info-form/<int:pk>/', InfoFormView.as_view(), name='info_reg')
 ]

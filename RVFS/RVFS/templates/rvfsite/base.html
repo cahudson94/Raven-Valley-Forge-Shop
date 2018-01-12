@@ -6,110 +6,130 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
   <title>{% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tangerine:bold|Niconne">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
   <link rel="stylesheet" href="{% static 'app.css' %}">
 </head>
 <body>
-  <nav class="navbar navbar-expand-md navbar-dark">
-    <div class="container-fluid">
-      <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#collapse-left" aria-controls="#collapse-left" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon mr-auto">
-      </span>
-      </button>
-      <div id="collapse-left" class="collapse navbar-collapse">
-        <ul class="nav navbar-nav mr-auto">
-          <li class="nav-item {% if nbar == 'home' %}active{% endif %}"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
-          <li class="nav-item {% if nbar == 'about' %}active{% endif %}"><a class="nav-link" href="{% url 'about' %}">About</a></li>
-          {% if user %}
-            {% if user.is_authenticated %}
-            <li class="nav-item {% if nbar == 'account' %}active{% endif %}"><a class="nav-link" href="{% url 'account' %}">Account</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
-            {% else %}
-            <li class="nav-item {% if nbar == 'register' %}active{% endif %}"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
-            <li class="nav-item {% if nbar == 'login' %}active{% endif %}"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
-            {% endif %}
-          {% endif %}
-        </ul>
+  <div class="container">
+    <div class="row">
+      <div class="col-1 left-bar">
       </div>
-      <div class="row banner">
-        <div class="col align-self-center">
-          <div class="banner-img">
-            <img src="{% static 'temp_logo.png' %}">
+      <div class="col-10 content-back">
+        <nav class="navbar navbar-expand-md navbar-light">
+          <div class="row header">
+            <div class="col-md-auto banner-text">
+              <div class="row">
+                <div class="col">
+                  <img class="banner-img" src="{% static 'RVFM logo.png' %}">
+                </div>
+                <div class="col-md-auto">
+                  <p class="header-main">
+                    Ravenmoore Valley Forge
+                  </p>
+                  <p class="header-main">
+                    &amp; Metal works
+                  </p>
+                  <p class="header-sub">
+                    Your Custom Creations Made Reality
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <ul class="info banner-text">
+                <li>
+                  <p class="email header-sub">m.ravenmoore@&#8203;gmail.com</p>
+                </li>
+                <li>
+                  <p class="header-sub">
+                  (206)-372-6501
+                  </p>
+                </li>
+                <li>
+                  <a href="https://www.facebook.com/Ravenmoorevalleyforge/"><img class="nav-social" src="{% static 'Facebook.png' %}"></a>
+                </li>
+                <li>
+                  <a href="https://www.linkedin.com/in/muninn-ravenmoore-a5215a142/"><img class="nav-social" src="{% static 'linkedin-round.png' %}"></a>
+                </li>
+                <li>
+                  <a href="https://www.youtube.com/channel/UC4spBX_WrijqjKRQQIaBfdw?view_as=subscriber"><img class="nav-social" src="{% static 'youtube.png' %}"></a>
+                </li>
+                <li>
+                  <a href="https://www.instagram.com/m.ravenmoore/"><img class="nav-social" src="{% static 'insta.png' %}"></a>
+                </li>
+              </ul>
+            </div>
+          <div class="w-100">
+            <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#collapse-left" aria-controls="#collapse-left" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon">
+              </span>
+            </button>
+            <button class="navbar-toggler collapsed float-right" type="button" data-toggle="collapse" data-target="#collapse-right" aria-controls="#collapse-right" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon">
+              </span>
+            </button>
+            <div id="collapse-left" class="collapse navbar-collapse">
+              <ul class="nav navbar-nav ml-auto">
+                <li class="nav-item {% if nbar == 'home' %}active{% endif %}"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+                <li class="nav-item {% if nbar == 'about' %}active{% endif %}"><a class="nav-link" href="{% url 'about' %}">About</a></li>
+                {% if user.is_authenticated %}
+                  <li class="nav-item {% if nbar == 'account' %}active{% endif %}"><a class="nav-link" href="{% url 'account' %}">Account</a></li>
+                  <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
+                {% else %}
+                  <li class="nav-item {% if nbar == 'register' %}active{% endif %}"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
+                  <li class="nav-item {% if nbar == 'login' %}active{% endif %}"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                {% endif %}
+              </ul>
+            </div>
           </div>
-        </div>
-        <div class="col banner-text">
-          <h3>
-            Ravenmoore Valley Forge
-          </h3>
-          <h5>
-            Local Area Blacksmith
-          </h5>
-        </div>
-        <div class="col">
-          <ul class="info">
-            <li>
-              <h5>captain.ravenmoor@gmail.com</h5>
-              <h5>
-              (206) 372-6501
-              </h5>
-            </li>
-            <li>
-              <a href="https://www.facebook.com/Ravenmoorevalleyforge/"><img src="{% static 'fbook.png' %}"></img></a>
-            </li>
-            <li>
-              <a href="https://www.linkedin.com/in/muninn-ravenmoore-a5215a142/"><img src="{% static 'linkedin.png' %}"></img></a>
-            </li>
-          </ul>
-        </div>
-      </div>
-      {% if user %}
-      <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#collapse-right" aria-controls="#collapse-right" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon">
-          </span>
-      </button>
-      <div id="collapse-right" class="collapse navbar-collapse" >
-        <ul class="nav navbar-nav ml-auto">
-          {% if user.is_staff %}
-          <li class="nav-item {% if nbar == 'add-prod' %}active{% endif %}"><a class="nav-link" href="{% url 'add_prod' %}">Add a Product</a></li>
-          <li class="nav-item {% if nbar == 'add-serv' %}active{% endif %}"><a class="nav-link" href="{% url 'add_serv' %}">Add a Service</a></li>
-          {% endif %}
+            {% if user.is_staff %}
+            <div class="w-100">
+              <div id="collapse-right" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav ml-auto">
+                  <li class="nav-item {% if nbar == 'add-prod' %}active{% endif %}"><a class="nav-link" href="{% url 'add_prod' %}">Add a Product</a></li>
+                  <li class="nav-item {% if nbar == 'add-serv' %}active{% endif %}"><a class="nav-link" href="{% url 'add_serv' %}">Add a Service</a></li>
 
-          {% if user.is_superuser %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'admin:login' %}">Admin</a></li>
+                {% if user.is_superuser %}
+                  <li class="nav-item"><a class="nav-link" href="{% url 'admin:login' %}">Admin</a></li>
+                {% endif %}
+                </ul>
+              </div>
+            </div>
+            {% elif user.is_authenticated %}
+              <div id="collapse-right" class="collapse navbar-collapse"></div>
+                <button class="navbar-toggler collapsed hide-nav" type="button" data-toggle="collapse" data-target="#collapse-right" aria-controls="#collapse-right" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+                  </span>
+                </button>
           {% endif %}
-        </ul>
-      {% endif %}
+        </div>
+      </nav>
+      <img class="dividor" src="{% static 'arrow-divider.png' %}">
+      {% block body %}
+      {% endblock %}
+      </div>
+      <div class="col-1 right-bar">
       </div>
     </div>
-  </nav>
-  <main class="container" role="main">
-    <div class="col main">
-     {% block body %}
-     {% endblock %}
-    </div>
-    {% for thing in things %}
-      <p>
-        {{ thing }}
-      </p>
-    {% endfor %}
-  </main>
+  </div>
 
   <footer class="footer">
     <div class="container">
-      <div class="row justify-content-lg-center">
+      <div class="row">
         <div class="col">
           <h5 class="footer-text">Address</h5>
-          <hr>
+          <hr class="footer-break">
           <h6 class="footer-text">11639 13th Ave SW Burien WA United States 98146</h6>
         </div>
         <div class="col">
           <h5 class="footer-text">Contact</h5>
-          <hr>
+          <hr class="footer-break">
           <h6 class="footer-text">(206)-372-6501</h6>
         </div>
         <div class="col">
           <h5 class="footer-text">Follow</h5>
-          <hr>
+          <hr class="footer-break">
           <ul class="links">
             <li>
               <a href="https://www.facebook.com/Ravenmoorevalleyforge/"><img src="{% static 'fbook.png' %}"></img></a>
@@ -121,8 +141,12 @@
         </div>
       </div>
     </div>
-    <div class="footer cp-box">
-      <h5 class="cp">©2017 BY RAVENMOORE VALLEY FORGE</h5>
+    <div class="cp-box">
+      <div class="container">
+        <div class="row">
+          <h5 class="col">©2017 BY RAVENMOORE VALLEY FORGE</h5>
+        </div>
+      </div>
     </div>
   </footer>
 

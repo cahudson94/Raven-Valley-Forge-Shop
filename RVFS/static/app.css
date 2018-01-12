@@ -1,89 +1,151 @@
+/* ***************************************************************************
+GENERAL
+*************************************************************************** */
+
+html {
+    position: relative;
+    min-height: 100%
+}
+
 body {
-    background: radial-gradient(rgb(190, 220, 10), rgb(215, 20, 50));
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-image: url('Backgroundonly.png');
+    margin-bottom: 155px;
 }
 
-nav {
-    background: radial-gradient(black, grey);
-}
-
-footer {
-    background: radial-gradient(black, grey);
-}
-
-.main {
-    background-color: grey;
-}
-
-.cp-box {
-    background-color: rgb(130, 20, 29);
-}
-
-.cp {
-    margin-bottom: 0;
-}
-
-.banner-text {
-    color: #bfbfbf;
-}
-
-.footer-text {
-    color: #bfbfbf;
-}
-
-.info {
-    text-align: right;
-    list-style: none;
-}
-
-.info li {
-    display: inline;
-}
-
-.links {
-    margin-left: -25px;
-}
-
-.links li {
-    display: inline;
-}
-
-.info h5 {
-    color: #bfbfbf;
-}
-
-#collapse-left {
-    padding-right: 10px;
-    width: 25%;
-}
-
-#collapse-right {
-    padding-left: 10px;
-    width: 25%;
-}
-
-.banner {
-    z-index: 99;
-    width: 50%;
-    margin: 0;
-    padding: 0 10px;
-}
+/* ***************************************************************************
+NAV
+*************************************************************************** */
 
 .navbar {
     padding: 0 15px;
     margin-bottom: 2rem;
 }
 
-
-@media (max-width: 355px) {
-    .reg_form ul {
-        margin-left: -35px;
-    }
+.nav-link {
+    font-weight: bold;
+    font-size: 18px;
 }
 
-@media (max-width: 565px) {
-    .reg_button {
-        float: none !important;
-    }
+.nav-social {
+    width: 25px;
+    height: 25px;
+}
+
+.hide-nav {
+    visibility: hidden;
+}
+
+.header {
+    padding: 35px 30px 15px 5px;
+}
+
+.email {
+    font-size: 40px !important;
+}
+
+.header-sub {
+    font-family: 'Tangerine', serif;
+    font-size: 32px;
+}
+
+.header-main {
+    font-family: 'Niconne', serif;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.banner-text {
+    color: black;
+}
+
+.banner-text p {
+    margin-bottom: 0;
+}
+
+.banner-img {
+    width: 150px;
+    height: 150px;
+}
+
+.info {
+    text-align: right;
+    list-style: none;
+    color: black;
+}
+
+.info li {
+    display: inline;
+}
+
+.dividor {
+    height: 35px;
+    width: 100%;
+    padding: 0px 20px;
+}
+
+/* ***************************************************************************
+MAIN SECTION
+*************************************************************************** */
+
+.page-text {
+    padding: 0px 20px 60px;
+}
+
+.content-back {
+    background-image: url('parch.jpg');
+    background-size: 100% 100%;
+    padding-bottom: 10px;
+}
+
+.left-bar {
+    margin: 5px 0px;
+    background-size: 100% 50%;
+    background-image: url('left scroll.png')
+}
+
+.right-bar {
+    margin: 5px 0px;
+    background-size: 100% 50%;
+    background-image: url('right scroll.png')
+}
+
+
+#myCarousel {
+    padding: 10px 20px;
+}
+
+.carousel-text {
+    font-family: 'Tangerine', serif;
+    text-align: center;
+    font-size: 36px;
+}
+
+.about-text {
+    font-family: 'Tangerine', serif;
+    font-size: 32px;
+}
+
+.section-heads {
+    font-family: 'Niconne', serif;
+    padding: 10px 0px;
+}
+
+.section-sub-heads {
+    text-align: center;
+}
+
+.names {
+    font-family: 'Niconne', serif;
+    text-align: center;
+}
+
+.next-link {
+    font-family: 'Niconne', serif;
+    text-align: center;
+    text-decoration: underline;
+    color: darkred;
 }
 
 .reg_form h4 {
@@ -98,4 +160,162 @@ footer {
 
 .reg_button {
     float: right;
+}
+
+/* ***************************************************************************
+FOOTER
+*************************************************************************** */
+
+.footer {
+    background: radial-gradient(black, grey);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-text {
+    color: #bfbfbf;
+}
+
+.footer-break {
+    border-color: #bfbfbf;
+}
+
+.links {
+    margin-left: -25px;
+}
+
+.links li {
+    display: inline;
+}
+
+.cp-box {
+    background: radial-gradient(red, darkred);
+}
+
+/* ***************************************************************************
+MEDIA QUERY
+*************************************************************************** */
+
+@media (max-width: 1199px) {
+    .info {
+        padding-left: 0;
+        text-align: left !important;
+    }
+}
+
+@media (max-width: 985px) {
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 33%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 33%;
+    background-image: url('right scroll.png')
+    }
+}
+
+@media (max-width: 765px) {
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 25%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 25%;
+    background-image: url('right scroll.png')
+    }
+    body {
+        margin-bottom: 200px;
+    }
+}
+
+@media (max-width: 660px) {
+    body {
+        background-size: 100% 100%;
+        background-image: url('Backgroundonlyslim.png');
+    }
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 20%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 20%;
+    background-image: url('right scroll.png')
+    }
+}
+
+@media (max-width: 565px) {
+    .reg_button {
+        float: none !important;
+    }
+}
+
+@media (max-width: 525px) {
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 16.5%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 16.5%;
+    background-image: url('right scroll.png')
+    }
+}
+
+@media (max-width: 465px) {
+    .banner-text p {
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 441px) {
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 12.5%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 12.5%;
+    background-image: url('right scroll.png')
+    }
+    body {
+        margin-bottom: 240px;
+    }
+}
+
+@media (max-width: 388px) {
+    body {
+        margin-bottom: 260px;
+    }
+}
+
+@media (max-width: 370px) {
+    .left-bar {
+    padding: 0;
+    visibility: hidden;
+    }
+    .right-bar {
+    padding: 0;
+    visibility: hidden;
+    }
+}
+
+@media (max-width: 355px) {
+    .reg_form ul {
+        margin-left: -35px;
+    }
+}
+
+@media (max-width: 331px) {
+    body {
+        margin-bottom: 290px;
+    }
 }

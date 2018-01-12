@@ -1,0 +1,14 @@
+{% extends 'rvfsite/base.html' %}
+
+{% block title %}Info Form{% endblock %}
+
+{% block body %}
+  <h2>Info</h2>
+  <form method="post">
+    {% csrf_token %}
+    <h4>Please provide your username for confirmation</h4>
+    {{ form.as_p }}
+    <input class="button" type="submit" value="Login">
+    <p>*By submmiting this for you verify and consent to the unserstanding that you are above the age of 18, this verification is required for the purchase of knives from this site as they are weapons and physical harm may result from the improper use of these tools.</p>
+  </form>
+{% endblock %}

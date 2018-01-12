@@ -1,0 +1,61 @@
+{% extends 'rvfsite/base.html' %}
+{% load static %}
+{% load thumbnail %}
+
+{% block title %}
+Account
+{% endblock %}
+
+{% block body %}
+<p>{{ account }}</p>
+<img class="img-fluid acc-pic" src='{{ account.pic.url }}'>
+<p>{{ account.first_name }}</p>
+<p>{{ account.last_name }}</p>
+<p>{{ account.birth_day }}</p>
+<p>{{ addresses.address1 }}</p>
+<p>{{ addresses.address2 }}</p>
+<p>{{ addresses.zip_code }}</p>
+<p>{{ addresses.city }}</p>
+<p>{{ addresses.state }}</p>
+<h3>Saved products list:</h3>
+{% if account.saved_products %}
+    <ul>
+    {% for item in account.saved_products %}
+        <li>{{ item }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+<h5>You have no saved products yet.</h5>
+{% endif %}
+<h3>Saved services list:</h3>
+{% if account.saved_services %}
+    <ul>
+    {% for service in account.saved_services %}
+        <li>{{ service }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+<h5>You have no saved services yet.</h5>
+{% endif %}
+<h3>Product purchase history:</h3>
+{% if account.purchase_history %}
+    <ul>
+    {% for item in account.purchase_history %}
+        <li>{{ item }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+<h5>You have not purchased any products yet.</h5>
+{% endif %}
+<h3>Service purchase history:</h3>
+{% if account.service_history %}
+    <ul>
+    {% for service in account.service_history %}
+        <li>{{ service }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+<h5>You have not purchased any services yet.</h5>
+{% endif %}
+
+{% endblock %}
