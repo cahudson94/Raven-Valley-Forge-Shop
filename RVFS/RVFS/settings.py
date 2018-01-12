@@ -25,7 +25,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', '')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('DEBUG', ''))
 
-ALLOWED_HOSTS = [i for i in os.environ.get('ALLOWED_HOSTS', '')]
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(' ')
 
 ACCOUNT_ACTIVATION_DAYS = 7
 
@@ -165,6 +165,7 @@ else:
         AWS_STORAGE_BUCKET_NAME
     )
 
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
     STATICFILES_LOCATION = 'static'
     STATICFILES_STORAGE = 'RVFS.custom_storages.StaticStorage'
     STATIC_URL = 'https://{}/{}/'.format(
