@@ -8,7 +8,9 @@ Account
 
 {% block body %}
 <p>{{ account }}</p>
+{% if account.pic %}
 <img class="img-fluid acc-pic" src='{{ account.pic.url }}'>
+{% endif %}
 <p>{{ account.first_name }}</p>
 <p>{{ account.last_name }}</p>
 <p>{{ account.birth_day }}</p>
