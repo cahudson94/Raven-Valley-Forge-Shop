@@ -1,3 +1,7 @@
+/* ***************************************************************************
+GENERAL
+*************************************************************************** */
+
 html {
     position: relative;
     min-height: 100%
@@ -10,140 +14,138 @@ body {
     margin-bottom: 155px;
 }
 
-.nav-back {
-    background-color: rgb(120, 0, 0);
-}
-
-.main {
-    background-color: grey;
-}
-
-.footer {
-    background: radial-gradient(black, grey);
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-}
-
-.cp-box {
-    background: radial-gradient(red, darkred);
-}
-
-.hide-nav {
-    visibility: hidden;
-}
-
-.banner-text {
-    color: #bfbfbf;
-}
-
-.banner-img {
-    width: 100px;
-    height: 100px;
-}
-
-.footer-text {
-    color: #bfbfbf;
-}
-
-.info {
-    text-align: right;
-    list-style: none;
-}
-
-.info li {
-    display: inline;
-}
-
-.links {
-    margin-left: -25px;
-}
-
-.links li {
-    display: inline;
-}
-
-.info h5 {
-    color: #bfbfbf;
-}
-
-#collapse-left {
-    padding-right: 10px;
-    width: 25%;
-}
-
-#collapse-right {
-    padding-left: 10px;
-    width: 25%;
-}
-
-.banner {
-    width: 50%;
-}
+/* ***************************************************************************
+NAV
+*************************************************************************** */
 
 .navbar {
     padding: 0 15px;
     margin-bottom: 2rem;
 }
 
+.nav-link {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.nav-social {
+    width: 25px;
+    height: 25px;
+}
+
+.hide-nav {
+    visibility: hidden;
+}
+
+.header {
+    padding: 35px 30px 15px 5px;
+}
+
+.email {
+    font-size: 40px !important;
+}
+
+.header-sub {
+    font-family: 'Tangerine', serif;
+    font-size: 32px;
+}
+
+.header-main {
+    font-family: 'Niconne', serif;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.banner-text {
+    color: black;
+}
+
+.banner-text p {
+    margin-bottom: 0;
+}
+
+.banner-img {
+    width: 150px;
+    height: 150px;
+}
+
+.info {
+    text-align: right;
+    list-style: none;
+    color: black;
+}
+
+.info li {
+    display: inline;
+}
+
+.dividor {
+    height: 35px;
+    width: 100%;
+    padding: 0px 20px;
+}
+
+/* ***************************************************************************
+MAIN SECTION
+*************************************************************************** */
+
 .page-text {
-    color: white;
+    padding: 0px 20px 60px;
+}
+
+.content-back {
+    background-image: url('parch.jpg');
+    background-size: 100% 100%;
+    padding-bottom: 10px;
+}
+
+.left-bar {
+    margin: 5px 0px;
+    background-size: 100% 50%;
+    background-image: url('left scroll.png')
+}
+
+.right-bar {
+    margin: 5px 0px;
+    background-size: 100% 50%;
+    background-image: url('right scroll.png')
 }
 
 
-@media (max-width: 355px) {
-    .reg_form ul {
-        margin-left: -35px;
-    }
+#myCarousel {
+    padding: 10px 20px;
 }
 
-@media (max-width: 565px) {
-    .reg_button {
-        float: none !important;
-    }
+.carousel-text {
+    font-family: 'Tangerine', serif;
+    text-align: center;
+    font-size: 36px;
 }
 
-@media (max-width: 730px) {
-    .info {
-        padding-left: 0;
-        text-align: left !important;
-    }
+.about-text {
+    font-family: 'Tangerine', serif;
+    font-size: 32px;
 }
 
-@media (max-width: 505px) {
-    .email {
-        font-size: 15px;
-    }
+.section-heads {
+    font-family: 'Niconne', serif;
+    padding: 10px 0px;
 }
 
-@media (max-width: 425px) {
-    .email {
-        font-size: 12px;
-    }
+.section-sub-heads {
+    text-align: center;
 }
 
-@media (max-width: 770px) {
-    body {
-        margin-bottom: 200px;
-    }
+.names {
+    font-family: 'Niconne', serif;
+    text-align: center;
 }
 
-@media (max-width: 441px) {
-    body {
-        margin-bottom: 240px;
-    }
-}
-
-@media (max-width: 388px) {
-    body {
-        margin-bottom: 260px;
-    }
-}
-
-@media (max-width: 331px) {
-    body {
-        margin-bottom: 290px;
-    }
+.next-link {
+    font-family: 'Niconne', serif;
+    text-align: center;
+    text-decoration: underline;
+    color: darkred;
 }
 
 .reg_form h4 {
@@ -158,4 +160,162 @@ body {
 
 .reg_button {
     float: right;
+}
+
+/* ***************************************************************************
+FOOTER
+*************************************************************************** */
+
+.footer {
+    background: radial-gradient(black, grey);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-text {
+    color: #bfbfbf;
+}
+
+.footer-break {
+    border-color: #bfbfbf;
+}
+
+.links {
+    margin-left: -25px;
+}
+
+.links li {
+    display: inline;
+}
+
+.cp-box {
+    background: radial-gradient(red, darkred);
+}
+
+/* ***************************************************************************
+MEDIA QUERY
+*************************************************************************** */
+
+@media (max-width: 1199px) {
+    .info {
+        padding-left: 0;
+        text-align: left !important;
+    }
+}
+
+@media (max-width: 985px) {
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 33%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 33%;
+    background-image: url('right scroll.png')
+    }
+}
+
+@media (max-width: 765px) {
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 25%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 25%;
+    background-image: url('right scroll.png')
+    }
+    body {
+        margin-bottom: 200px;
+    }
+}
+
+@media (max-width: 660px) {
+    body {
+        background-size: 100% 100%;
+        background-image: url('Backgroundonlyslim.png');
+    }
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 20%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 20%;
+    background-image: url('right scroll.png')
+    }
+}
+
+@media (max-width: 565px) {
+    .reg_button {
+        float: none !important;
+    }
+}
+
+@media (max-width: 525px) {
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 16.5%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 16.5%;
+    background-image: url('right scroll.png')
+    }
+}
+
+@media (max-width: 465px) {
+    .banner-text p {
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 441px) {
+    .left-bar {
+    margin: 5px 0px;
+    background-size: 100% 12.5%;
+    background-image: url('left scroll.png')
+    }
+    .right-bar {
+    margin: 5px 0px;
+    background-size: 100% 12.5%;
+    background-image: url('right scroll.png')
+    }
+    body {
+        margin-bottom: 240px;
+    }
+}
+
+@media (max-width: 388px) {
+    body {
+        margin-bottom: 260px;
+    }
+}
+
+@media (max-width: 370px) {
+    .left-bar {
+    padding: 0;
+    visibility: hidden;
+    }
+    .right-bar {
+    padding: 0;
+    visibility: hidden;
+    }
+}
+
+@media (max-width: 355px) {
+    .reg_form ul {
+        margin-left: -35px;
+    }
+}
+
+@media (max-width: 331px) {
+    body {
+        margin-bottom: 290px;
+    }
 }

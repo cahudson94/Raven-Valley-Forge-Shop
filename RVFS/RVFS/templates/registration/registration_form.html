@@ -5,8 +5,6 @@
     <form class="reg_form" method='post'>
       {% csrf_token %}
       <ul>
-        <h4>User Info:</h4>
-        <hr>
       {% for field in form %}
         <li>
           {{ field.label_tag }}
@@ -15,15 +13,7 @@
             <h4>{{ error }}</h4>
           {% endfor %}
         </li>
-        {% if forloop.counter == 4 %}
-          <h4>Personal Info:</h4>
-          <hr>
-        {% endif %}
-        {% if forloop.counter == 7 %}
-          <h4>Shipping Info:</h4>
-          <hr>
-        {% endif %}
-        {% endfor %}
+      {% endfor %}
       <input class="button reg_button" type="submit" value="Sign up!">
       </ul>
     </form>
