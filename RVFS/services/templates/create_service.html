@@ -1,0 +1,9 @@
+{% extends 'rvfsite/base.html' %}
+
+{% block body %}
+<h2>Create a Service</h2>
+    <form method="post">
+        {{ form.as_p }}
+        <input class="button" type="submit" value="Create">
+    </form>
+{% endblock %}

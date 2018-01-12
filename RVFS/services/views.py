@@ -1,20 +1,15 @@
 """."""
-from django.http import HttpResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
 from services.models import Service
 from services.forms import ServiceForm
 
 
-def index(request):
-    """."""
-    return HttpResponse("Hello, world. You're at the services.")
-
-
-class CreateService(CreateView):
+class CreateServiceView(LoginRequiredMixin, CreateView):
     """View for creating black smith services."""
 
-    template_name = 'RVFS/create_service.html'
+    template_name = 'create_service.html'
     model = Service
     success_url = reverse_lazy('home')
     form_class = ServiceForm

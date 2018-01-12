@@ -1,3 +1,4 @@
+"""."""
 from django import forms
 from services.models import Service
 
@@ -9,4 +10,4 @@ class ServiceForm(forms.ModelForm):
         """Meta for ablum form."""
 
         model = Service
-        exlude = ['date_created']
+        exclude = ['date_created']

@@ -36,14 +36,13 @@ def about(request):
 class AccountView(LoginRequiredMixin, ListView):
     """Custom geistration view."""
 
-    template_name = 'account/account.html'
+    template_name = 'account.html'
     model = Account
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(ListView, self).get_context_data(**kwargs)
         context['account'] = context['view'].request.user.account
-        # import pdb; pdb.set_trace()
         context['addresses'] = context['view'].request.user.addresses.get()
         context['nbar'] = 'account'
         return context
@@ -86,7 +85,7 @@ class CustomLog(LoginView):
 class InfoFormView(UpdateView):
     """."""
 
-    template_name = 'account/info-form.html'
+    template_name = 'info-form.html'
     form_class = InfoRegForm
     success_url = '/login'
     model = Account

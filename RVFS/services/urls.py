@@ -1,8 +1,8 @@
 """."""
 from django.urls import path
 
-from . import views
+from services.views import CreateServiceView
 
 urlpatterns = [
-    path('index/', views.index, name='add_serv'),
+    path('add-service/', CreateServiceView.as_view(), name='add_serv'),
 ]
