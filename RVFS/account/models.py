@@ -9,10 +9,10 @@ class Account(models.Model):
     """An account for users of RVFS app."""
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    pic = models.ImageField(upload_to='profile_pics')
+    pic = models.ImageField(blank=True, upload_to='profile_pics', max_length=100)
     first_name = models.CharField(max_length=25, default='')
     last_name = models.CharField(max_length=25, default='')
-    birth_day = models.DateTimeField(auto_now_add=True)
+    birth_day = models.DateField(auto_now_add=True)
     purchase_history = []
     service_history = []
     saved_products = []

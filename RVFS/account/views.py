@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
-from products.models import SliderImages
+from products.models import SliderImage
 from registration.backends.hmac.views import RegistrationView
 from registration.forms import RegistrationForm
 from account.models import Account, ShippingInfo
@@ -17,7 +17,7 @@ import random
 
 def home(request):
     """."""
-    pics = [i for i in SliderImages.objects.all()]
+    pics = [i for i in SliderImage.objects.all()]
     count = min(5, len(pics))
     rand_pics = random.sample(pics, count)
     context = {'Hello': "Hello, world. This is the home page.",
@@ -87,7 +87,7 @@ class InfoFormView(UpdateView):
 
     template_name = 'info-form.html'
     form_class = InfoRegForm
-    success_url = '/login'
+    success_url = '/account'
     model = Account
 
     def form_valid(self, form):
@@ -98,6 +98,7 @@ class InfoFormView(UpdateView):
         account.registration_complete = True
         account.first_name = form.cleaned_data['first_name']
         account.last_name = form.cleaned_data['last_name']
+        account.pic = form.cleaned_data['pic']
         account.save()
         new_info = ShippingInfo()
         new_info.address1 = form.cleaned_data['street']
@@ -110,4 +111,5 @@ class InfoFormView(UpdateView):
         new_info.resident = user
         account.save()
         new_info.save()
+        auth_login(self.request, user)
         return HttpResponseRedirect(self.get_success_url())

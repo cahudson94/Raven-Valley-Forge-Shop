@@ -1,8 +1,8 @@
 """."""
 from django.urls import path
 
-from . import views
+from products.views import CreateProductView
 
 urlpatterns = [
-    path('index/', views.index, name='add_prod'),
+    path('add-product/', CreateProductView.as_view(), name='add_prod'),
 ]

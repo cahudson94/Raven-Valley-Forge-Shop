@@ -8,7 +8,9 @@
   <title>{% block title %}{% endblock %}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tangerine:bold|Niconne">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
-  <link rel="stylesheet" href="{% static 'app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% block head %}
+  {% endblock %}
 </head>
 <body>
   <div class="container">
@@ -65,10 +67,17 @@
               <span class="navbar-toggler-icon">
               </span>
             </button>
+            {% if user.is_staff %}
             <button class="navbar-toggler collapsed float-right" type="button" data-toggle="collapse" data-target="#collapse-right" aria-controls="#collapse-right" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon">
               </span>
             </button>
+            {% elif user.is_authenticated %}
+            <button class="navbar-toggler collapsed hide-nav" type="button" data-toggle="collapse" data-target="#collapse-right" aria-controls="#collapse-right" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon">
+              </span>
+            </button>
+            {% endif %}
             <div id="collapse-left" class="collapse navbar-collapse">
               <ul class="nav navbar-nav ml-auto">
                 <li class="nav-item {% if nbar == 'home' %}active{% endif %}"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
@@ -96,63 +105,54 @@
                 </ul>
               </div>
             </div>
-            {% elif user.is_authenticated %}
-              <div id="collapse-right" class="collapse navbar-collapse"></div>
-                <button class="navbar-toggler collapsed hide-nav" type="button" data-toggle="collapse" data-target="#collapse-right" aria-controls="#collapse-right" aria-expanded="false" aria-label="Toggle navigation">
-                  <span class="navbar-toggler-icon">
-                  </span>
-                </button>
-          {% endif %}
-        </div>
-      </nav>
-      <img class="dividor" src="{% static 'arrow-divider.png' %}">
-      {% block body %}
-      {% endblock %}
+            {% endif %}
+          </div>
+        </nav>
+        <img class="dividor" src="{% static 'arrow-divider.png' %}">
+        {% block body %}
+        {% endblock %}
+        <img class="dividor" src="{% static 'arrow-divider.png' %}">
+          <div class="row">
+            <div class="col">
+              <h5 class="footer-info">Address</h5>
+              <hr class="footer-break">
+              <h6 class="footer-info">11639 13th Ave SW Burien WA United States 98146</h6>
+            </div>
+            <div class="col">
+              <h5 class="footer-info">Contact</h5>
+              <hr class="footer-break">
+              <h6 class="footer-info">(206)-372-6501</h6>
+            </div>
+            <div class="col">
+              <h5 class="footer-info">Follow</h5>
+              <hr class="footer-break">
+              <ul class="links">
+                <li>
+                  <a href="https://www.facebook.com/Ravenmoorevalleyforge/"><img class="nav-social" src="{% static 'Facebook.png' %}"></a>
+                </li>
+                <li>
+                  <a href="https://www.linkedin.com/in/muninn-ravenmoore-a5215a142/"><img class="nav-social" src="{% static 'linkedin-round.png' %}"></a>
+                </li>
+                <li>
+                  <a href="https://www.youtube.com/channel/UC4spBX_WrijqjKRQQIaBfdw?view_as=subscriber"><img class="nav-social" src="{% static 'youtube.png' %}"></a>
+                </li>
+                <li>
+                  <a href="https://www.instagram.com/m.ravenmoore/"><img class="nav-social" src="{% static 'insta.png' %}"></a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <h5 class="col cp">©2017 BY RAVENMOORE VALLEY FORGE</h5>
+          </div>
       </div>
       <div class="col-1 right-bar">
       </div>
     </div>
   </div>
 
-  <footer class="footer">
-    <div class="container">
-      <div class="row">
-        <div class="col">
-          <h5 class="footer-text">Address</h5>
-          <hr class="footer-break">
-          <h6 class="footer-text">11639 13th Ave SW Burien WA United States 98146</h6>
-        </div>
-        <div class="col">
-          <h5 class="footer-text">Contact</h5>
-          <hr class="footer-break">
-          <h6 class="footer-text">(206)-372-6501</h6>
-        </div>
-        <div class="col">
-          <h5 class="footer-text">Follow</h5>
-          <hr class="footer-break">
-          <ul class="links">
-            <li>
-              <a href="https://www.facebook.com/Ravenmoorevalleyforge/"><img src="{% static 'fbook.png' %}"></img></a>
-            </li>
-            <li>
-              <a href="https://www.linkedin.com/in/muninn-ravenmoore-a5215a142/"><img src="{% static 'linkedin.png' %}"></img></a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <div class="cp-box">
-      <div class="container">
-        <div class="row">
-          <h5 class="col">©2017 BY RAVENMOORE VALLEY FORGE</h5>
-        </div>
-      </div>
-    </div>
-  </footer>
-
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
-
 </body>
 </html>
