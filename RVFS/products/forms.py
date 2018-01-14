@@ -1,13 +1,13 @@
 """."""
 from django import forms
-from services.models import Service
+from products.models import Product
 
 
-class ServiceForm(forms.ModelForm):
+class ProductForm(forms.ModelForm):
     """From for album create view."""
 
     class Meta:
         """Meta for ablum form."""
 
-        model = Service
+        model = Product
         exclude = ['date_created', 'date_published']

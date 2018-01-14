@@ -46,12 +46,9 @@ class Product(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_published = models.DateTimeField(blank=True, null=True)
     name = models.CharField(max_length=100)
-    decription = models.TextField(default='')
     price = models.DecimalField(null=True, max_digits=6, decimal_places=2)
     stock = models.IntegerField(null=True, blank=True)
-    shipping_info = models.TextField(
-        max_length=180,
-        blank=True)
+    Tags = TaggableManager()
     length = MultiSelectField(
         max_length=150,
         choices=LENGTHS,
@@ -62,20 +59,23 @@ class Product(models.Model):
         choices=DIAMS,
         default='',
         blank=True)
+    decription = models.TextField(default='')
+    shipping_info = models.TextField(
+        max_length=180,
+        blank=True)
     color = models.TextField(
         max_length=500,
         blank=True)
     extra_options = models.TextField(
         max_length=500,
         blank=True)
-    Tags = TaggableManager()
 
     def __str__(self):
         """Print for admin."""
         return self.name
 
 
-class SliderImages(models.Model):
+class SliderImage(models.Model):
     """Image model for home page slider."""
 
     photo = ImageField(upload_to='slides')

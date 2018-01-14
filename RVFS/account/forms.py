@@ -66,8 +66,6 @@ class InfoRegForm(forms.ModelForm):
     """."""
 
     user_name = forms.CharField(max_length=35)
-    # first_name = forms.CharField(max_length=25)
-    # last_name = forms.CharField(max_length=25)
     birth_date = forms.CharField(widget=forms.SelectDateWidget(years=YEARS))
     street = forms.CharField(max_length=90, label='Address Line 1')
     adr_extra = forms.CharField(required=False, max_length=90, label='Address Line 2')
@@ -79,4 +77,4 @@ class InfoRegForm(forms.ModelForm):
         """."""
 
         model = Account
-        fields = ['first_name', 'last_name']
+        fields = ['first_name', 'last_name', 'pic']

@@ -1,5 +1,7 @@
 {% extends 'rvfsite/base.html' %}
 
+{% block head %}{{ form.media }}{% endblock %}
+
 {% block title %}Info Form{% endblock %}
 
 {% block body %}
@@ -9,6 +11,6 @@
     <h4>Please provide your username for confirmation</h4>
     {{ form.as_p }}
     <input class="button" type="submit" value="Login">
-    <p>*By submmiting this for you verify and consent to the unserstanding that you are above the age of 18, this verification is required for the purchase of knives from this site as they are weapons and physical harm may result from the improper use of these tools.</p>
+    <p class="disclaimer">*By submmiting this for you verify and consent to the unserstanding that you are above the age of 18, this verification is required for the purchase of knives from this site as they are weapons and physical harm may result from the improper use of these tools.</p>
   </form>
 {% endblock %}

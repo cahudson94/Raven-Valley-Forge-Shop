@@ -1,6 +1,6 @@
 """."""
 from django.contrib import admin
-from products.models import Product, SliderImages
+from products.models import Product, SliderImage
 
 admin.site.register(Product)
-admin.site.register(SliderImages)
+admin.site.register(SliderImage)

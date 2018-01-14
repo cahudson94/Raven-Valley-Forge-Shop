@@ -10,8 +10,7 @@ html {
 body {
     background-repeat: no-repeat;
     background-size: 100% 100%;
-    background-image: url('Backgroundonly.png');
-    margin-bottom: 155px;
+    background-image: url('../Backgroundonly.png');
 }
 
 /* ***************************************************************************
@@ -20,7 +19,6 @@ NAV
 
 .navbar {
     padding: 0 15px;
-    margin-bottom: 2rem;
 }
 
 .nav-link {
@@ -83,6 +81,7 @@ NAV
     height: 35px;
     width: 100%;
     padding: 0px 20px;
+    margin: 15px 0px;
 }
 
 /* ***************************************************************************
@@ -94,21 +93,21 @@ MAIN SECTION
 }
 
 .content-back {
-    background-image: url('parch.jpg');
+    background-image: url('../parch.jpg');
     background-size: 100% 100%;
     padding-bottom: 10px;
 }
 
 .left-bar {
     margin: 5px 0px;
-    background-size: 100% 50%;
-    background-image: url('left scroll.png')
+    background-size: 100% 650px;
+    background-image: url('../left scroll.png')
 }
 
 .right-bar {
     margin: 5px 0px;
-    background-size: 100% 50%;
-    background-image: url('right scroll.png')
+    background-size: 100% 650px;
+    background-image: url('../right scroll.png')
 }
 
 
@@ -148,6 +147,10 @@ MAIN SECTION
     color: darkred;
 }
 
+.disclaimer {
+    margin-top: 15px;
+}
+
 .reg_form h4 {
     margin: 15px;
     margin-top: 25px;
@@ -158,27 +161,48 @@ MAIN SECTION
     margin: 10px;
 }
 
-.reg_button {
-    float: right;
+.prod-form li {
+    list-style: none;
+    display: inline;
+}
+
+.serv-form, .prod-form {
+    margin-left: 15px;
+}
+
+/* ***************************************************************************
+ACCOUNT
+*************************************************************************** */
+
+.acc-pic {
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+}
+
+.acc-info-row {
+    padding: 25px 0;
+}
+
+.acc-row {
+    padding: 25px 15px;
 }
 
 /* ***************************************************************************
 FOOTER
 *************************************************************************** */
 
-.footer {
-    background: radial-gradient(black, grey);
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-}
-
-.footer-text {
-    color: #bfbfbf;
-}
-
 .footer-break {
-    border-color: #bfbfbf;
+    border-color: black;
+}
+
+.footer-info {
+    list-style: none;
+    color: black;
+}
+
+.footer-info li {
+    display: inline;
 }
 
 .links {
@@ -189,8 +213,8 @@ FOOTER
     display: inline;
 }
 
-.cp-box {
-    background: radial-gradient(red, darkred);
+.cp {
+    text-align: center;
 }
 
 /* ***************************************************************************
@@ -204,49 +228,9 @@ MEDIA QUERY
     }
 }
 
-@media (max-width: 985px) {
-    .left-bar {
-    margin: 5px 0px;
-    background-size: 100% 33%;
-    background-image: url('left scroll.png')
-    }
-    .right-bar {
-    margin: 5px 0px;
-    background-size: 100% 33%;
-    background-image: url('right scroll.png')
-    }
-}
-
-@media (max-width: 765px) {
-    .left-bar {
-    margin: 5px 0px;
-    background-size: 100% 25%;
-    background-image: url('left scroll.png')
-    }
-    .right-bar {
-    margin: 5px 0px;
-    background-size: 100% 25%;
-    background-image: url('right scroll.png')
-    }
-    body {
-        margin-bottom: 200px;
-    }
-}
-
 @media (max-width: 660px) {
     body {
-        background-size: 100% 100%;
-        background-image: url('Backgroundonlyslim.png');
-    }
-    .left-bar {
-    margin: 5px 0px;
-    background-size: 100% 20%;
-    background-image: url('left scroll.png')
-    }
-    .right-bar {
-    margin: 5px 0px;
-    background-size: 100% 20%;
-    background-image: url('right scroll.png')
+        background-image: url('../Backgroundonlyslim.png');
     }
 }
 
@@ -256,53 +240,14 @@ MEDIA QUERY
     }
 }
 
-@media (max-width: 525px) {
-    .left-bar {
-    margin: 5px 0px;
-    background-size: 100% 16.5%;
-    background-image: url('left scroll.png')
-    }
-    .right-bar {
-    margin: 5px 0px;
-    background-size: 100% 16.5%;
-    background-image: url('right scroll.png')
-    }
-}
-
 @media (max-width: 465px) {
     .banner-text p {
         margin-bottom: 15px;
     }
 }
 
-@media (max-width: 441px) {
-    .left-bar {
-    margin: 5px 0px;
-    background-size: 100% 12.5%;
-    background-image: url('left scroll.png')
-    }
-    .right-bar {
-    margin: 5px 0px;
-    background-size: 100% 12.5%;
-    background-image: url('right scroll.png')
-    }
-    body {
-        margin-bottom: 240px;
-    }
-}
-
-@media (max-width: 388px) {
-    body {
-        margin-bottom: 260px;
-    }
-}
-
-@media (max-width: 370px) {
-    .left-bar {
-    padding: 0;
-    visibility: hidden;
-    }
-    .right-bar {
+@media (max-width: 570px) {
+    .left-bar, .right-bar {
     padding: 0;
     visibility: hidden;
     }
@@ -311,11 +256,5 @@ MEDIA QUERY
 @media (max-width: 355px) {
     .reg_form ul {
         margin-left: -35px;
-    }
-}
-
-@media (max-width: 331px) {
-    body {
-        margin-bottom: 290px;
     }
 }

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'multiselectfield',
     'taggit',
     'storages',
+    'mathfilters',
 ]
 
 MIDDLEWARE = [
@@ -106,7 +107,6 @@ DATABASES = {
         }
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators

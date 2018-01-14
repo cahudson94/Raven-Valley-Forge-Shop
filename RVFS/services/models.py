@@ -23,13 +23,13 @@ class Service(models.Model):
     name = models.CharField(max_length=100)
     decription = models.TextField(max_length=500, default='')
     limitations = models.TextField(max_length=500, default='')
-    extras = models.TextField(
-        max_length=500,
-        blank=True)
     commision_fee = models.IntegerField(blank=True, default=0)
     price_range = models.CharField(
         max_length=15,
         default='')
+    extras = models.TextField(
+        max_length=500,
+        blank=True)
     warning = models.TextField(
         max_length=500,
         blank=True)
