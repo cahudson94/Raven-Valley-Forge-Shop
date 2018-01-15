@@ -1,0 +1,77 @@
+{% extends 'rvfsite/base.html' %}
+{% load thumbnail %}
+
+{% block title %}
+{% if nbar == 'cata' %}
+Catalog
+{% elif nbar == 'prods' %}
+Products
+{% elif nbar == 'servs' %}
+Services
+{% endif %}
+{% endblock %}
+
+{% block body %}
+{% if nbar == 'cata' %}
+<a href="{% url 'prods' %}"><h1>Products</h1></a>
+{% endif %}
+{% for tag in prod_tags %}
+    <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories">{{ tag }}</h2></a>
+    <div class="row card-row">
+    {% for tags, prods in products.items %}
+        {% if tag == tags %}
+            {% for prod in prods %}
+                {% if forloop.counter < 6 and nbar == 'prods' %}
+                    <a href="{% url 'prod' pk=prod.id %}"><div class="card">
+                        {% thumbnail prod.image "140x140" crop="center" as pic %}
+                        <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        <h4 class="card-title">{{ prod.name }}</h4>
+                        <p class="card-text">${{ prod.price }}</p>
+                    </div></a>
+                {% elif forloop.counter < 5 and nbar == 'cata' %}
+                    <a href="{% url 'prod' pk=prod.id %}"><div class="card">
+                        {% thumbnail prod.image "140x140" crop="center" as pic %}
+                        <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        <h4 class="card-title">{{ prod.name }}</h4>
+                        <p class="card-text">${{ prod.price }}</p>
+                    </div></a>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+    </div>
+{% endfor %}
+{% if nbar == 'cata' %}
+<a href="{% url 'servs' %}"><h1>Services</h1></a>
+{% endif %}
+{% for tag in serv_tags %}
+    <a class="catagory-a" href="{% url 'tagged_services' slug=tag %}"><h2 class="catalog-catagories">{{ tag }}</h2></a>
+    <div class="row card-row">
+    {% for tags, servs in services.items %}
+        {% if tag == tags %}
+            {% for serv in servs %}
+                {% if forloop.counter < 6 and nbar == 'servs' %}
+                    <a href="{% url 'serv' pk=serv.id %}"><div class="card">
+                        {% thumbnail serv.image "140x140" crop="center" as pic %}
+                        <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        <h4 class="card-title">{{ serv.name }}</h4>
+                        <p class="card-text">${{ serv.price }}</p>
+                    </div></a>
+                {% elif forloop.counter < 5 and nbar == 'cata' %}
+                    <a href="{% url 'serv' pk=serv.id %}"><div class="card">
+                        {% thumbnail serv.image "140x140" crop="center" as pic %}
+                        <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        <h4 class="card-title">{{ serv.name }}</h4>
+                        <p class="card-text">${{ serv.price }}</p>
+                    </div></a>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+    </div>
+{% endfor %}
+{% endblock %}

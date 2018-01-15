@@ -51,9 +51,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'sorl.thumbnail',
     'RVFS',
-    'products',
+    'catalog',
     'account',
-    'services',
     'multiselectfield',
     'taggit',
     'storages',
@@ -185,4 +184,3 @@ else:
     MEDIA_URL = 'https://{}/{}/'.format(
         AWS_S3_CUSTOM_DOMAIN, MEDIAFILES_LOCATION
     )
-

@@ -171,6 +171,80 @@ MAIN SECTION
 }
 
 /* ***************************************************************************
+CATALOG
+*************************************************************************** */
+
+.prods, .servs {
+    list-style: none;
+    display: inline;
+}
+
+.catalog-catagories {
+    text-decoration: none;
+    color: rgba(0, 0, 0, 0.9);
+    margin-left: 15px;
+}
+
+.card-row {
+    margin: 15px 0px 15px 15px;
+}
+
+.card-row a {
+    text-decoration: none;
+    color: black;
+}
+
+.side-bar-items {
+    list-style: none;
+    margin-left: -30px;
+}
+
+.side-bar-items a {
+    color: black;
+}
+
+.side-bar-items a:hover {
+    text-decoration: none;
+}
+
+.catalog-tag-head {
+    margin-left: 30px;
+}
+
+.tagged-row {
+    margin-left: 0px;
+}
+
+.catagory-a:hover {
+    text-decoration: none;
+}
+
+.catalog-catagories:hover {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.card-title {
+    padding-top: 5px;
+    margin-bottom: .5rem;
+}
+
+.card {
+    border-width: .15rem;
+    border-color: black;
+    background-size: 100% 100%;
+    background-image: url('../marble.jpeg');
+    padding: .5rem;
+    margin-left: 1rem;
+    margin-top: 1rem;
+    color: black;
+}
+
+.side-bar {
+    padding: .5rem 0;
+    margin-left: 1rem;
+}
+
+/* ***************************************************************************
 ACCOUNT
 *************************************************************************** */
 

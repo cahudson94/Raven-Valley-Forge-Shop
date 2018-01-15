@@ -1,0 +1,38 @@
+{% extends 'rvfsite/base.html' %}
+{% load thumbnail %}
+
+{% block title %}
+{% if nbar == 'prods' %}
+Products
+{% elif nbar == 'servs' %}
+Services
+{% endif %}
+{% endblock %}
+
+{% block body %}
+{% for tag in tags %}
+    <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories">{{ tag }}</h2></a>
+    <div class="row card-row">
+    {% for key_tag, prod_or_serv in items.items %}
+        {% if tag == key_tag %}
+            {% for item in prod_or_serv %}
+                {% if forloop.counter < 6 %}
+                    {% if nbar == 'prods' %}
+                    <a href="{% url 'prod' pk=item.id %}">
+                    {% else %}
+                    <a href="{% url 'serv' pk=item.id %}">
+                    {% endif %}
+                        <div class="card">
+                        {% thumbnail item.image "140x140" crop="center" as pic %}
+                        <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        <h4 class="card-title">{{ item.name }}</h4>
+                        <p class="card-text">${{ item.price }}</p>
+                    </div></a>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+    </div>
+{% endfor %}
+{% endblock %}

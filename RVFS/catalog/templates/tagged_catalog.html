@@ -1,0 +1,97 @@
+{% extends 'rvfsite/base.html' %}
+{% load thumbnail %}
+
+
+{% block title %}
+{% if nbar == 'pords' %}
+Products
+{% else %}
+Services
+{% endif %}
+ - {{ tag }}
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-1 side-bar">
+        <h5>{% if nbar == 'pords' %}
+        Product
+        {% else %}
+        Service
+        {% endif %}
+         Catagories</h5>
+        <ul class="side-bar-items">
+        {% for tag in tags %}
+            {% if nbar == 'prods' %}
+            <a href="{% url 'tagged_products' slug=tag %}"><li>{{ tag }}</li></a>
+            {% else %}
+            <a href="{% url 'tagged_services' slug=tag %}"><li>{{ tag }}</li></a>
+            {% endif %}
+        {% endfor %}
+        </ul>
+    </div>
+    <div class="col">
+    <h2 class="catalog-tag-head">
+    {% if nbar == 'pords' %}
+    Products
+    {% else %}
+    Services
+    {% endif %}
+     - {{ tag }}
+    </h2>
+        {% if items.paginator.num_pages != 1 %}
+        <nav aria-label="{{ tag }} paginator">
+            <ul class="pagination justify-content-center">
+                {% if items.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ items.previous_page_number }}">Previous</a>
+                {% endif %}
+                </li>
+                <li class="page-item active">
+                    Page {{ items.number }} of {{ items.paginator.num_pages }}
+                </li>
+                {% if items.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ items.next_page_number }}">Next</a>
+                {% endif %}
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+        <ul class="row tagged-row">
+            {% for item in items %}
+            {% if nbar == 'prods' %}
+            <a class="title" href="{% url 'prod' item.id %}">
+            {% else %}
+            <a class="title" href="{% url 'serv' item.id %}">
+            {% endif %}<li class="card card-tagged">
+            {% thumbnail item.image "150x150" crop="center" as pic %}
+                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
+                {% endthumbnail %}
+                <h4 class="card-title">{{ item.name }}</h4>
+                <p class="card-text">${{ item.price }}</p>
+            </li></a>
+        {% endfor %}
+        </ul>
+        {% if items.paginator.num_pages != 1 %}
+        <nav aria-label="{{ tag }} paginator">
+            <ul class="pagination justify-content-center">
+                {% if items.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ items.previous_page_number }}">Previous</a>
+                {% endif %}
+                </li>
+                <li class="page-item active">
+                    Page {{ items.number }} of {{ items.paginator.num_pages }}
+                </li>
+                {% if items.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ items.next_page_number }}">Next</a>
+                {% endif %}
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

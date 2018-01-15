@@ -1,0 +1,29 @@
+{% extends 'rvfsite/base.html' %}
+
+{% block title %}Add a Product{% endblock %}
+
+{% block body %}
+<h2>Create a Product</h2>
+    <form class="prod-form" enctype="multipart/form-data" method="post">
+        {% csrf_token %}
+        <div class="row">
+        {% for field in form %}
+            {% if forloop.counter == 1 %}
+            <div class="col">
+            <h4>{{ field.label }}:</h4>
+            <p>{{ field }}</p>
+            {% elif forloop.counter == 9 %}
+            </div>
+            <div class="col">
+            <h4>{{ field.label }}:</h4>
+            <p>{{ field }}</p>
+            {% else %}
+            <h4>{{ field.label }}:</h4>
+            <p>{{ field }}</p>
+            {% endif %}
+        {% endfor %}
+        </div>
+        </div>
+        <input class="button" type="submit" value="Create">
+    </form>
+{% endblock %}
