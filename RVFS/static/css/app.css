@@ -200,7 +200,11 @@ CATALOG
 }
 
 .side-bar-items a {
-    color: black;
+    color: rgba(0, 0, 0, 0.9);
+}
+
+.side-bar-catagories:hover {
+    color: rgba(0, 0, 0, 0.7);
 }
 
 .side-bar-items a:hover {
@@ -299,6 +303,12 @@ MEDIA QUERY
     .info {
         padding-left: 0;
         text-align: left !important;
+    }
+}
+
+@media (max-width: 770px) {
+    .side-bar {
+        visibility: hidden;
     }
 }
 

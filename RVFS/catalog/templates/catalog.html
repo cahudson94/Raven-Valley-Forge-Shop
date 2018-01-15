@@ -10,13 +10,36 @@ Services
 {% endblock %}
 
 {% block body %}
+<div class="row">
+    <div class="col-1 side-bar">
+        <h5>{% if nbar == 'prods' %}
+        Product
+        {% else %}
+        Service
+        {% endif %}
+         Catagories</h5>
+        <ul class="side-bar-items">
+        {% for tag in tags %}
+            {% if forloop.counter < 10 %}
+                {% if nbar == 'prods' %}
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
+                {% else %}
+                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
+                {% endif %}
+            {% endif %}
+            {% if forloop.counter == 10 %}
+            {% endif %}
+        {% endfor %}
+        </ul>
+    </div>
+    <div class="col">
 {% for tag in tags %}
     <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories">{{ tag }}</h2></a>
     <div class="row card-row">
     {% for key_tag, prod_or_serv in items.items %}
         {% if tag == key_tag %}
             {% for item in prod_or_serv %}
-                {% if forloop.counter < 6 %}
+                {% if forloop.counter < 5 %}
                     {% if nbar == 'prods' %}
                     <a href="{% url 'prod' pk=item.id %}">
                     {% else %}
@@ -35,4 +58,6 @@ Services
     {% endfor %}
     </div>
 {% endfor %}
+</div>
+</div>
 {% endblock %}

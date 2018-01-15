@@ -3,7 +3,7 @@
 
 
 {% block title %}
-{% if nbar == 'pords' %}
+{% if nbar == 'prods' %}
 Products
 {% else %}
 Services
@@ -14,7 +14,7 @@ Services
 {% block body %}
 <div class="row">
     <div class="col-1 side-bar">
-        <h5>{% if nbar == 'pords' %}
+        <h5>{% if nbar == 'prods' %}
         Product
         {% else %}
         Service
@@ -22,17 +22,21 @@ Services
          Catagories</h5>
         <ul class="side-bar-items">
         {% for tag in tags %}
-            {% if nbar == 'prods' %}
-            <a href="{% url 'tagged_products' slug=tag %}"><li>{{ tag }}</li></a>
-            {% else %}
-            <a href="{% url 'tagged_services' slug=tag %}"><li>{{ tag }}</li></a>
+            {% if forloop.counter < 10 %}
+                {% if nbar == 'prods' %}
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
+                {% else %}
+                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
+                {% endif %}
+            {% endif %}
+            {% if forloop.counter == 10 %}
             {% endif %}
         {% endfor %}
         </ul>
     </div>
     <div class="col">
     <h2 class="catalog-tag-head">
-    {% if nbar == 'pords' %}
+    {% if nbar == 'prods' %}
     Products
     {% else %}
     Services
