@@ -21,7 +21,7 @@ Services
         {% endif %}
          Catagories</h5>
         <ul class="side-bar-items">
-        {% for tag in tags %}
+        {% for tag in all_tags %}
             {% if forloop.counter < 10 %}
                 {% if nbar == 'prods' %}
                 <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
@@ -30,11 +30,21 @@ Services
                 {% endif %}
             {% endif %}
             {% if forloop.counter == 10 %}
+                <button class="side-bar-more" type="button" data-toggle="collapse" data-target=".more-catagories" aria-controls=".more-catagories" aria-expanded="false" aria-label="Toggle navigation">
+                    <span>more...</span>
+                </button>
+            {% endif %}
+            {% if forloop.counter > 10 %}
+                {% if nbar == 'prods' %}
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories more-catagories collapse">{{ tag }}</li></a>
+                {% else %}
+                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories more-catagories collapse">{{ tag }}</li></a>
+                {% endif %}
             {% endif %}
         {% endfor %}
         </ul>
     </div>
-    <div class="col">
+    <div class="col catalog">
     <h2 class="catalog-tag-head">
     {% if nbar == 'prods' %}
     Products
@@ -52,7 +62,7 @@ Services
                 {% endif %}
                 </li>
                 <li class="page-item active">
-                    Page {{ items.number }} of {{ items.paginator.num_pages }}
+                    {{ items.number }} of {{ items.paginator.num_pages }}
                 </li>
                 {% if items.has_next %}
                 <li class="page-item">
@@ -86,7 +96,7 @@ Services
                 {% endif %}
                 </li>
                 <li class="page-item active">
-                    Page {{ items.number }} of {{ items.paginator.num_pages }}
+                    {{ items.number }} of {{ items.paginator.num_pages }}
                 </li>
                 {% if items.has_next %}
                 <li class="page-item">

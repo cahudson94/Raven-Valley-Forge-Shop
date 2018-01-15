@@ -248,6 +248,25 @@ CATALOG
     margin-left: 1rem;
 }
 
+.side-bar-more {
+    background: none;
+    border: none;
+    color: rgba(0, 0, 0, 0.9);
+    padding: 0;
+}
+
+.side-bar-more:hover {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.side-bar-more:focus {
+    outline: none;
+}
+
+.paginator {
+    padding-right: 90px;
+}
+
 /* ***************************************************************************
 ACCOUNT
 *************************************************************************** */
@@ -306,6 +325,12 @@ MEDIA QUERY
     }
 }
 
+@media (max-width: 990px) {
+    .catalog {
+        padding-left: 20px;
+    }
+}
+
 @media (max-width: 770px) {
     .side-bar {
         visibility: hidden;
@@ -318,9 +343,19 @@ MEDIA QUERY
     }
 }
 
-@media (max-width: 565px) {
+@media (max-width: 570px) {
+    .left-bar, .right-bar {
+    padding: 0;
+    visibility: hidden;
+    }
     .reg_button {
         float: none !important;
+    }
+}
+
+@media (max-width: 490px) {
+    .catalog {
+        padding-left: 0px;
     }
 }
 
@@ -328,17 +363,37 @@ MEDIA QUERY
     .banner-text p {
         margin-bottom: 15px;
     }
+    .side-bar {
+        padding: 5px;
+        margin: 5px;
+    }
 }
 
-@media (max-width: 570px) {
-    .left-bar, .right-bar {
-    padding: 0;
-    visibility: hidden;
+@media (max-width: 410px) {
+    .side-bar {
+        padding: 0px;
+        margin: 0px;
+    }
+}
+
+@media (max-width: 390px) {
+    .side-bar {
+        width: 15px;
+        flex: none !important;
     }
 }
 
 @media (max-width: 355px) {
     .reg_form ul {
         margin-left: -35px;
+    }
+    .side-bar {
+        width: 0;
+    }
+}
+
+@media (max-width: 320px) {
+    .tagged-row {
+        padding-left: 25px;
     }
 }

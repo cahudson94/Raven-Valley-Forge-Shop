@@ -19,7 +19,7 @@ Services
         {% endif %}
          Catagories</h5>
         <ul class="side-bar-items">
-        {% for tag in tags %}
+        {% for tag in all_tags %}
             {% if forloop.counter < 10 %}
                 {% if nbar == 'prods' %}
                 <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
@@ -28,36 +28,120 @@ Services
                 {% endif %}
             {% endif %}
             {% if forloop.counter == 10 %}
+                <button class="side-bar-more" type="button" data-toggle="collapse" data-target=".more-catagories" aria-controls=".more-catagories" aria-expanded="false" aria-label="Toggle navigation">
+                    <span>more...</span>
+                </button>
+            {% endif %}
+            {% if forloop.counter > 10 %}
+                {% if nbar == 'prods' %}
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories more-catagories collapse">{{ tag }}</li></a>
+                {% else %}
+                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories more-catagories collapse">{{ tag }}</li></a>
+                {% endif %}
             {% endif %}
         {% endfor %}
         </ul>
     </div>
-    <div class="col">
-{% for tag in tags %}
-    <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories">{{ tag }}</h2></a>
-    <div class="row card-row">
-    {% for key_tag, prod_or_serv in items.items %}
-        {% if tag == key_tag %}
-            {% for item in prod_or_serv %}
-                {% if forloop.counter < 5 %}
-                    {% if nbar == 'prods' %}
-                    <a href="{% url 'prod' pk=item.id %}">
-                    {% else %}
-                    <a href="{% url 'serv' pk=item.id %}">
-                    {% endif %}
-                        <div class="card">
-                        {% thumbnail item.image "140x140" crop="center" as pic %}
-                        <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
-                        {% endthumbnail %}
-                        <h4 class="card-title">{{ item.name }}</h4>
-                        <p class="card-text">${{ item.price }}</p>
-                    </div></a>
+    <div class="col catalog">
+    {% if tags.paginator.num_pages != 1 %}
+        <nav aria-label="{{ tag }} paginator">
+            <ul class="pagination justify-content-center paginator">
+                {% if tags.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tags.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
                 {% endif %}
-            {% endfor %}
-        {% endif %}
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">{{ tags.number }} of {{ tags.paginator.num_pages }}</span>
+                </li>
+                {% if tags.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tags.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                {% endif %}
+                </li>
+            </ul>
+        </nav>
+    {% endif %}
+    {% for tag in tags %}
+        <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories">{{ tag }}</h2></a>
+        <div class="row card-row">
+        {% for key_tag, prod_or_serv in items.items %}
+            {% if tag == key_tag %}
+                {% for item in prod_or_serv %}
+                    {% if forloop.counter < 5 %}
+                        {% if nbar == 'prods' %}
+                        <a href="{% url 'prod' pk=item.id %}">
+                        {% else %}
+                        <a href="{% url 'serv' pk=item.id %}">
+                        {% endif %}
+                            <div class="card">
+                            {% thumbnail item.image "140x140" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                            <h4 class="card-title">{{ item.name }}</h4>
+                            <p class="card-text">${{ item.price }}</p>
+                        </div></a>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
+        </div>
     {% endfor %}
+    {% if tags.paginator.num_pages != 1 %}
+        <nav aria-label="{{ tag }} paginator">
+            <ul class="pagination justify-content-center paginator">
+                {% if tags.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tags.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                {% endif %}
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">{{ tags.number }} of {{ tags.paginator.num_pages }}</span>
+                </li>
+                {% if tags.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ tags.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                {% endif %}
+                </li>
+            </ul>
+        </nav>
+    {% endif %}
     </div>
-{% endfor %}
-</div>
 </div>
 {% endblock %}
