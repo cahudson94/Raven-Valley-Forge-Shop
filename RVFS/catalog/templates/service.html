@@ -1,0 +1,25 @@
+{% extends 'rvfsite/base.html' %}
+{% load thumbnail %}
+
+{% block title %}{{ service.name }}{% endblock %}
+
+{% block body %}
+{% thumbnail service.image "300x300" crop="center" as pic %}
+    <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
+{% endthumbnail %}
+<h3>{{ service.price }}</h3>
+<h4>{{ service.stock }}</h4>
+{% if service.length %}
+    <select>{{ service.length }}</select>
+{% endif %}
+{% if service.diamiter %}
+    <select>{{ service.diamiter }}</select>
+{% endif %}
+{% if service.color %}
+    <select>{{ service.color }}</select>
+{% endif %}
+<p>{{ service.description }}</p>
+{% if service.extra_options %}
+    <select>{{ service.extra_options }}</select>
+{% endif %}
+{% endblock %}

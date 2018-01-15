@@ -1,0 +1,25 @@
+{% extends 'rvfsite/base.html' %}
+{% load thumbnail %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block body %}
+{% thumbnail product.image "300x300" crop="center" as pic %}
+    <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
+{% endthumbnail %}
+<h3>{{ product.price }}</h3>
+<h4>{{ product.stock }}</h4>
+{% if product.length %}
+    <select>{{ product.length }}</select>
+{% endif %}
+{% if product.diamiter %}
+    <select>{{ product.diamiter }}</select>
+{% endif %}
+{% if product.color %}
+    <select>{{ product.color }}</select>
+{% endif %}
+<p>{{ product.description }}</p>
+{% if product.extra_options %}
+    <select>{{ product.extra_options }}</select>
+{% endif %}
+{% endblock %}

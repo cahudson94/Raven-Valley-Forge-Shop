@@ -171,6 +171,103 @@ MAIN SECTION
 }
 
 /* ***************************************************************************
+CATALOG
+*************************************************************************** */
+
+.prods, .servs {
+    list-style: none;
+    display: inline;
+}
+
+.catalog-catagories {
+    text-decoration: none;
+    color: rgba(0, 0, 0, 0.9);
+    margin-left: 15px;
+}
+
+.card-row {
+    margin: 15px 0px 15px 15px;
+}
+
+.card-row a {
+    text-decoration: none;
+    color: black;
+}
+
+.side-bar-items {
+    list-style: none;
+    margin-left: -30px;
+}
+
+.side-bar-items a {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+.side-bar-catagories:hover {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.side-bar-items a:hover {
+    text-decoration: none;
+}
+
+.catalog-tag-head {
+    margin-left: 30px;
+}
+
+.tagged-row {
+    margin-left: 0px;
+}
+
+.catagory-a:hover {
+    text-decoration: none;
+}
+
+.catalog-catagories:hover {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.card-title {
+    padding-top: 5px;
+    margin-bottom: .5rem;
+}
+
+.card {
+    border-width: .15rem;
+    border-color: black;
+    background-size: 100% 100%;
+    background-image: url('../marble.jpeg');
+    padding: .5rem;
+    margin-left: 1rem;
+    margin-top: 1rem;
+    color: black;
+}
+
+.side-bar {
+    padding: .5rem 0;
+    margin-left: 1rem;
+}
+
+.side-bar-more {
+    background: none;
+    border: none;
+    color: rgba(0, 0, 0, 0.9);
+    padding: 0;
+}
+
+.side-bar-more:hover {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.side-bar-more:focus {
+    outline: none;
+}
+
+.paginator {
+    padding-right: 90px;
+}
+
+/* ***************************************************************************
 ACCOUNT
 *************************************************************************** */
 
@@ -228,21 +325,21 @@ MEDIA QUERY
     }
 }
 
+@media (max-width: 990px) {
+    .catalog {
+        padding-left: 20px;
+    }
+}
+
+@media (max-width: 770px) {
+    .side-bar {
+        visibility: hidden;
+    }
+}
+
 @media (max-width: 660px) {
     body {
         background-image: url('../Backgroundonlyslim.png');
-    }
-}
-
-@media (max-width: 565px) {
-    .reg_button {
-        float: none !important;
-    }
-}
-
-@media (max-width: 465px) {
-    .banner-text p {
-        margin-bottom: 15px;
     }
 }
 
@@ -251,10 +348,52 @@ MEDIA QUERY
     padding: 0;
     visibility: hidden;
     }
+    .reg_button {
+        float: none !important;
+    }
+}
+
+@media (max-width: 490px) {
+    .catalog {
+        padding-left: 0px;
+    }
+}
+
+@media (max-width: 465px) {
+    .banner-text p {
+        margin-bottom: 15px;
+    }
+    .side-bar {
+        padding: 5px;
+        margin: 5px;
+    }
+}
+
+@media (max-width: 410px) {
+    .side-bar {
+        padding: 0px;
+        margin: 0px;
+    }
+}
+
+@media (max-width: 390px) {
+    .side-bar {
+        width: 15px;
+        flex: none !important;
+    }
 }
 
 @media (max-width: 355px) {
     .reg_form ul {
         margin-left: -35px;
+    }
+    .side-bar {
+        width: 0;
+    }
+}
+
+@media (max-width: 320px) {
+    .tagged-row {
+        padding-left: 25px;
     }
 }

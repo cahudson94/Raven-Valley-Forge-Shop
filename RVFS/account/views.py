@@ -1,36 +1,44 @@
 """."""
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
-from products.models import SliderImage
+from catalog.models import SliderImage
 from registration.backends.hmac.views import RegistrationView
 from registration.forms import RegistrationForm
 from account.models import Account, ShippingInfo
 from account.forms import InfoRegForm
-from django.views.generic import ListView, UpdateView
+from django.views.generic import ListView, UpdateView, TemplateView
 from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
 from django.contrib.auth import login as auth_login
 import random
 
 
-def home(request):
-    """."""
-    pics = [i for i in SliderImage.objects.all()]
-    count = min(5, len(pics))
-    rand_pics = random.sample(pics, count)
-    context = {'Hello': "Hello, world. This is the home page.",
-               'random_pics': rand_pics,
-               'nbar': 'home'}
-    return render(request, 'rvfsite/home.html', context)
+class HomeView(TemplateView):
+    """Home View."""
+
+    template_name = 'rvfsite/home.html'
+
+    def get_context_data(self, **kwargs):
+        """."""
+        pics = [i for i in SliderImage.objects.all()]
+        rand_pics = random.sample(pics, min(5, len(pics)))
+        context = super(TemplateView, self).get_context_data(**kwargs)
+        context['random_pics'] = rand_pics
+        context['nbar'] = 'home'
+        return context
 
 
-def about(request):
-    """."""
-    context = {'Hello': "Hello, world. This is the about page.",
-               'nbar': 'about'}
-    return render(request, 'rvfsite/about.html', context)
+class AboutView(TemplateView):
+    """About View."""
+
+    template_name = 'rvfsite/about.html'
+
+    def get_context_data(self, **kwargs):
+        """."""
+        context = super(TemplateView, self).get_context_data(**kwargs)
+        context['nbar'] = 'about'
+        return context
 
 
 class AccountView(LoginRequiredMixin, ListView):
@@ -48,7 +56,7 @@ class AccountView(LoginRequiredMixin, ListView):
         return context
 
 
-class CustomReg(RegistrationView):
+class CustomRegView(RegistrationView):
     """Custom regeistration view."""
 
     form_class = RegistrationForm
@@ -61,7 +69,7 @@ class CustomReg(RegistrationView):
         return context
 
 
-class CustomLog(LoginView):
+class CustomLogView(LoginView):
     """Custom login view."""
 
     def get_context_data(self, **kwargs):
