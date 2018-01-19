@@ -4,22 +4,160 @@
 {% block title %}{{ service.name }}{% endblock %}
 
 {% block body %}
-{% thumbnail service.image "300x300" crop="center" as pic %}
-    <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
-{% endthumbnail %}
-<h3>{{ service.price }}</h3>
-<h4>{{ service.stock }}</h4>
-{% if service.length %}
-    <select>{{ service.length }}</select>
-{% endif %}
-{% if service.diamiter %}
-    <select>{{ service.diamiter }}</select>
-{% endif %}
-{% if service.color %}
-    <select>{{ service.color }}</select>
-{% endif %}
-<p>{{ service.description }}</p>
-{% if service.extra_options %}
-    <select>{{ service.extra_options }}</select>
-{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <h2>{{ service.name }}</h2>
+    <div class="row service-image-banner">
+        <img class="service-image" src="{{ service.image.url }}">
+    </div>
+    <div class="row item-container">
+        <div class="col">
+            {% if service.commision_fee %}
+            <h4>Commision Fee: ${{ service.commision_fee }}</h4>
+            <h5>One time appointment fee, for on site consultation.</h5>
+            {% endif %}
+            {% if service.price_range %}
+            <h4>Price Range: ${{ service.price_range }}</h4>
+            {% endif %}
+            <h4>{% if service.stock %}stock: {{ service.stock }}{% elif service.stock == 0 %}Out of Stock{% else %}In Stock{% endif %}</h4>
+            <p>{{ service.description }}</p>
+            {% if service.extras %}
+            <p>
+                <label>extras:</label>
+                <select name="extras">
+                    {% for extra in service.extras %}
+                    <option value="{{ extra }}">{{ extra }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            {% endif %}
+            {% if service.requires_description %}
+            <p>Please provide a detailed description:</p>
+            <textarea name="description" rows="6" cols="40" placeholder="Your description here..." required>
+            </textarea>
+            {% endif %}
+        </div>
+        <div class="col">
+            <div class="nativeDateTimePicker">
+                <label for="party">Select a time for this service:</label>
+                <input type="datetime-local" id="party" name="bday">
+                <span class="validity"></span>
+            </div>
+            <p class="fallbackLabel">Select a time for this service:</p>
+            <div class="fallbackDateTimePicker">
+                <div>
+                  <span>
+                    <label for="day">Day:</label>
+                    <select id="day" name="day">
+                    </select>
+                  </span>
+                  <span>
+                    <label for="month">Month:</label>
+                    <select id="month" name="month">
+                      <option selected>January</option>
+                      <option>February</option>
+                      <option>March</option>
+                      <option>April</option>
+                      <option>May</option>
+                      <option>June</option>
+                      <option>July</option>
+                      <option>August</option>
+                      <option>September</option>
+                      <option>October</option>
+                      <option>November</option>
+                      <option>December</option>
+                    </select>
+                  </span>
+                  <span>
+                    <label for="year">Year:</label>
+                    <select id="year" name="year">
+                    </select>
+                  </span>
+                </div>
+                <div>
+                  <span>
+                    <label for="hour">Hour:</label>
+                    <select id="hour" name="hour">
+                    </select>
+                  </span>
+                  <span>
+                    <label for="minute">Minute:</label>
+                    <select id="minute" name="minute">
+                    </select>
+                  </span>
+                </div>
+            </div>
+            <p>See calendar for openings, you will recieve an email confirming this time or to adjust if the time you select is unavailable.</p>
+            {% if service.requires_address %}
+            <p>Please provide an Address for this service:</p>
+            <input type="checkbox" name="use_acc" value="Use saved address">Use saved address<br>
+            Address Line 1:<input type="text" name="Address1"><br>
+            Address Line 2:<input type="text" name="Address2"><br>
+            City:<input type="text" name="City"><br>
+            State:<input type="text" name="State"><br>
+            Zip Code:<input type="text" name="Zip"><br>
+            <p>*Services only available within 50 miles of shop.</p>
+            {% endif %}
+            {% if service.requires_pictures %}
+            <input type="file" name="pic1" required>
+            <input type="file" name="pic2">
+            <input type="file" name="pic3">
+            <input type="file" name="pic4">
+            {% endif %}
+        </div>
+        <div class="w-100">
+        {% if service.warning %}
+        <p>*{{ service.warning }}</p>
+        {% endif %}
+        {% if service.limitations %}
+        <p>**Limitations: {{ service.limitations }}</p>
+        {% endif %}
+        </div>
+    </div>
+    <div class="d-flex w-100">
+        {% if user.is_staff %}
+        <a class="btn btn-secondary" href="{% url 'edit_serv' service.id %}">Edit</a>
+        {% endif %}
+        <button class="btn btn-secondary" type="button" data-toggle="modal" data-target="#calendar">View Shop Calendar</button>
+        <div class="ml-auto">
+        {% if user.is_authenticated %}
+        <input class="btn btn-secondary" type="submit" name="save" value="Save item for Later">
+        {% endif %}
+        {% if service.stock != 0 %}
+            {% if service.is_knife %}
+                {% if user.is_authenticated %}
+                    <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                {% else %}
+                    <p>This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                {% endif %}
+            {% else %}
+                <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+            {% endif %}
+        {% elif service.stock == 0 %}
+            <p>Out of Stock</p>
+        {% else %}
+            {% if service.is_knife %}
+                {% if user.is_authenticated %}
+                    <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                {% else %}
+                    <p>This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                {% endif %}
+            {% else %}
+                <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+            {% endif %}
+        {% endif %}
+        </div>
+    </div>
+
+    <div class="col modal fade" id="calendar" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-body">
+            <iframe class="calendar" src="https://calendar.google.com/calendar/b/4/embed?title=Raven%20Valley%20Forge%20Calendar&amp;showDate=0&amp;showPrint=0&amp;showCalendars=0&amp;height=600&amp;wkst=1&amp;bgcolor=%23ffffff&amp;src=ravenmoorevalleyforge%40gmail.com&amp;color=%23711616&amp;src=%23contacts%40group.v.calendar.google.com&amp;color=%2328754E&amp;src=en.usa%23holiday%40group.v.calendar.google.com&amp;color=%23125A12&amp;src=rsbvvpdq2vkmefr4690mi11afo%40group.calendar.google.com&amp;color=%23333333&amp;ctz=America%2FLos_Angeles" frameborder="0" scrolling="no"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+</form>
 {% endblock %}

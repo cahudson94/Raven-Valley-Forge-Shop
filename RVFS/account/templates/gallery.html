@@ -1,0 +1,33 @@
+{% extends 'rvfsite/base.html' %}
+{% load static %}
+{% load thumbnail %}
+
+{% block title %}
+{{ gallery }}
+{% endblock %}
+
+{% block body %}
+
+<h1 class="gallery-title">{{ gallery }}</h1>
+
+<div class="row gallery-row">
+{% for photo in photos %}
+<a class="card gallery-images" data-toggle="modal" data-target="#exampleModal{{ forloop.counter }}"><img src="{{ photo.webContentLink }}" height="250" width="250"></a>
+
+<div class="col modal fade" id="exampleModal{{ forloop.counter }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <img class="lightbox-img" src="{{ photo.webContentLink}}">
+      </div>
+      <div class="modal-footer">
+        <h3>{{ photo.name }}</h3>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+
+{% endblock %}

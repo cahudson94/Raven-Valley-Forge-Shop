@@ -13,6 +13,9 @@ class Account(models.Model):
     first_name = models.CharField(max_length=25, default='')
     last_name = models.CharField(max_length=25, default='')
     birth_day = models.DateField(auto_now_add=True)
+    cart = []
+    cart_total = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    orders = []
     purchase_history = []
     service_history = []
     saved_products = []
@@ -39,6 +42,16 @@ class ShippingInfo(models.Model):
     def __str__(self):
         """Print for admin."""
         return str(self.resident)
+
+
+# @receiver(post_save, sender=Account)
+# def set_birthday_to_calander(sender, **kwargs):
+#     """Add user birthday to calander."""
+#     if kwargs['created']:
+#         new_account = Account(
+#             user=kwargs['instance']
+#         )
+#         new_account.save()
 
 
 @receiver(post_save, sender=User)
