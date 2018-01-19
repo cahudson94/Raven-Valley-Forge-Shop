@@ -332,6 +332,25 @@ CATALOG
     background-color: #4c5155;
 }
 
+.product-image {
+    max-width: 100%;
+    max-height: 400px;
+}
+
+.service-image-banner {
+    padding: 10px 55px;
+}
+
+.service-image {
+    width: 100%;
+}
+
+.calendar {
+    width: 100%;
+    border-width: 0;
+    height: 600px;
+}
+
 /* ***************************************************************************
 ACCOUNT
 *************************************************************************** */
@@ -407,6 +426,9 @@ MEDIA QUERY
     .catalog {
         padding-left: 20px;
     }
+    .calendar {
+    height: 400px;
+    }
 }
 
 @media (max-width: 770px) {
@@ -434,6 +456,9 @@ MEDIA QUERY
 @media (max-width: 490px) {
     .catalog {
         padding-left: 0px;
+    }
+    .calendar {
+    height: 300px;
     }
 }
 

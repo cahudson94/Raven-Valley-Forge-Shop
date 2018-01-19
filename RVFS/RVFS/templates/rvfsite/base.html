@@ -11,8 +11,6 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
-  {% block head %}
-  {% endblock %}
 </head>
 <body>
   <div class="container">
@@ -109,6 +107,7 @@
                   <li class="nav-item {% if nbar == 'register' %}active{% endif %}"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
                   <li class="nav-item {% if nbar == 'login' %}active{% endif %}"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
                 {% endif %}
+                  <li class="nav-item {% if nbar == 'cart' %}active{% endif %}"><a class="nav-link fa fa-shopping-cart " href="{% url 'cart' %}"></a></li>
               </ul>
             </div>
           </div>
@@ -118,7 +117,7 @@
                 <ul class="nav navbar-nav ml-auto">
                   <li class="nav-item {% if nbar == 'add_prod' %}active{% endif %}"><a class="nav-link" href="{% url 'add_prod' %}">Add a Product</a></li>
                   <li class="nav-item {% if nbar == 'add_serv' %}active{% endif %}"><a class="nav-link" href="{% url 'add_serv' %}">Add a Service</a></li>
-
+                  <li class="nav-item {% if nbar == 'list' %}active{% endif %}"><a class="nav-link" href="{% url 'list' %}">All Items</a></li>
                 {% if user.is_superuser %}
                   <li class="nav-item"><a class="nav-link" href="{% url 'admin:login' %}">Admin</a></li>
                 {% endif %}
@@ -176,32 +175,25 @@
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
+  <script src="{% static 'js/dates.js' %}"></script>
   <script type="text/javascript">
-    $(document).ready(function(){
+  $(document).ready(function(){
 
-var quantitiy=0;
-   $('.quantity-right-plus').click(function(e){
-        // Stop acting like a button
-        e.preventDefault();
-        // Get the field name
-        var quantity = parseInt($('#quantity').val());
-        // If is not undefined
-            $('#quantity').val(quantity + 1);
-            // Increment
+    var quantitiy=0;
+    $('.quantity-right-plus').click(function(e){
+      e.preventDefault();
+      var quantity = parseInt($('#quantity').val());
+        $('#quantity').val(quantity + 1);
     });
 
-     $('.quantity-left-minus').click(function(e){
-        // Stop acting like a button
-        e.preventDefault();
-        // Get the field name
-        var quantity = parseInt($('#quantity').val());
-        // If is not undefined
-            // Increment
-            if(quantity>0){
-            $('#quantity').val(quantity - 1);
-            }
+    $('.quantity-left-minus').click(function(e){
+      e.preventDefault();
+      var quantity = parseInt($('#quantity').val());
+        if(quantity>0){
+        $('#quantity').val(quantity - 1);
+        }
     });
-});
+  });
   </script>
 </body>
 </html>

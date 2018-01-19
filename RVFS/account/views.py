@@ -10,9 +10,7 @@ from django.views.generic import ListView, UpdateView, TemplateView
 from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
 from django.contrib.auth import login as auth_login
-from RVFS.quickstart import main as drive_files
-from datetime import date
-from django import forms
+from RVFS.google_drive import main as drive_files
 import random
 
 
@@ -98,7 +96,7 @@ class CustomLogView(LoginView):
 
 
 class InfoFormView(UpdateView):
-    """."""
+    """Form for shipping info and birthday."""
 
     template_name = 'info-form.html'
     form_class = InfoRegForm
@@ -116,8 +114,9 @@ class InfoFormView(UpdateView):
         """Creating shipping model and update user account."""
         user = User.objects.get(username=form.cleaned_data['user_name'])
         account = Account.objects.get(user=user)
+        if account.registration_complete:
+            return HttpResponseRedirect(self.get_success_url())
         account.birth_day = form.cleaned_data['birth_date']
-        account.registration_complete = True
         account.first_name = form.cleaned_data['first_name']
         account.last_name = form.cleaned_data['last_name']
         account.pic = form.cleaned_data['pic']
@@ -131,6 +130,7 @@ class InfoFormView(UpdateView):
         new_info.state = form.cleaned_data['state']
         new_info.save()
         new_info.resident = user
+        account.registration_complete = True
         account.save()
         new_info.save()
         auth_login(self.request, user)
@@ -153,7 +153,6 @@ class GalleryView(TemplateView):
         for file in context['galleries']:
             if file['name'].title() == title:
                 folder = file['id']
-        # import pdb; pdb.set_trace()
         context['photos'] = drive_files(folder)
         for photo in context['photos']:
             photo['name'] = photo['name'].split('.')[0]

@@ -1,0 +1,18 @@
+{% extends 'rvfsite/base.html' %}
+
+{% block title %}All Items List{% endblock %}
+
+{% block body %}
+<h1>Products:</h1>
+<ul>
+{% for product in product_list %}
+    <li><a href="{% url 'prod' product.id %}">{{ product.name }}</a></li>
+{% endfor %}
+</ul>
+<h1>Services:</h1>
+<ul>
+{% for service in services %}
+    <li><a href="{% url 'serv' service.id %}">{{ service.name }}</a></li>
+{% endfor %}
+</ul>
+{% endblock %}

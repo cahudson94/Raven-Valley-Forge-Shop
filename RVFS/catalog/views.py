@@ -1,7 +1,7 @@
 """."""
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.views.generic import CreateView, ListView, DetailView
-from django.views.generic.edit import UpdateView
+from django.views.generic import ListView, DetailView, TemplateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
 from account.models import Account
 from catalog.models import Product, Service
@@ -9,8 +9,23 @@ from catalog.forms import ProductForm, ServiceForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect
 from account.views import get_galleries
+from RVFS.google_calander import get_calendar
 from datetime import datetime
 from decimal import Decimal
+
+
+class AllItemsView(ListView):
+
+    template_name = 'list.html'
+    model = Product
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(AllItemsView, self).get_context_data(**kwargs)
+        context['services'] = Service.objects.all()
+        context['nbar'] = 'list'
+        context['galleries'] = get_galleries()
+        return context
 
 
 class AllProductsView(ListView):
@@ -186,6 +201,8 @@ class SingleServiceView(DetailView):
             context['object'].extras = context['object'].extras.split(', ')
         context['nbar'] = 'servs'
         context['galleries'] = get_galleries()
+        # context['calendar'] = get_calendar()
+        # import pdb; pdb.set_trace()
         return context
 
     def post(self, request, *args, **kwargs):
@@ -242,6 +259,13 @@ class EditProductView(PermissionRequiredMixin, UpdateView):
     model = Product
     form_class = ProductForm
 
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(EditProductView, self).get_context_data(**kwargs)
+        context['nbar'] = 'prods'
+        context['galleries'] = get_galleries()
+        return context
+
     # def form_valid(self, form):
     #     """Update date published."""
     #     form.save()
@@ -281,3 +305,23 @@ class EditServiceView(PermissionRequiredMixin, UpdateView):
     template_name = 'edit_service.html'
     model = Service
     form_class = ServiceForm
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(EditServiceView, self).get_context_data(**kwargs)
+        context['nbar'] = 'servs'
+        context['galleries'] = get_galleries()
+        return context
+
+
+class CartView(TemplateView):
+    """Cart and checkout page."""
+
+    template_name = 'cart.html'
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(CartView, self).get_context_data(**kwargs)
+        context['nbar'] = 'cart'
+        context['galleries'] = get_galleries()
+        return context

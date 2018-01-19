@@ -9,9 +9,7 @@
     <h2>{{ product.name }}</h2>
     <div class="row item-container">
         <div class="col">
-            {% thumbnail product.image "350x350" crop="center" as pic %}
-                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
-            {% endthumbnail %}
+            <img class="product-image" src="{{ product.image.url }}">
             </div>
             <div class="col item-details">
             <h4>price: ${{ product.price }}</h4>

@@ -101,6 +101,9 @@ class Service(models.Model):
         blank=True)
     tags = TaggableManager()
     is_knife = models.BooleanField(default=False)
+    requires_pictures = models.BooleanField(default=False)
+    requires_description = models.BooleanField(default=False)
+    requires_address = models.BooleanField(default=False)
 
     def __str__(self):
         """Print for admin."""

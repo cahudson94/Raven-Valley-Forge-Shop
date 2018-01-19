@@ -1,23 +1,22 @@
 """."""
-from __future__ import print_function
-import httplib2
 import os
-
-from apiclient import discovery
-from oauth2client import client
-from oauth2client import tools
+from datetime import timedelta
+import datetime
+import pytz
+from oauth2client import tools, client
 from oauth2client.file import Storage
+
+import httplib2
+from apiclient import discovery
+
+APPLICATION_NAME = 'Web client 1'
+CLIENT_SECRET_FILE = 'client_secret.json'
+SCOPES = 'https://www.googleapis.com/auth/calendar'
 
 try:
     flags = tools.argparser.parse_args([])
 except ImportError:
     flags = None
-
-# If modifying these scopes, delete your previously saved credentials
-# at ~/.credentials/drive-python-quickstart.json
-SCOPES = 'https://www.googleapis.com/auth/drive'
-CLIENT_SECRET_FILE = 'client_secret.json'
-APPLICATION_NAME = 'Web client 1'
 
 
 def get_credentials():
@@ -35,7 +34,7 @@ def get_credentials():
     if not os.path.exists(credential_dir):
         os.makedirs(credential_dir)
     credential_path = os.path.join(credential_dir,
-                                   'drive-python-quickstart.json')
+                                   'calendar.json')
 
     store = Storage(credential_path)
     credentials = store.get()
@@ -50,27 +49,33 @@ def get_credentials():
     return credentials
 
 
-def main(drive_file):
-    """Show basic usage of the Google Drive API.
-
-    Creates a Google Drive API service object and outputs the names and IDs
-    for up to 10 files.
-    """
+def create_event():
+    """."""
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
-    service = discovery.build('drive', 'v3', http=http)
 
-    results = service.files().list(
-        q=("'%s' in parents" % drive_file),
-        fields="nextPageToken, files(id, name, webContentLink, webViewLink)").execute()
-    items = results.get('files', [])
-    if not items:
-        return('No files found.')
-    else:
-        files = []
-        for item in items:
-            files.append(item)
-        return files
+    service = discovery.build('calendar', 'v3', http=http)
+
+    start_datetime = datetime.datetime.now(tz=pytz.utc)
+    event = service.events().insert(calendarId='ravenmoorevalleyforge@gmail.com', body={
+        'summary': 'Foo',
+        'description': 'Bar',
+        'start': {'dateTime': start_datetime.isoformat()},
+        'end': {'dateTime': (start_datetime + timedelta(minutes=15)).isoformat()},
+    }).execute()
+
+    print(event)
+
+
+def get_calendar():
+    """."""
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+
+    service = discovery.build('calendar', 'v3', http=http)
+    calendar = service.calendarList().list().execute()
+
+    return calendar
 
 if __name__ == '__main__':
-    main(os.sys.argv[1])
+    get_credentials()
