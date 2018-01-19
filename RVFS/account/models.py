@@ -14,6 +14,7 @@ class Account(models.Model):
     last_name = models.CharField(max_length=25, default='')
     birth_day = models.DateField(auto_now_add=True)
     cart = []
+    cart_total = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     orders = []
     purchase_history = []
     service_history = []

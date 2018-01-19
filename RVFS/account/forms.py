@@ -58,7 +58,7 @@ STATES = ([
 
 current_year = datetime.datetime.now().year
 
-YEARS = [x for x in range(current_year - 117, current_year - 17)]
+YEARS = [x for x in range(current_year - 100, current_year - 17)]
 YEARS = YEARS[::-1]
 
 

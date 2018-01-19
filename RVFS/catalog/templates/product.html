@@ -15,14 +15,14 @@
             </div>
             <div class="col item-details">
             <h4>price: ${{ product.price }}</h4>
-            <h4>{% if product.stock %}stock: {{ product.stock }}{% else %}In Stock{% endif %}</h4>
+            <h4>{% if product.stock %}stock: {{ product.stock }}{% elif product.stock == 0 %}Out of Stock{% else %}In Stock{% endif %}</h4>
             <p>{{ product.description }}</p>
             <p>
                 {% if product.length %}
                     <label>length:</label>
                     <select name="length">
                         {% for length in product.length %}
-                        <option>{{ length }}</option>
+                        <option value="{{ length }}">{{ length }}</option>
                         {% endfor %}
                     </select>
                 {% endif %}
@@ -32,7 +32,7 @@
                     <label>diameter:</label>
                     <select name="diameter">
                         {% for diameter in product.diameter %}
-                        <option>{{ diameter }}</option>
+                        <option value="{{ diameter }}">{{ diameter }}</option>
                         {% endfor %}
                     </select>
                 {% endif %}
@@ -42,7 +42,7 @@
                     <label>color:</label>
                     <select name="color">
                         {% for color in product.color %}
-                        <option>{{ color }}</option>
+                        <option value="{{ color }}">{{ color }}</option>
                         {% endfor %}
                     </select>
                 {% endif %}
@@ -52,7 +52,7 @@
                     <label>extras:</label>
                     <select name="extras">
                         {% for extra in product.extras %}
-                        <option>{{ extra }}</option>
+                        <option value="{{ extra }}">{{ extra }}</option>
                         {% endfor %}
                     </select>
                 {% endif %}
@@ -69,15 +69,38 @@
             </p>
         </div>
     </div>
-    {% if product.is_knife %}
-        {% if user.is_authenticated %}
-            <input type="button" name="add" value="Add to cart">
-        {% else %}
-            <p>Please Login to purchase this item.</p>
+    <div class="d-flex w-100">
+        {% if user.is_staff %}
+        <a class="btn btn-secondary" href="{% url 'edit_prod' product.id %}">Edit</a>
         {% endif %}
-    {% else %}
-        <input type="submit" class="button" value="Add to cart">
-    {% endif %}
-
+        <div class="ml-auto">
+        {% if user.is_authenticated %}
+        <input class="btn btn-secondary" type="submit" name="save" value="Save item for Later">
+        {% endif %}
+        {% if product.stock != 0 %}
+            {% if product.is_knife %}
+                {% if user.is_authenticated %}
+                    <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                {% else %}
+                    <p>This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                {% endif %}
+            {% else %}
+                <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+            {% endif %}
+        {% elif product.stock == 0 %}
+            <p>Out of Stock</p>
+        {% else %}
+            {% if product.is_knife %}
+                {% if user.is_authenticated %}
+                    <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                {% else %}
+                    <p>This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                {% endif %}
+            {% else %}
+                <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+            {% endif %}
+        {% endif %}
+        </div>
+    </div>
 </form>
 {% endblock %}

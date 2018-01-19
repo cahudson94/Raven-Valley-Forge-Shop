@@ -31,97 +31,194 @@ Account
     <h5>State: </h5><h5>{{ addresses.state }}</h5>
     </div>
 </div>
+<h3>Cart:</h3>
 <div class="row acc-row">
-<h3>Saved products list:</h3>
-{% if account.saved_products %}
-    {% for item in account.saved_products %}
-        <ul class="col">
-        {% if forloop.counter == 0 or forloop.counter|mod:3 == 0 %}
-            <li>{{ service }}</li>
-        {% endif %}
+{% if account.cart %}
+    <ul class="row">
+    {% for item in account.cart %}
+        {% if forloop.counter|mod:3 == 0 %}
         </ul>
-        <ul class="col">
-        {% if forloop.counter == 1 or forloop.counter|sub:1|mod:3 == 0 %}
-            <li>{{ service }}</li>
+        <ul class="w-100">
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        {% for field, value in item.items %}
+                            {% if field == 'item' %}
+                            <h4>{{ value.name }}</h4>
+                            {% else %}
+                            <h5>{{ field }}: {{ value }}</h5>
+                            {% endif %}
+                        {% endfor %}
+                        <h5>${{ item.item.price }} per unit</h5>
+                    </div>
+                </div></a>
+            </li>
+        {% else %}
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        {% for field, value in item.items %}
+                            {% if field == 'item' %}
+                            <h4>{{ value.name }}</h4>
+                            {% else %}
+                            <h5>{{ field }}: {{ value }}</h5>
+                            {% endif %}
+                        {% endfor %}
+                        <h5>${{ item.item.price }} per unit</h5>
+                    </div>
+                </div></a>
+            </li>
         {% endif %}
-        </ul>
-        <ul class="col">
-        {% if forloop.counter == 2 or forloop.counter|sub:2|mod:3 == 0 %}
-            <li>{{ service }}</li>
-        {% endif %}
-        </ul>
     {% endfor %}
+    </ul>
+{% else %}
+<h5 class="w-100">Your cart is empty.</h5>
+{% endif %}
+</div>
+<div class="w-100">
+    <h3 class="text-right">Total: $
+        {% if account.cart_total %}
+            {% if account.cart_total.endswith == 0 %}
+                {{ account.cart_total }}0
+            {% else %}
+                {{ account.cart_total }}
+            {% endif %}
+        {% else %}
+        0
+        {% endif %}
+    </h3>
+</div>
+<h3>Saved products list:</h3>
+<div class="row acc-row">
+{% if account.saved_products %}
+        <ul class="row">
+    {% for item in account.saved_products %}
+        {% if forloop.counter|mod:3 == 0 %}
+        </ul>
+        <ul class="w-100">
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        <h4>{{ item.name }}</h4>
+                        <h5>${{ item.price }} per unit</h5>
+                        <
+                    </div>
+                </div></a>
+            </li>
+        {% else %}
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        <h4>{{ item.name }}</h4>
+                        <h5>${{ item.price }} per unit</h5>
+                    </div>
+                </div></a>
+            </li>
+        {% endif %}
+    {% endfor %}
+    </ul>
 {% else %}
 <h5 class="w-100">You have no saved products yet.</h5>
 {% endif %}
 </div>
-<div class="row acc-row">
 <h3>Saved services list:</h3>
+<div class="row acc-row">
 {% if account.saved_services %}
-    {% for service in account.saved_services %}
-        <ul class="col">
-        {% if forloop.counter == 0 or forloop.counter|mod:3 == 0 %}
-            <li>{{ service }}</li>
-        {% endif %}
+    {% for item in account.saved_services %}
+        {% if forloop.counter|mod:3 == 0 %}
         </ul>
-        <ul class="col">
-        {% if forloop.counter == 1 or forloop.counter|sub:1|mod:3 == 0 %}
-            <li>{{ service }}</li>
+        <ul class="w-100">
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        <h4>{{ item.name }}</h4>
+                        <h5>${{ item.price }} per unit</h5>
+                        <
+                    </div>
+                </div></a>
+            </li>
+        {% else %}
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        <h4>{{ item.name }}</h4>
+                        <h5>${{ item.price }} per unit</h5>
+                    </div>
+                </div></a>
+            </li>
         {% endif %}
-        </ul>
-        <ul class="col">
-        {% if forloop.counter == 2 or forloop.counter|sub:2|mod:3 == 0 %}
-            <li>{{ service }}</li>
-        {% endif %}
-        </ul>
     {% endfor %}
 {% else %}
 <h5 class="w-100">You have no saved services yet.</h5>
 {% endif %}
 </div>
-<div class="row acc-row">
 <h3>Product purchase history:</h3>
+<div class="row acc-row">
 {% if account.purchase_history %}
     {% for item in account.purchase_history %}
-        <ul class="col">
-        {% if forloop.counter == 0 or forloop.counter|mod:3 == 0 %}
-            <li>{{ service }}</li>
-        {% endif %}
+        {% if forloop.counter|mod:3 == 0 %}
         </ul>
-        <ul class="col">
-        {% if forloop.counter == 1 or forloop.counter|sub:1|mod:3 == 0 %}
-            <li>{{ service }}</li>
+        <ul class="w-100">
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        <h4>{{ item.name }}</h4>
+                        <h5>${{ item.price }} per unit</h5>
+                        <
+                    </div>
+                </div></a>
+            </li>
+        {% else %}
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        <h4>{{ item.name }}</h4>
+                        <h5>${{ item.price }} per unit</h5>
+                    </div>
+                </div></a>
+            </li>
         {% endif %}
-        </ul>
-        <ul class="col">
-        {% if forloop.counter == 2 or forloop.counter|sub:2|mod:3 == 0 %}
-            <li>{{ service }}</li>
-        {% endif %}
-        </ul>
     {% endfor %}
 {% else %}
 <h5 class="w-100">You have not purchased any products yet.</h5>
 {% endif %}
 </div>
-<div class="row acc-row">
 <h3>Service purchase history:</h3>
+<div class="row acc-row">
 {% if account.service_history %}
-    {% for service in account.service_history %}
-        <ul class="col">
-        {% if forloop.counter == 0 or forloop.counter|mod:3 == 0 %}
-            <li>{{ service }}</li>
-        {% endif %}
+    {% for item in account.service_history %}
+        {% if forloop.counter|mod:3 == 0 %}
         </ul>
-        <ul class="col">
-        {% if forloop.counter == 1 or forloop.counter|sub:1|mod:3 == 0 %}
-            <li>{{ service }}</li>
+        <ul class="w-100">
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        <h4>{{ item.name }}</h4>
+                        <h5>${{ item.price }} per unit</h5>
+                        <
+                    </div>
+                </div></a>
+            </li>
+        {% else %}
+            <li class="col account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
+                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
+                    <div class="col">
+                        <h4>{{ item.name }}</h4>
+                        <h5>${{ item.price }} per unit</h5>
+                    </div>
+                </div></a>
+            </li>
         {% endif %}
-        </ul>
-        <ul class="col">
-        {% if forloop.counter == 2 or forloop.counter|sub:2|mod:3 == 0 %}
-            <li>{{ service }}</li>
-        {% endif %}
-        </ul>
     {% endfor %}
 {% else %}
 <h5 class="w-100">You have not purchased any services yet.</h5>

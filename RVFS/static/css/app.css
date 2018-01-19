@@ -324,6 +324,14 @@ CATALOG
     text-align: right;
 }
 
+.btn-secondary {
+    background-color: #727b84;
+}
+
+.btn-secondary:hover {
+    background-color: #4c5155;
+}
+
 /* ***************************************************************************
 ACCOUNT
 *************************************************************************** */
@@ -340,6 +348,19 @@ ACCOUNT
 
 .acc-row {
     padding: 25px 15px;
+}
+
+.account-list {
+    list-style: none;
+}
+
+.acc-item-link {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+.acc-item-link:hover {
+    color: rgba(0, 0, 0, 0.7);
+    text-decoration: none;
 }
 
 /* ***************************************************************************

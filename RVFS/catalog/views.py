@@ -3,11 +3,14 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views.generic import CreateView, ListView, DetailView
 from django.views.generic.edit import UpdateView
 from django.urls import reverse_lazy
+from account.models import Account
 from catalog.models import Product, Service
 from catalog.forms import ProductForm, ServiceForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponseRedirect
 from account.views import get_galleries
 from datetime import datetime
+from decimal import Decimal
 
 
 class AllProductsView(ListView):
@@ -131,7 +134,6 @@ class SingleProductView(DetailView):
 
     template_name = 'product.html'
     model = Product
-    success_url = reverse_lazy('prods')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -149,9 +151,26 @@ class SingleProductView(DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
-        """."""
-        import pdb; pdb.set_trace()
-        pass
+        """Add item to appropriate list."""
+        data = request.POST
+        account = Account.objects.get(user=request.user)
+        if 'add' in data.keys():
+            success_url = reverse_lazy('prods')
+            fields = []
+            for field in data:
+                if field != 'csrfmiddlewaretoken' and field != 'add':
+                    fields.append(field)
+            cart_item = {'item': self.get_object()}
+            for field in fields:
+                cart_item[field] = data[field]
+            account.cart.append(cart_item)
+            account.cart_total += Decimal(self.get_object().price)
+            account.save()
+        else:
+            success_url = reverse_lazy('account')
+            account.saved_products.append(self.get_object())
+            account.save()
+        return HttpResponseRedirect(success_url)
 
 
 class SingleServiceView(DetailView):
@@ -168,6 +187,28 @@ class SingleServiceView(DetailView):
         context['nbar'] = 'servs'
         context['galleries'] = get_galleries()
         return context
+
+    def post(self, request, *args, **kwargs):
+        """Add item to appropriate list."""
+        data = request.POST
+        account = Account.objects.get(user=request.user)
+        if 'add' in data.keys():
+            success_url = reverse_lazy('prods')
+            fields = []
+            for field in data:
+                if field != 'csrfmiddlewaretoken' and field != 'add':
+                    fields.append(field)
+            cart_item = {'item': self.get_object()}
+            for field in fields:
+                cart_item[field] = data[field]
+            account.cart.append(cart_item)
+            account.cart_total += Decimal(self.get_object().price)
+            account.save()
+        else:
+            success_url = reverse_lazy('account')
+            account.saved_products.append(self.get_object())
+            account.save()
+        return HttpResponseRedirect(success_url)
 
 
 class CreateProductView(PermissionRequiredMixin, CreateView):
@@ -186,12 +227,11 @@ class CreateProductView(PermissionRequiredMixin, CreateView):
         context['galleries'] = get_galleries()
         return context
 
-    def get_form_kwargs(self):
-        """Set date published if item is public."""
-        kwargs = super(CreateProductView, self).get_form_kwargs()
-        if kwargs['data']['published'] == 'PB':
-            kwargs['data']['data_published'] = datetime.now()
-        return kwargs
+    def form_valid(self, form):
+        """Set date published if public."""
+        if form.instance.published == 'PB':
+            form.instance.date_published = datetime.now()
+        return super(CreateProductView, self).form_valid(form)
 
 
 class EditProductView(PermissionRequiredMixin, UpdateView):
@@ -227,12 +267,11 @@ class CreateServiceView(PermissionRequiredMixin, CreateView):
         context['galleries'] = get_galleries()
         return context
 
-    def get_form_kwargs(self):
-        """Set date published if item is public."""
-        kwargs = super(CreateServiceView, self).get_form_kwargs()
-        if kwargs['data']['published'] == 'PB':
-            kwargs['data']['data_published'] = datetime.now()
-        return kwargs
+    def form_valid(self, form):
+        """Set date published if public."""
+        if form.instance.published == 'PB':
+            form.instance.date_published = datetime.now()
+        return super(CreateServiceView, self).form_valid(form)
 
 
 class EditServiceView(PermissionRequiredMixin, UpdateView):

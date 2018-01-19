@@ -54,7 +54,7 @@ class Product(models.Model):
         choices=LENGTHS,
         default='',
         blank=True)
-    diamiter = MultiSelectField(
+    diameter = MultiSelectField(
         max_length=150,
         choices=DIAMS,
         default='',

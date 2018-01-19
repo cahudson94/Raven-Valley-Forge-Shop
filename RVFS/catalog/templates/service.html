@@ -4,22 +4,93 @@
 {% block title %}{{ service.name }}{% endblock %}
 
 {% block body %}
-{% thumbnail service.image "300x300" crop="center" as pic %}
-    <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
-{% endthumbnail %}
-<h3>{{ service.price }}</h3>
-<h4>{{ service.stock }}</h4>
-{% if service.length %}
-    <select>{{ service.length }}</select>
-{% endif %}
-{% if service.diamiter %}
-    <select>{{ service.diamiter }}</select>
-{% endif %}
-{% if service.color %}
-    <select>{{ service.color }}</select>
-{% endif %}
-<p>{{ service.description }}</p>
-{% if service.extra_options %}
-    <select>{{ service.extra_options }}</select>
-{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <h2>{{ service.name }}</h2>
+    <div class="row item-container">
+        <div class="col">
+            {% thumbnail service.image "350x350" crop="center" as pic %}
+                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
+            {% endthumbnail %}
+            </div>
+            <div class="col item-details">
+            <h4>price: ${{ service.price }}</h4>
+            <h4>{% if service.stock %}stock: {{ service.stock }}{% elif service.stock == 0 %}Out of Stock{% else %}In Stock{% endif %}</h4>
+            <p>{{ service.description }}</p>
+            <p>
+                {% if service.length %}
+                    <label>length:</label>
+                    <select name="length">
+                        {% for length in service.length %}
+                        <option value="{{ length }}">{{ length }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </p>
+            <p>
+                {% if service.diameter %}
+                    <label>diameter:</label>
+                    <select name="diameter">
+                        {% for diameter in service.diameter %}
+                        <option value="{{ diameter }}">{{ diameter }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </p>
+            <p>
+                {% if service.color %}
+                    <label>color:</label>
+                    <select name="color">
+                        {% for color in service.color %}
+                        <option value="{{ color }}">{{ color }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </p>
+            <p>
+                {% if service.extras %}
+                    <label>extras:</label>
+                    <select name="extras">
+                        {% for extra in service.extras %}
+                        <option value="{{ extra }}">{{ extra }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    <div class="d-flex w-100">
+        {% if user.is_staff %}
+        <a class="btn btn-secondary" href="{% url 'edit_prod' service.id %}">Edit</a>
+        {% endif %}
+        <div class="ml-auto">
+        {% if user.is_authenticated %}
+        <input class="btn btn-secondary" type="submit" name="save" value="Save item for Later">
+        {% endif %}
+        {% if service.stock != 0 %}
+            {% if service.is_knife %}
+                {% if user.is_authenticated %}
+                    <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                {% else %}
+                    <p>This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                {% endif %}
+            {% else %}
+                <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+            {% endif %}
+        {% elif service.stock == 0 %}
+            <p>Out of Stock</p>
+        {% else %}
+            {% if service.is_knife %}
+                {% if user.is_authenticated %}
+                    <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                {% else %}
+                    <p>This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                {% endif %}
+            {% else %}
+                <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+            {% endif %}
+        {% endif %}
+        </div>
+    </div>
+</form>
 {% endblock %}
