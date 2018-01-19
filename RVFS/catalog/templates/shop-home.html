@@ -32,7 +32,7 @@
         </ul>
     </div>
     <div class="col catalog">
-    <h2><a href="{% url 'prods' %}">Products</a></h2>
+    <h1><a href="{% url 'prods' %}">Products</a></h1>
     {% if prod_tags.paginator.num_pages != 1 %}
         <nav aria-label="{{ tag }} paginator">
             <ul class="pagination justify-content-center paginator">
@@ -165,7 +165,7 @@
             </ul>
         </nav>
     {% endif %}
-    <h2><a href="{% url 'servs' %}">Services</a></h2>
+    <h1><a href="{% url 'servs' %}">Services</a></h1>
     {% for tag in tags %}
         <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories">{{ tag }}</h2></a>
         <div class="row card-row">

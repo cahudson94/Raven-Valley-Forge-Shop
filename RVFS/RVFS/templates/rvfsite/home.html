@@ -21,11 +21,11 @@ Home
     {% for pic in random_pics %}
         {% if forloop.revcounter0 %}
         <div class="carousel-item">
-          <img class="d-block img-fluid" src="{{ pic.photo.url }}">
+          <img class="d-block img-fluid" src="{{ pic.webContentLink }}">
         </div>
         {% else %}
         <div class="carousel-item active">
-          <img class="d-block img-fluid" src="{{ pic.photo.url }}">
+          <img class="d-block img-fluid" src="{{ pic.webContentLink }}">
         </div>
         {% endif %}
     {% endfor %}
@@ -35,6 +35,7 @@ Home
     <span class="carousel-control-prev-icon"></span>
     <span class="sr-only">Previous</span>
   </a>
+  <div class="btn carousel-caption carousel-link"><a class="next-link" href="{% url 'about' %}"><h2>Meet the Crew!</h2></a></div>
   <a class="carousel-control-next" href="#myCarousel" data-slide="next">
     <span class="carousel-control-next-icon"></span>
     <span class="sr-only">Next</span>
@@ -44,5 +45,4 @@ Home
 <p class="carousel-text">Welcome to Ravenmoore Valley Forge &amp; Metalworks, where our crew of designers and artisans
 can craft anything from the simplest of works to the most intricate of designs.
 </p>
-<a class="next-link" href="{% url 'about' %}"><h2>Meet the Crew!</h2></a>
 {% endblock %}

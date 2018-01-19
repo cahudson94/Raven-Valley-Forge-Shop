@@ -4,22 +4,80 @@
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block body %}
-{% thumbnail product.image "300x300" crop="center" as pic %}
-    <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
-{% endthumbnail %}
-<h3>{{ product.price }}</h3>
-<h4>{{ product.stock }}</h4>
-{% if product.length %}
-    <select>{{ product.length }}</select>
-{% endif %}
-{% if product.diamiter %}
-    <select>{{ product.diamiter }}</select>
-{% endif %}
-{% if product.color %}
-    <select>{{ product.color }}</select>
-{% endif %}
-<p>{{ product.description }}</p>
-{% if product.extra_options %}
-    <select>{{ product.extra_options }}</select>
-{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <h2>{{ product.name }}</h2>
+    <div class="row item-container">
+        <div class="col">
+            {% thumbnail product.image "350x350" crop="center" as pic %}
+                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
+            {% endthumbnail %}
+            </div>
+            <div class="col item-details">
+            <h4>price: ${{ product.price }}</h4>
+            <h4>{% if product.stock %}stock: {{ product.stock }}{% else %}In Stock{% endif %}</h4>
+            <p>{{ product.description }}</p>
+            <p>
+                {% if product.length %}
+                    <label>length:</label>
+                    <select name="length">
+                        {% for length in product.length %}
+                        <option>{{ length }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </p>
+            <p>
+                {% if product.diameter %}
+                    <label>diameter:</label>
+                    <select name="diameter">
+                        {% for diameter in product.diameter %}
+                        <option>{{ diameter }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </p>
+            <p>
+                {% if product.color %}
+                    <label>color:</label>
+                    <select name="color">
+                        {% for color in product.color %}
+                        <option>{{ color }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </p>
+            <p>
+                {% if product.extras %}
+                    <label>extras:</label>
+                    <select name="extras">
+                        {% for extra in product.extras %}
+                        <option>{{ extra }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </p>
+            <p>
+                <label>Quantity:</label>
+                <select name="quantity">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </p>
+        </div>
+    </div>
+    {% if product.is_knife %}
+        {% if user.is_authenticated %}
+            <input type="button" name="add" value="Add to cart">
+        {% else %}
+            <p>Please Login to purchase this item.</p>
+        {% endif %}
+    {% else %}
+        <input type="submit" class="button" value="Add to cart">
+    {% endif %}
+
+</form>
 {% endblock %}

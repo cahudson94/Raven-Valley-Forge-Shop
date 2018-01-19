@@ -2,7 +2,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
-from catalog.models import SliderImage
 from registration.backends.hmac.views import RegistrationView
 from registration.forms import RegistrationForm
 from account.models import Account, ShippingInfo
@@ -11,6 +10,7 @@ from django.views.generic import ListView, UpdateView, TemplateView
 from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
 from django.contrib.auth import login as auth_login
+from RVFS.quickstart import main as drive_files
 import random
 
 
@@ -21,10 +21,11 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         """."""
-        pics = [i for i in SliderImage.objects.all()]
-        rand_pics = random.sample(pics, min(5, len(pics)))
+        slide_files = drive_files('17fqQwUu1dGPOUBirLDo2O0tBg_TUXMlZ')
+        rand_pics = random.sample(slide_files, min(5, len(slide_files)))
         context = super(TemplateView, self).get_context_data(**kwargs)
         context['random_pics'] = rand_pics
+        context['galleries'] = get_galleries()
         context['nbar'] = 'home'
         return context
 
@@ -37,6 +38,7 @@ class AboutView(TemplateView):
     def get_context_data(self, **kwargs):
         """."""
         context = super(TemplateView, self).get_context_data(**kwargs)
+        context['galleries'] = get_galleries()
         context['nbar'] = 'about'
         return context
 
@@ -52,6 +54,7 @@ class AccountView(LoginRequiredMixin, ListView):
         context = super(ListView, self).get_context_data(**kwargs)
         context['account'] = context['view'].request.user.account
         context['addresses'] = context['view'].request.user.addresses.get()
+        context['galleries'] = get_galleries()
         context['nbar'] = 'account'
         return context
 
@@ -65,6 +68,7 @@ class CustomRegView(RegistrationView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(RegistrationView, self).get_context_data(**kwargs)
+        context['galleries'] = get_galleries()
         context['nbar'] = 'register'
         return context
 
@@ -75,6 +79,7 @@ class CustomLogView(LoginView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(LoginView, self).get_context_data(**kwargs)
+        context['galleries'] = get_galleries()
         context['nbar'] = 'login'
         return context
 
@@ -97,6 +102,13 @@ class InfoFormView(UpdateView):
     form_class = InfoRegForm
     success_url = '/account'
     model = Account
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(InfoFormView, self).get_context_data(**kwargs)
+        context['galleries'] = get_galleries()
+        context['nbar'] = 'login'
+        return context
 
     def form_valid(self, form):
         """Creating shipping model and update user account."""
@@ -121,3 +133,34 @@ class InfoFormView(UpdateView):
         new_info.save()
         auth_login(self.request, user)
         return HttpResponseRedirect(self.get_success_url())
+
+
+class GalleryView(TemplateView):
+    """."""
+
+    template_name = 'gallery.html'
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(GalleryView, self).get_context_data(**kwargs)
+        title = context['slug'].replace('_', ' ').title()
+        context['galleries'] = get_galleries()
+        context['tab'] = title
+        context['gallery'] = title
+        context['nbar'] = 'gallery'
+        for file in context['galleries']:
+            if file['name'].title() == title:
+                folder = file['id']
+        # import pdb; pdb.set_trace()
+        context['photos'] = drive_files(folder)
+        for photo in context['photos']:
+            photo['name'] = photo['name'].split('.')[0]
+        return context
+
+
+def get_galleries():
+    """."""
+    files = drive_files('18HHO951sd6wkp_tCREzHQimX8ntwVycq')
+    for file in files:
+        file['url'] = file['name'].lower().replace(' ', '_')
+    return files

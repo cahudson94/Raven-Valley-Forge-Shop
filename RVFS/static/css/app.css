@@ -84,6 +84,21 @@ NAV
     margin: 15px 0px;
 }
 
+.dropdown-menu {
+    background-image: url('../parch.jpg');
+    background-size: 100% 100%;
+}
+
+.dropdown-item:hover {
+    background-color: transparent;
+    color: rgb(122, 0, 0);
+}
+
+.dropdown-item.active {
+    background-color: transparent;
+    color: rgb(122, 0, 0);
+}
+
 /* ***************************************************************************
 MAIN SECTION
 *************************************************************************** */
@@ -99,13 +114,13 @@ MAIN SECTION
 }
 
 .left-bar {
-    margin: 5px 0px;
+    margin: 5px 0px 0px;
     background-size: 100% 650px;
     background-image: url('../left scroll.png')
 }
 
 .right-bar {
-    margin: 5px 0px;
+    margin: 5px 0px 0px;
     background-size: 100% 650px;
     background-image: url('../right scroll.png')
 }
@@ -144,7 +159,7 @@ MAIN SECTION
     font-family: 'Niconne', serif;
     text-align: center;
     text-decoration: underline;
-    color: darkred;
+    color: rgb(122, 0, 0);
 }
 
 .disclaimer {
@@ -168,6 +183,40 @@ MAIN SECTION
 
 .serv-form, .prod-form {
     margin-left: 15px;
+}
+
+.carousel-link {
+    background-color: rgba(0, 0, 0, 0.8);
+    width: 22%;
+    margin: auto;
+    height: 5.8%;
+    margin-bottom: 1.5rem;
+    padding-top: 0;
+}
+
+.carousel-link:hover {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.carousel-link a:hover {
+    color: rgb(142, 0, 0);
+}
+
+.gallery-title {
+    text-align: center;
+}
+
+.gallery-row {
+    padding: 0 20px;
+}
+
+.gallery-images {
+    padding-top: 20px;
+    padding-bottom: 5px;
+}
+
+.lightbox-img {
+    width: 100%;
 }
 
 /* ***************************************************************************
@@ -265,6 +314,14 @@ CATALOG
 
 .paginator {
     padding-right: 90px;
+}
+
+.item-container {
+    padding: 10px 25px;
+}
+
+.item-details {
+    text-align: right;
 }
 
 /* ***************************************************************************

@@ -1,7 +1,6 @@
 """."""
 from django.urls import path
-from catalog.views import (CatalogView as Cata,
-                           CreateProductView as CreateProd,
+from catalog.views import (CreateProductView as CreateProd,
                            EditProductView as EditProd,
                            SingleProductView as Prod,
                            AllProductsView as Prods,
@@ -12,7 +11,6 @@ from catalog.views import (CatalogView as Cata,
                            )
 
 urlpatterns = [
-    path('', Cata.as_view(), name='cata'),
     path('add-product/', CreateProd.as_view(), name='add_prod'),
     path('edit-product/<int:pk>/', EditProd.as_view(), name='edit_prod'),
     path('products/<int:pk>/', Prod.as_view(), name='prod'),

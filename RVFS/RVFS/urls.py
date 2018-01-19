@@ -18,18 +18,23 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
-from account.views import (CustomRegView, CustomLogView, AboutView, HomeView)
+from account.views import (CustomRegView,
+                           CustomLogView,
+                           AboutView,
+                           HomeView,
+                           GalleryView)
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
     path('about/', AboutView.as_view(), name='about'),
+    path('gallery/<slug:slug>/', GalleryView.as_view(), name='gallery'),
     path('login/', CustomLogView.as_view(), name='login'),
     path('logout/', auth_views.logout, {'next_page': '/'}, name='logout'),
     path('admin/', admin.site.urls),
     path('register/', CustomRegView.as_view(), name='register'),
     path('accounts/', include('registration.backends.hmac.urls')),
     path('account/', include('account.urls')),
-    path('catalog/', include('catalog.urls')),
+    path('shop/', include('catalog.urls')),
 ]
 
 if settings.DEBUG:

@@ -59,16 +59,17 @@ class Product(models.Model):
         choices=DIAMS,
         default='',
         blank=True)
-    decription = models.TextField(default='')
+    description = models.TextField(default='')
     shipping_info = models.TextField(
         max_length=180,
         blank=True)
     color = models.TextField(
         max_length=500,
         blank=True)
-    extra_options = models.TextField(
+    extras = models.TextField(
         max_length=500,
         blank=True)
+    is_knife = models.BooleanField(default=False)
 
     def __str__(self):
         """Print for admin."""
@@ -86,7 +87,7 @@ class Service(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_published = models.DateTimeField(blank=True, null=True)
     name = models.CharField(max_length=100)
-    decription = models.TextField(max_length=500, default='')
+    description = models.TextField(max_length=500, default='')
     limitations = models.TextField(max_length=500, default='')
     commision_fee = models.IntegerField(blank=True, default=0)
     price_range = models.CharField(
@@ -99,19 +100,8 @@ class Service(models.Model):
         max_length=500,
         blank=True)
     tags = TaggableManager()
+    is_knife = models.BooleanField(default=False)
 
     def __str__(self):
         """Print for admin."""
         return self.name
-
-
-class SliderImage(models.Model):
-    """Image model for home page slider."""
-
-    photo = ImageField(upload_to='slides')
-    date_added = models.DateTimeField(auto_now_add=True)
-    title = models.CharField(default='', max_length=50)
-
-    def __str__(self):
-        """Print for admin."""
-        return self.title

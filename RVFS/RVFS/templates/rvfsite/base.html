@@ -8,6 +8,7 @@
   <title>{% block title %}{% endblock %}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tangerine:bold|Niconne">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
   <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
   {% block head %}
@@ -82,14 +83,25 @@
             <div id="collapse-left" class="collapse navbar-collapse">
               <ul class="nav navbar-nav ml-auto">
                 <li class="nav-item {% if nbar == 'home' %}active{% endif %}"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
-                {% if nbar != 'cata' and nbar != 'prods' and nbar != 'servs' %}
                 <li class="nav-item {% if nbar == 'about' %}active{% endif %}"><a class="nav-link" href="{% url 'about' %}">About</a></li>
-                {% endif %}
-                <li class="nav-item {% if nbar == 'cata' %}active{% endif %}"><a class="nav-link" href="{% url 'cata' %}">Catalog</a></li>
-                {% if nbar == 'cata' or nbar == 'prods' or nbar == 'servs' %}
                 <li class="nav-item {% if nbar == 'prods' %}active{% endif %}"><a class="nav-link" href="{% url 'prods' %}">Products</a></li>
                 <li class="nav-item {% if nbar == 'servs' %}active{% endif %}"><a class="nav-link" href="{% url 'servs' %}">Services</a></li>
-                {% endif %}
+                <li class="nav-item dropdown {% if nbar == 'gallery' %}active{% endif %}">
+                  <a class="nav-link dropdown-toggle" id="dropdownmenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#" role="button">Galleries</a>
+                  <div class="dropdown-menu">
+                  {% for gallery in galleries %}
+                    {% if tab %}
+                      {% if tab == gallery.name %}
+                        <a class="dropdown-item active" href="{% url 'gallery' slug=gallery.url %}">{{ gallery.name }}</a>
+                      {% else %}
+                      <a class="dropdown-item" href="{% url 'gallery' slug=gallery.url %}">{{ gallery.name }}</a>
+                      {% endif %}
+                    {% else %}
+                    <a class="dropdown-item" href="{% url 'gallery' slug=gallery.url %}">{{ gallery.name }}</a>
+                    {% endif %}
+                  {% endfor %}
+                  </div>
+                </li>
                 {% if user.is_authenticated %}
                   <li class="nav-item {% if nbar == 'account' %}active{% endif %}"><a class="nav-link" href="{% url 'account' %}">Account</a></li>
                   <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
@@ -164,5 +176,32 @@
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
+  <script type="text/javascript">
+    $(document).ready(function(){
+
+var quantitiy=0;
+   $('.quantity-right-plus').click(function(e){
+        // Stop acting like a button
+        e.preventDefault();
+        // Get the field name
+        var quantity = parseInt($('#quantity').val());
+        // If is not undefined
+            $('#quantity').val(quantity + 1);
+            // Increment
+    });
+
+     $('.quantity-left-minus').click(function(e){
+        // Stop acting like a button
+        e.preventDefault();
+        // Get the field name
+        var quantity = parseInt($('#quantity').val());
+        // If is not undefined
+            // Increment
+            if(quantity>0){
+            $('#quantity').val(quantity - 1);
+            }
+    });
+});
+  </script>
 </body>
 </html>
