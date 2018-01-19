@@ -136,9 +136,8 @@ class SingleProductView(DetailView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(SingleProductView, self).get_context_data(**kwargs)
-        context['form'] = ProductForm
-        if context['object'].diamiter:
-            context['object'].diamiter = context['object'].diamiter.split(', ')
+        if context['object'].diameter:
+            context['object'].diameter = context['object'].diameter.split(', ')
         if context['object'].length:
             context['object'].length = context['object'].length.split(', ')
         if context['object'].color:
@@ -151,7 +150,6 @@ class SingleProductView(DetailView):
 
     def post(self, request, *args, **kwargs):
         """."""
-        form = ProductForm(request.POST, request.FILES)
         import pdb; pdb.set_trace()
         pass
 
