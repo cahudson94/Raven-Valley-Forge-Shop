@@ -100,7 +100,8 @@ class TagProductsView(ListView):
         all_items = self.model.objects.filter(published='PB')
         context['all_tags'] = sorted(set([tag for item in all_items for tag in item.tags.names()]))
         items = (self.model.objects.filter(published='PB')
-                                   .filter(tags__name__in=[self.kwargs.get('slug')]).all())
+                                   .filter(tags__name__in=[self.kwargs.get('slug')]).all()
+                                   .order_by('id'))
         paginator = Paginator(items, 20)
         page = context['view'].request.GET.get('page')
         try:
@@ -129,7 +130,8 @@ class TagServicesView(ListView):
         all_items = self.model.objects.filter(published='PB')
         context['all_tags'] = sorted(set([tag for item in all_items for tag in item.tags.names()]))
         items = (self.model.objects.filter(published='PB')
-                                   .filter(tags__name__in=[self.kwargs.get('slug')]).all())
+                                   .filter(tags__name__in=[self.kwargs.get('slug')]).all()
+                                   .order_by('id'))
         paginator = Paginator(items, 20)
         page = context['view'].request.GET.get('page')
         try:
