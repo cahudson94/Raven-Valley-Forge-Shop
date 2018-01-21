@@ -49,19 +49,26 @@ def get_credentials():
     return credentials
 
 
-def create_event():
+def create_event(info):
     """."""
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
 
     service = discovery.build('calendar', 'v3', http=http)
 
+    if 'birthday' in info.keys():
+        appointment = 'Birthday'
+    if 'service' in info.keys():
+        appointment = info['service'].name
+    start_datetime = info['time']
+    end_datetime = info['time'] + info['length']
+
     start_datetime = datetime.datetime.now(tz=pytz.utc)
     event = service.events().insert(calendarId='ravenmoorevalleyforge@gmail.com', body={
-        'summary': 'Foo',
+        'summary': info['full_name'] + appointment,
         'description': 'Bar',
         'start': {'dateTime': start_datetime.isoformat()},
-        'end': {'dateTime': (start_datetime + timedelta(minutes=15)).isoformat()},
+        'end': {'dateTime': end_datetime.isoformat()},
     }).execute()
 
     print(event)

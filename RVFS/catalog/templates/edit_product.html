@@ -5,6 +5,7 @@
 {% block body %}
 <h2>Create a Product</h2>
     <form class="prod-form" method="post">
+        {% csrf_token %}
         <div class="row">
         {% for field in form %}
             {% if forloop.counter == 1 %}

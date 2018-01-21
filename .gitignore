@@ -102,7 +102,7 @@ ENV/
 
 __pycache__
 
-imagersite/media/*
-!imagersite/media/.gitkeep
+RVFS/media/*
+!RVFS/media/.gitkeep
 
 client_secret.json

@@ -21,6 +21,7 @@ class Account(models.Model):
     saved_products = []
     saved_services = []
     comments = models.TextField(default='')
+    birthday_set = models.BooleanField(default=False)
     registration_complete = models.BooleanField(default=False)
 
     def __str__(self):

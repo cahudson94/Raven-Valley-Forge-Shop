@@ -120,6 +120,7 @@ class InfoFormView(UpdateView):
         account.first_name = form.cleaned_data['first_name']
         account.last_name = form.cleaned_data['last_name']
         account.pic = form.cleaned_data['pic']
+        account.birthday_set = True
         account.save()
         new_info = ShippingInfo()
         new_info.address1 = form.cleaned_data['street']
