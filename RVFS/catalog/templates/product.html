@@ -6,18 +6,18 @@
 {% block body %}
 <form method="post">
     {% csrf_token %}
-    <h2>{{ product.name }}</h2>
+    <h2 class="text-standard">{{ product.name }}</h2>
     <div class="row item-container">
         <div class="col">
             <img class="product-image" src="{{ product.image.url }}">
             </div>
             <div class="col item-details">
-            <h4>price: ${{ product.price }}</h4>
-            <h4>{% if product.stock %}stock: {{ product.stock }}{% elif product.stock == 0 %}Out of Stock{% else %}In Stock{% endif %}</h4>
-            <p>{{ product.description }}</p>
+            <h4 class="text-standard">price: ${{ product.price }}</h4>
+            <h4 class="text-standard">{% if product.stock %}stock: {{ product.stock }}{% elif product.stock == 0 %}Out of Stock{% else %}In Stock{% endif %}</h4>
+            <p class="text-standard description-font">{{ product.description }}</p>
             <p>
                 {% if product.length %}
-                    <label>length:</label>
+                    <label class="text-standard">length:</label>
                     <select name="length">
                         {% for length in product.length %}
                         <option value="{{ length }}">{{ length }}</option>
@@ -27,7 +27,7 @@
             </p>
             <p>
                 {% if product.diameter %}
-                    <label>diameter:</label>
+                    <label class="text-standard">diameter:</label>
                     <select name="diameter">
                         {% for diameter in product.diameter %}
                         <option value="{{ diameter }}">{{ diameter }}</option>
@@ -37,7 +37,7 @@
             </p>
             <p>
                 {% if product.color %}
-                    <label>color:</label>
+                    <label class="text-standard">color:</label>
                     <select name="color">
                         {% for color in product.color %}
                         <option value="{{ color }}">{{ color }}</option>
@@ -47,7 +47,7 @@
             </p>
             <p>
                 {% if product.extras %}
-                    <label>extras:</label>
+                    <label class="text-standard">extras:</label>
                     <select name="extras">
                         {% for extra in product.extras %}
                         <option value="{{ extra }}">{{ extra }}</option>
@@ -56,7 +56,7 @@
                 {% endif %}
             </p>
             <p>
-                <label>Quantity:</label>
+                <label class="text-standard">Quantity:</label>
                 <select name="quantity">
                     <option value="1">1</option>
                     <option value="2">2</option>
@@ -69,33 +69,33 @@
     </div>
     <div class="d-flex w-100">
         {% if user.is_staff %}
-        <a class="btn btn-secondary" href="{% url 'edit_prod' product.id %}">Edit</a>
+        <a class="btn btn-secondary text-standard" href="{% url 'edit_prod' product.id %}">Edit</a>
         {% endif %}
         <div class="ml-auto">
         {% if user.is_authenticated %}
-        <input class="btn btn-secondary" type="submit" name="save" value="Save item for Later">
+        <input class="btn btn-secondary text-standard" type="submit" name="save" value="Save item for Later">
         {% endif %}
         {% if product.stock != 0 %}
             {% if product.is_knife %}
                 {% if user.is_authenticated %}
-                    <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                    <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">
                 {% else %}
-                    <p>This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                    <p class="text-standard">This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
                 {% endif %}
             {% else %}
-                <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">
             {% endif %}
         {% elif product.stock == 0 %}
             <p>Out of Stock</p>
         {% else %}
             {% if product.is_knife %}
                 {% if user.is_authenticated %}
-                    <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                    <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">
                 {% else %}
-                    <p>This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                    <p class="text-standard">This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
                 {% endif %}
             {% else %}
-                <input class="btn btn-secondary" type="submit" name="add" value="Add to cart">
+                <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">
             {% endif %}
         {% endif %}
         </div>

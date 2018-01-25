@@ -3,16 +3,16 @@
 {% block title %}All Items List{% endblock %}
 
 {% block body %}
-<h1>Products:</h1>
+<h1 class="text-standard">Products:</h1>
 <ul>
 {% for product in product_list %}
-    <li><a href="{% url 'prod' product.id %}">{{ product.name }}</a></li>
+    <li><a class="text-standard link-font" href="{% url 'prod' product.id %}">{{ product.name }}</a></li>
 {% endfor %}
 </ul>
-<h1>Services:</h1>
+<h1 class="text-standard">Services:</h1>
 <ul>
 {% for service in services %}
-    <li><a href="{% url 'serv' service.id %}">{{ service.name }}</a></li>
+    <li><a class="text-standard link-font" href="{% url 'serv' service.id %}">{{ service.name }}</a></li>
 {% endfor %}
 </ul>
 {% endblock %}

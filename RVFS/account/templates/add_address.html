@@ -1,0 +1,21 @@
+{% extends 'rvfsite/base.html' %}
+
+{% block title %}Add an Address{% endblock %}
+
+{% block body %}
+    <form enctype="multipart/form-data" class="prod-form" method="post">
+        {% csrf_token %}
+        <h2 class="text-standard">New Shipping Address:</h2>
+        {% for field in form %}
+            {% if forloop.counter < 3 %}
+            <p class="form-font"><label class="text-standard">{{ field.label }}:</label><br>{{ field }}</p>
+            {% endif %}
+        {% endfor %}
+        <p class="form-font"><label class="text-standard">{{ form.address2.label }}:</label><br>{{ form.address2 }}</p>
+        <p class="form-font"><label class="text-standard">{{ form.zip_code.label }}:</label><br>{{ form.zip_code }}</p>
+        <p class="form-font"><label class="text-standard">{{ form.city.label }}:</label><br>{{ form.city }}</p>
+        <p class="form-font"><label class="text-standard">{{ form.state.label }}:</label><br>{{ form.state }}</p>
+        <p class="form-font"><label class="text-standard">{{ form.main.label }}:</label><br>{{ form.main }}</p>
+        <input class="button text-standard" type="submit" value="Add">
+    </form>
+{% endblock %}

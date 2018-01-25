@@ -22,7 +22,8 @@ from account.views import (CustomRegView,
                            CustomLogView,
                            AboutView,
                            HomeView,
-                           GalleryView)
+                           GalleryView,
+                           )
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
@@ -36,6 +37,7 @@ urlpatterns = [
     path('account/', include('account.urls')),
     path('shop/', include('catalog.urls')),
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(

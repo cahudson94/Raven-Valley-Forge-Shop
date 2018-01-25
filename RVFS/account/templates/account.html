@@ -8,77 +8,109 @@ Account
 {% endblock %}
 
 {% block body %}
-<div class="row acc-info-row">
-    {% if account.pic %}
-    <div class="col">
-    <img class="img-fluid acc-pic" src='{{ account.pic.url }}'>
-    </div>
-    {% endif %}
-    <div class="col">
-    <h3>Account Info:</h3>
-    <h5>Username: </h5><h5>{{ account }}</h5>
-    <h5>Name: </h5><h5>{{ account.first_name }}, {{ account.last_name }}</h5>
-    <h5>Birthday: </h5><h5>{{ account.birth_day }}</h5>
-    </div>
-    <div class="col">
-    <h3>Shipping Info:</h3>
-    <h5>Address Line 1: </h5><h5>{{ addresses.address1 }}</h5>
-    {% if addresses.address2 %}
-    <h5>Address Line 2: </h5><h5>{{ addresses.address2 }}</h5>
-    {% endif %}
-    <h5>Zip Code: </h5><h5>{{ addresses.zip_code }}</h5>
-    <h5>City: </h5><h5>{{ addresses.city }}</h5>
-    <h5>State: </h5><h5>{{ addresses.state }}</h5>
+<div class="dropdown">
+    <a class="btn btn-secondary dropdown-toggle text-standard" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#" role="button">Account Settings</a>
+    <div class="dropdown-menu acc-drop" aria-labelledby="dropdownMenuButton">
+        <a class="dropdown-item text-standard" href="{% url 'edit_acc' account.id %}">Edit Account</a>
+        <a class="dropdown-item text-standard" href="{% url 'add_add' %}">Add an Address</a>
+        <a class="dropdown-item text-standard" href="{% url 'add_list' %}">List of Addresses</a>
     </div>
 </div>
-<h3>Cart:</h3>
+<div class="row acc-info-row">
+    <div class="col acc-pic-col">
+    {% if account.pic %}
+        {% thumbnail account.pic "250x250" crop="center" as pic %}
+            <img class="acc-pic" src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+        {% endthumbnail %}
+    {% else %}
+        <img class="acc-pic" src="{% static 'default_acc_pic.jpg' %}" height="250" width="250">
+    {% endif %}
+    </div>
+    <div class="col">
+    <h3 class="text-standard">Account Info:</h3>
+    <h5 class="text-standard">Username: </h5>
+    <h5 class="text-standard">{{ account }}</h5>
+    <h5 class="text-standard">Name: </h5>
+    <h5 class="text-standard">{{ account.first_name }}, {{ account.last_name }}</h5>
+    <h5 class="text-standard">Birthday: </h5>
+    <h5 class="text-standard">{{ account.birth_day }}</h5>
+    </div>
+    <div class="col">
+    <h3 class="text-standard">Shipping Info:</h3>
+    <h5 class="text-standard">Address Line 1: </h5>
+    <h5 class="text-standard">{{ address.address1 }}</h5>
+    {% if address.address2 %}
+    <h5 class="text-standard">Address Line 2: </h5>
+    <h5 class="text-standard">{{ address.address2 }}</h5>
+    {% endif %}
+    <h5 class="text-standard">Zip Code: </h5>
+    <h5 class="text-standard">{{ address.zip_code }}</h5>
+    <h5 class="text-standard">City: </h5>
+    <h5 class="text-standard">{{ address.city }}</h5>
+    <h5 class="text-standard">State: </h5>
+    <h5 class="text-standard">{{ address.state }}</h5>
+    </div>
+</div>
+<h3 class="text-standard">Cart:</h3>
 <div class="row acc-row">
 {% if account.cart %}
-    <ul class="row">
-    {% for item in account.cart %}
-        {% if forloop.counter|mod:3 == 0 %}
+    <ul class="row acc-list-row">
+    {% for item in cart %}
+        {% if forloop.counter|mod:4 == 0 %}
         </ul>
-        <ul class="w-100">
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        {% for field, value in item.items %}
-                            {% if field == 'item' %}
-                            <h4>{{ value.name }}</h4>
-                            {% else %}
-                            <h5>{{ field }}: {{ value }}</h5>
-                            {% endif %}
-                        {% endfor %}
-                        <h5>${{ item.item.price }} per unit</h5>
+        <ul class="row acc-list-row">
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field == 'item' %}
+                                <h4 class="text-standard">{{ value }}</h4>
+                                {% elif field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                {% endif %}
+                            {% endfor %}
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% else %}
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        {% for field, value in item.items %}
-                            {% if field == 'item' %}
-                            <h4>{{ value.name }}</h4>
-                            {% else %}
-                            <h5>{{ field }}: {{ value }}</h5>
-                            {% endif %}
-                        {% endfor %}
-                        <h5>${{ item.item.price }} per unit</h5>
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field == 'item' %}
+                                <h4 class="text-standard">{{ value.name }}</h4>
+                                {% elif field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                {% endif %}
+                            {% endfor %}
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% endif %}
     {% endfor %}
     </ul>
 {% else %}
-<h5 class="w-100">Your cart is empty.</h5>
+<h5 class="w-100 text-standard">Your cart is empty.</h5>
 {% endif %}
 </div>
 <div class="w-100">
-    <h3 class="text-right">Total: $
+    <h3 class="text-right text-standard">Total: $
         {% if account.cart_total %}
             {% if account.cart_total.endswith == 0 %}
                 {{ account.cart_total }}0
@@ -90,138 +122,202 @@ Account
         {% endif %}
     </h3>
 </div>
-<h3>Saved products list:</h3>
+<h3 class="text-standard">Saved products list:</h3>
 <div class="row acc-row">
 {% if account.saved_products %}
-        <ul class="row">
-    {% for item in account.saved_products %}
+        <ul class="row acc-list-row">
+    {% for item in saved_prods %}
         {% if forloop.counter|mod:3 == 0 %}
         </ul>
-        <ul class="w-100">
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        <h4>{{ item.name }}</h4>
-                        <h5>${{ item.price }} per unit</h5>
-                        <
+        <ul class="row acc-list-row">
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                        {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            <h4 class="text-standard">{{ item.item.name }}</h4>
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% else %}
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        <h4>{{ item.name }}</h4>
-                        <h5>${{ item.price }} per unit</h5>
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                        {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            <h4 class="text-standard">{{ item.item.name }}</h4>
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% endif %}
     {% endfor %}
     </ul>
 {% else %}
-<h5 class="w-100">You have no saved products yet.</h5>
+<h5 class="w-100 text-standard">You have no saved products yet.</h5>
 {% endif %}
 </div>
-<h3>Saved services list:</h3>
+<h3 class="text-standard">Saved services list:</h3>
 <div class="row acc-row">
 {% if account.saved_services %}
-    {% for item in account.saved_services %}
+        <ul class="row acc-list-row">
+    {% for item in saved_servs %}
         {% if forloop.counter|mod:3 == 0 %}
         </ul>
-        <ul class="w-100">
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        <h4>{{ item.name }}</h4>
-                        <h5>${{ item.price }} per unit</h5>
-                        <
+        <ul class="row acc-list-row">
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                        {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            <h4 class="text-standard">{{ item.item.name }}</h4>
+                            {% if item.item.price_range %}
+                                <h5 class="text-standard">${{ item.item.price_range }} price range</h5>
+                            {% else %}
+                                <h5 class="text-standard">${{ item.item.commission_fee }} commission</h5>
+                            {% endif %}
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% else %}
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        <h4>{{ item.name }}</h4>
-                        <h5>${{ item.price }} per unit</h5>
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                        {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            <h4 class="text-standard">{{ item.item.name }}</h4>
+                            {% if item.item.price_range %}
+                                <h4 class="text-standard">price range:</h4>
+                                <h5 class="text-standard">${{ item.item.price_range }}</h5>
+                            {% else %}
+                                <h5 class="text-standard">${{ item.item.commission_fee }} commission</h5>
+                            {% endif %}
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% endif %}
     {% endfor %}
 {% else %}
-<h5 class="w-100">You have no saved services yet.</h5>
+<h5 class="w-100 text-standard">You have no saved services yet.</h5>
 {% endif %}
 </div>
-<h3>Product purchase history:</h3>
+<h3 class="text-standard">Product purchase history:</h3>
 <div class="row acc-row">
 {% if account.purchase_history %}
-    {% for item in account.purchase_history %}
+        <ul class="row acc-list-row">
+    {% for item in prod_history %}
         {% if forloop.counter|mod:3 == 0 %}
         </ul>
-        <ul class="w-100">
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        <h4>{{ item.name }}</h4>
-                        <h5>${{ item.price }} per unit</h5>
-                        <
+        <ul class="row acc-list-row">
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                        {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            <h4 class="text-standard">{{ item.item.name }}</h4>
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% else %}
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        <h4>{{ item.name }}</h4>
-                        <h5>${{ item.price }} per unit</h5>
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                        {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            <h4 class="text-standard">{{ item.item.name }}</h4>
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% endif %}
     {% endfor %}
 {% else %}
-<h5 class="w-100">You have not purchased any products yet.</h5>
+<h5 class="w-100 text-standard">You have not purchased any products yet.</h5>
 {% endif %}
 </div>
-<h3>Service purchase history:</h3>
+<h3 class="text-standard">Service purchase history:</h3>
 <div class="row acc-row">
 {% if account.service_history %}
-    {% for item in account.service_history %}
+        <ul class="row acc-list-row">
+    {% for item in serv_history %}
         {% if forloop.counter|mod:3 == 0 %}
         </ul>
-        <ul class="w-100">
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        <h4>{{ item.name }}</h4>
-                        <h5>${{ item.price }} per unit</h5>
-                        <
+        <ul class="row acc-list-row">
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                        {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            <h4 class="text-standard">{{ item.item.name }}</h4>
+                            {% if item.item.price_range %}
+                                <h5 class="text-standard">${{ item.item.price_range }} serive range</h5>
+                            {% else %}
+                                <h5 class="text-standard">${{ item.item.commission_fee }} commission</h5>
+                            {% endif %}
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% else %}
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        <h4>{{ item.name }}</h4>
-                        <h5>${{ item.price }} per unit</h5>
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                        {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            <h4 class="text-standard">{{ item.item.name }}</h4>
+                            {% if item.item.price_range %}
+                                <h5 class="text-standard">${{ item.item.price_range }} serive range</h5>
+                            {% else %}
+                                <h5 class="text-standard">${{ item.item.commission_fee }} commission</h5>
+                            {% endif %}
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% endif %}
     {% endfor %}
 {% else %}
-<h5 class="w-100">You have not purchased any services yet.</h5>
+<h5 class="w-100 text-standard">You have not purchased any services yet.</h5>
 {% endif %}
 </div>
 

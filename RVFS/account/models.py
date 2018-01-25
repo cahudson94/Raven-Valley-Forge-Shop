@@ -5,6 +5,15 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 
 
+class Order(models.Model):
+    """Order detail model."""
+
+    number = models.IntegerField()
+    shipped = models.BooleanField(default=False)
+    tracking = models.CharField(max_length=35)
+    order_content = models.TextField()
+
+
 class Account(models.Model):
     """An account for users of RVFS app."""
 
@@ -13,16 +22,19 @@ class Account(models.Model):
     first_name = models.CharField(max_length=25, default='')
     last_name = models.CharField(max_length=25, default='')
     birth_day = models.DateField(auto_now_add=True)
-    cart = []
+    cart = models.TextField(default='', blank=True)
     cart_total = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    orders = []
-    purchase_history = []
-    service_history = []
-    saved_products = []
-    saved_services = []
+    orders = models.ForeignKey(Order, on_delete=models.CASCADE,
+                               related_name='buyer', blank=True, null=True)
+    purchase_history = models.TextField(default='', blank=True)
+    service_history = models.TextField(default='', blank=True)
+    saved_products = models.TextField(default='', blank=True)
+    saved_services = models.TextField(default='', blank=True)
     comments = models.TextField(default='')
     birthday_set = models.BooleanField(default=False)
     registration_complete = models.BooleanField(default=False)
+    has_address_delete = models.BooleanField(default=False)
+    main_address = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         """Print for admin."""
@@ -32,27 +44,19 @@ class Account(models.Model):
 class ShippingInfo(models.Model):
     """Address model for accounts."""
 
+    name = models.CharField("Location Name", max_length=50)
     address1 = models.CharField("Address line 1", max_length=250)
     address2 = models.CharField("Address line 2", max_length=250)
     zip_code = models.CharField("ZIP / Postal code", max_length=12)
     city = models.CharField("City", max_length=25)
     state = models.CharField("State", max_length=25)
-    resident = models.ForeignKey(User, on_delete=models.CASCADE,
-                                 related_name='addresses', blank=True, null=True)
+    resident = models.ForeignKey(Account, on_delete=models.CASCADE,
+                                 blank=True, null=True)
+    main = models.BooleanField(default=False)
 
     def __str__(self):
         """Print for admin."""
         return str(self.resident)
-
-
-# @receiver(post_save, sender=Account)
-# def set_birthday_to_calander(sender, **kwargs):
-#     """Add user birthday to calander."""
-#     if kwargs['created']:
-#         new_account = Account(
-#             user=kwargs['instance']
-#         )
-#         new_account.save()
 
 
 @receiver(post_save, sender=User)

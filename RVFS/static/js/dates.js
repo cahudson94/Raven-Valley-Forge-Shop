@@ -10,8 +10,12 @@ var hourSelect = document.querySelector('#hour');
 var minuteSelect = document.querySelector('#minute');
 
 // hide fallback initially
-fallbackPicker.style.display = 'none';
-fallbackLabel.style.display = 'none';
+if (fallbackPicker) {
+  fallbackPicker.style.display = 'none';
+}
+if (fallbackLabel) {
+  fallbackLabel.style.display = 'none';
+}
 
 // test whether a new datetime-local input falls back to a text input or not
 var test = document.createElement('input');
@@ -19,13 +23,21 @@ test.type = 'datetime-local';
 // if it does, run the code inside the if() {} block
 if(test.type === 'text') {
   // hide the native picker and show the fallback
-  nativePicker.style.display = 'none';
-  fallbackPicker.style.display = 'block';
-  fallbackLabel.style.display = 'block';
+  if (nativePicker) {
+    nativePicker.style.display = 'none';
+  }
+  if (fallbackPicker) {
+    fallbackPicker.style.display = 'block';
+  }
+  if (fallbackLabel) {
+    fallbackLabel.style.display = 'block';
+  }
 
   // populate the days and years dynamically
   // (the months are always the same, therefore hardcoded)
-  populateDays(monthSelect.value);
+  if (monthSelect) {
+    populateDays(monthSelect.value);
+  }
   populateYears();
   populateHours();
   populateMinutes();
@@ -53,7 +65,7 @@ function populateDays(month) {
   }
 
   // inject the right number of new <option> elements into the day <select>
-  for(i = 1; i <= dayNum; i++) {
+  for(var i = 1; i <= dayNum; i++) {
     var option = document.createElement('option');
     option.textContent = i;
     daySelect.appendChild(option);
@@ -69,15 +81,15 @@ function populateDays(month) {
     // you chose a month with less total days in it (e.g. February),
     // this part of the code ensures that the highest day available
     // is selected, rather than showing a blank daySelect
-    if(daySelect.value === "") {
+    if(daySelect.value === '') {
       daySelect.value = previousDay - 1;
     }
 
-    if(daySelect.value === "") {
+    if(daySelect.value === '') {
       daySelect.value = previousDay - 2;
     }
 
-    if(daySelect.value === "") {
+    if(daySelect.value === '') {
       daySelect.value = previousDay - 3;
     }
   }
@@ -92,7 +104,9 @@ function populateYears() {
   for(var i = 0; i <= 100; i++) {
     var option = document.createElement('option');
     option.textContent = year-i;
-    yearSelect.appendChild(option);
+    if (yearSelect) {
+      yearSelect.appendChild(option);
+    }
   }
 }
 
@@ -100,8 +114,10 @@ function populateHours() {
   // populate the hours <select> with the 24 hours of the day
   for(var i = 0; i <= 23; i++) {
     var option = document.createElement('option');
-    option.textContent = (i < 10) ? ("0" + i) : i;
-    hourSelect.appendChild(option);
+    option.textContent = (i < 10) ? ('0' + i) : i;
+    if (hourSelect) {
+      hourSelect.appendChild(option);
+    }
   }
 }
 
@@ -109,19 +125,25 @@ function populateMinutes() {
   // populate the minutes <select> with the 60 hours of each minute
   for(var i = 0; i <= 59; i++) {
     var option = document.createElement('option');
-    option.textContent = (i < 10) ? ("0" + i) : i;
-    minuteSelect.appendChild(option);
+    option.textContent = (i < 10) ? ('0' + i) : i;
+    if (minuteSelect) {
+      minuteSelect.appendChild(option);
+    }
   }
 }
 
 // when the month or year <select> values are changed, rerun populateDays()
 // in case the change affected the number of available days
-yearSelect.onchange = function() {
-  populateDays(monthSelect.value);
+if (yearSelect) {
+  yearSelect.onchange = function() {
+    populateDays(monthSelect.value);
+  };
 }
 
-monthSelect.onchange = function() {
-  populateDays(monthSelect.value);
+if (monthSelect) {
+  monthSelect.onchange = function() {
+    populateDays(monthSelect.value);
+  };
 }
 
 //preserve day selection
@@ -129,6 +151,8 @@ var previousDay;
 
 // update what day has been set to previously
 // see end of populateDays() for usage
-daySelect.onchange = function() {
-  previousDay = daySelect.value;
+if (daySelect) {
+  daySelect.onchange = function() {
+    previousDay = daySelect.value;
+  };
 }

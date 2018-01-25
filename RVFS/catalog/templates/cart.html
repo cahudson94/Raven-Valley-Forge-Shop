@@ -4,7 +4,7 @@
 {% block title %}Cart{% endblock %}
 
 {% block body %}
-<h3>Cart:</h3>
+<h3 class="text-standard">Cart:</h3>
 <div class="row acc-row">
 {% if account.cart %}
     <ul class="row">
@@ -18,12 +18,12 @@
                     <div class="col">
                         {% for field, value in item.items %}
                             {% if field == 'item' %}
-                            <h4>{{ value.name }}</h4>
+                            <h4 class="text-standard">{{ value.name }}</h4>
                             {% else %}
-                            <h5>{{ field }}: {{ value }}</h5>
+                            <h5 class="text-standard">{{ field }}: {{ value }}</h5>
                             {% endif %}
                         {% endfor %}
-                        <h5>${{ item.item.price }} per unit</h5>
+                        <h5 class="text-standard">${{ item.item.price }} per unit</h5>
                     </div>
                 </div></a>
             </li>
@@ -34,12 +34,12 @@
                     <div class="col">
                         {% for field, value in item.items %}
                             {% if field == 'item' %}
-                            <h4>{{ value.name }}</h4>
+                            <h4 class="text-standard">{{ value.name }}</h4>
                             {% else %}
-                            <h5>{{ field }}: {{ value }}</h5>
+                            <h5 class="text-standard">{{ field }}: {{ value }}</h5>
                             {% endif %}
                         {% endfor %}
-                        <h5>${{ item.item.price }} per unit</h5>
+                        <h5 class="text-standard">${{ item.item.price }} per unit</h5>
                     </div>
                 </div></a>
             </li>
@@ -47,6 +47,6 @@
     {% endfor %}
     </ul>
 {% else %}
-<h5 class="w-100">Your cart is empty.</h5>
+<h5 class="w-100 text-standard">Your cart is empty.</h5>
 {% endif %}
 {% endblock %}

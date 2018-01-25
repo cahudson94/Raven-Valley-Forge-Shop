@@ -8,10 +8,10 @@ from catalog.models import Product, Service
 from catalog.forms import ProductForm, ServiceForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect
-from account.views import get_galleries
-from RVFS.google_calander import get_calendar
+from account.views import get_galleries, cart_count
 from datetime import datetime
 from decimal import Decimal
+import json
 
 
 class AllItemsView(ListView):
@@ -23,6 +23,7 @@ class AllItemsView(ListView):
         """Add context for active page."""
         context = super(AllItemsView, self).get_context_data(**kwargs)
         context['services'] = Service.objects.all()
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'list'
         context['galleries'] = get_galleries()
         return context
@@ -51,6 +52,7 @@ class AllProductsView(ListView):
             context['tags'] = paginator.page(1)
         except EmptyPage:
             context['tags'] = paginator.page(paginator.num_pages)
+        context['cart_count'] = cart_count(self.request.user)
         context['items'] = {tag: [item for item in items if tag in item.tags.names()] for tag in context['tags']}
         context['nbar'] = 'prods'
         context['galleries'] = get_galleries()
@@ -80,6 +82,7 @@ class AllServicesView(ListView):
             context['tags'] = paginator.page(1)
         except EmptyPage:
             context['tags'] = paginator.page(paginator.num_pages)
+        context['cart_count'] = cart_count(self.request.user)
         context['items'] = {tag: [item for item in items if tag in item.tags.names()] for tag in context['tags']}
         context['nbar'] = 'servs'
         context['galleries'] = get_galleries()
@@ -110,6 +113,7 @@ class TagProductsView(ListView):
             context['items'] = paginator.page(1)
         except EmptyPage:
             context['items'] = paginator.page(paginator.num_pages)
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'prods'
         context['tags'] = sorted(set([tag for item in context['items'] for tag in item.tags.names()]))
         context['galleries'] = get_galleries()
@@ -140,6 +144,7 @@ class TagServicesView(ListView):
             context['items'] = paginator.page(1)
         except EmptyPage:
             context['items'] = paginator.page(paginator.num_pages)
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'servs'
         context['tags'] = sorted(set([tag for item in context['items'] for tag in item.tags.names()]))
         context['galleries'] = get_galleries()
@@ -151,6 +156,7 @@ class SingleProductView(DetailView):
 
     template_name = 'product.html'
     model = Product
+    success_url = reverse_lazy('prods')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -163,6 +169,7 @@ class SingleProductView(DetailView):
             context['object'].color = context['object'].color.split(', ')
         if context['object'].extras:
             context['object'].extras = context['object'].extras.split(', ')
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'prods'
         context['galleries'] = get_galleries()
         return context
@@ -172,22 +179,27 @@ class SingleProductView(DetailView):
         data = request.POST
         account = Account.objects.get(user=request.user)
         if 'add' in data.keys():
-            success_url = reverse_lazy('prods')
             fields = []
             for field in data:
                 if field != 'csrfmiddlewaretoken' and field != 'add':
                     fields.append(field)
-            cart_item = {'item': self.get_object()}
+            cart_item = {'item_id': self.get_object().id, 'type': 'prod'}
             for field in fields:
                 cart_item[field] = data[field]
-            account.cart.append(cart_item)
+            cart_item = json.dumps(cart_item)
+            if account.cart:
+                account.cart += '|' + cart_item
+            else:
+                account.cart += cart_item
             account.cart_total += Decimal(self.get_object().price)
-            account.save()
         else:
-            success_url = reverse_lazy('account')
-            account.saved_products.append(self.get_object())
-            account.save()
-        return HttpResponseRedirect(success_url)
+            item = json.dumps({'item_id': self.get_object().id, 'type': 'prod'})
+            if account.saved_products:
+                account.saved_products += '|' + item
+            else:
+                account.saved_products += item
+        account.save()
+        return HttpResponseRedirect(self.success_url)
 
 
 class SingleServiceView(DetailView):
@@ -195,16 +207,16 @@ class SingleServiceView(DetailView):
 
     template_name = 'service.html'
     model = Service
+    success_url = reverse_lazy('servs')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(SingleServiceView, self).get_context_data(**kwargs)
         if context['object'].extras:
             context['object'].extras = context['object'].extras.split(', ')
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'servs'
         context['galleries'] = get_galleries()
-        # context['calendar'] = get_calendar()
-        # import pdb; pdb.set_trace()
         return context
 
     def post(self, request, *args, **kwargs):
@@ -212,22 +224,29 @@ class SingleServiceView(DetailView):
         data = request.POST
         account = Account.objects.get(user=request.user)
         if 'add' in data.keys():
-            success_url = reverse_lazy('prods')
             fields = []
             for field in data:
                 if field != 'csrfmiddlewaretoken' and field != 'add':
                     fields.append(field)
-            cart_item = {'item': self.get_object()}
+            cart_item = {'item_id': self.get_object().id, 'type': 'serv'}
             for field in fields:
                 cart_item[field] = data[field]
+            cart_item = json.dumps(cart_item)
+            if account.cart:
+                account.cart += '|' + cart_item
+            else:
+                account.cart += cart_item
             account.cart.append(cart_item)
             account.cart_total += Decimal(self.get_object().price)
             account.save()
         else:
-            success_url = reverse_lazy('account')
-            account.saved_products.append(self.get_object())
+            item = json.dumps({'item_id': self.get_object().id, 'type': 'serv'})
+            if account.saved_services:
+                account.saved_services += '|' + item
+            else:
+                account.saved_services += item
             account.save()
-        return HttpResponseRedirect(success_url)
+        return HttpResponseRedirect(self.success_url)
 
 
 class CreateProductView(PermissionRequiredMixin, CreateView):
@@ -236,12 +255,13 @@ class CreateProductView(PermissionRequiredMixin, CreateView):
     permission_required = 'user.is_staff'
     template_name = 'create_product.html'
     model = Product
-    success_url = reverse_lazy('home')
+    success_url = reverse_lazy('prods')
     form_class = ProductForm
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CreateView, self).get_context_data(**kwargs)
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'add_prod'
         context['galleries'] = get_galleries()
         return context
@@ -260,21 +280,22 @@ class EditProductView(PermissionRequiredMixin, UpdateView):
     template_name = 'edit_product.html'
     model = Product
     form_class = ProductForm
+    success_url = reverse_lazy('prods')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(EditProductView, self).get_context_data(**kwargs)
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'prods'
         context['galleries'] = get_galleries()
         return context
 
-    # def form_valid(self, form):
-    #     """Update date published."""
-    #     form.save()
-    #     import pdb; pdb.set_trace()
-    #     if form['published'].value() == 'PB':
-    #         form['date_published'] = datetime.now()
-    #     return
+    def form_valid(self, form):
+        """Set date published if public."""
+        if not form.instance.date_published:
+            if form.instance.published == 'PB':
+                form.instance.date_published = datetime.now()
+        return super(EditProductView, self).form_valid(form)
 
 
 class CreateServiceView(PermissionRequiredMixin, CreateView):
@@ -283,12 +304,13 @@ class CreateServiceView(PermissionRequiredMixin, CreateView):
     permission_required = 'user.is_staff'
     template_name = 'create_service.html'
     model = Service
-    success_url = reverse_lazy('home')
+    success_url = reverse_lazy('servs')
     form_class = ServiceForm
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CreateServiceView, self).get_context_data(**kwargs)
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'add_serv'
         context['galleries'] = get_galleries()
         return context
@@ -307,13 +329,22 @@ class EditServiceView(PermissionRequiredMixin, UpdateView):
     template_name = 'edit_service.html'
     model = Service
     form_class = ServiceForm
+    success_url = reverse_lazy('servs')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(EditServiceView, self).get_context_data(**kwargs)
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'servs'
         context['galleries'] = get_galleries()
         return context
+
+    def form_valid(self, form):
+        """Set date published if public."""
+        if not form.instance.date_published:
+            if form.instance.published == 'PB':
+                form.instance.date_published = datetime.now()
+        return super(EditServiceView, self).form_valid(form)
 
 
 class CartView(TemplateView):
@@ -324,6 +355,7 @@ class CartView(TemplateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CartView, self).get_context_data(**kwargs)
+        context['cart_count'] = cart_count(self.request.user)
         context['nbar'] = 'cart'
         context['galleries'] = get_galleries()
         return context

@@ -3,27 +3,27 @@
 {% block title %}Add a Service{% endblock %}
 
 {% block body %}
-<h2>Create a Service</h2>
-    <form class="serv-form" enctype="multipart/form-data" method="post">
+<h2 class="text-standard">Create a Service</h2>
+    <form class="item-form" enctype="multipart/form-data" method="post">
         {% csrf_token %}
         <div class="row">
         {% for field in form %}
             {% if forloop.counter == 1 %}
             <div class="col">
-            <h4>{{ field.label }}:</h4>
-            <p>{{ field }}</p>
-            {% elif forloop.counter == 6 %}
+            <h4 class="text-standard">{{ field.label }}:</h4>
+            <p class="textarea-form">{{ field }}</p>
+            {% elif forloop.counter == 11 %}
             </div>
             <div class="col">
-            <h4>{{ field.label }}:</h4>
-            <p>{{ field }}</p>
+            <h4 class="text-standard">{{ field.label }}:</h4>
+            <p class="textarea-form">{{ field }}</p>
             {% else %}
-            <h4>{{ field.label }}:</h4>
-            <p>{{ field }}</p>
+            <h4 class="text-standard">{{ field.label }}:</h4>
+            <p class="textarea-form">{{ field }}</p>
             {% endif %}
         {% endfor %}
         </div>
         </div>
-        <input class="button" type="submit" value="Create">
+        <input class="button text-standard" type="submit" value="Create">
     </form>
 {% endblock %}

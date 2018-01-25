@@ -14,7 +14,7 @@ Services
 {% block body %}
 <div class="row">
     <div class="col-1 side-bar">
-        <h5>{% if nbar == 'prods' %}
+        <h5 class="text-standard">{% if nbar == 'prods' %}
         Product
         {% else %}
         Service
@@ -24,28 +24,26 @@ Services
         {% for tag in all_tags %}
             {% if forloop.counter < 10 %}
                 {% if nbar == 'prods' %}
-                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories text-standard">{{ tag }}</li></a>
                 {% else %}
                 <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
                 {% endif %}
-            {% endif %}
-            {% if forloop.counter == 10 %}
+            {% elif forloop.counter == 10 %}
                 <button class="side-bar-more" type="button" data-toggle="collapse" data-target=".more-catagories" aria-controls=".more-catagories" aria-expanded="false" aria-label="Toggle navigation">
-                    <span>more...</span>
+                    <span class="text-standard">more...</span>
                 </button>
-            {% endif %}
-            {% if forloop.counter > 10 %}
+            {% else %}
                 {% if nbar == 'prods' %}
-                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories more-catagories collapse">{{ tag }}</li></a>
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories more-catagories collapse text-standard">{{ tag }}</li></a>
                 {% else %}
-                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories more-catagories collapse">{{ tag }}</li></a>
+                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories more-catagories collapse text-standard">{{ tag }}</li></a>
                 {% endif %}
             {% endif %}
         {% endfor %}
         </ul>
     </div>
     <div class="col catalog">
-    <h2 class="catalog-tag-head">
+    <h2 class="catalog-tag-head text-standard">
     {% if nbar == 'prods' %}
     Products
     {% else %}
@@ -58,14 +56,14 @@ Services
             <ul class="pagination justify-content-center">
                 {% if items.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ items.previous_page_number }}">Previous</a>
+                    <a class="page-link text-standard" href="?page={{ items.previous_page_number }}">Previous</a>
                 {% endif %}
                 </li>
-                <li class="page-item active">
+                <li class="page-item active text-standard">
                     {{ items.number }} of {{ items.paginator.num_pages }}
                 </li>
                 {% if items.has_next %}
-                <li class="page-item">
+                <li class="page-item text-standard">
                     <a class="page-link" href="?page={{ items.next_page_number }}">Next</a>
                 {% endif %}
                 </li>
@@ -82,8 +80,8 @@ Services
             {% thumbnail item.image "150x150" crop="center" as pic %}
                 <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
                 {% endthumbnail %}
-                <h4 class="card-title">{{ item.name }}</h4>
-                <p class="card-text">${{ item.price }}</p>
+                <h4 class="card-title text-standard">{{ item.name }}</h4>
+                <p class="card-text text-standard">${{ item.price }}</p>
             </li></a>
         {% endfor %}
         </ul>
@@ -92,14 +90,14 @@ Services
             <ul class="pagination justify-content-center">
                 {% if items.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ items.previous_page_number }}">Previous</a>
+                    <a class="page-link text-standard" href="?page={{ items.previous_page_number }}">Previous</a>
                 {% endif %}
                 </li>
-                <li class="page-item active">
+                <li class="page-item active text-standard">
                     {{ items.number }} of {{ items.paginator.num_pages }}
                 </li>
                 {% if items.has_next %}
-                <li class="page-item">
+                <li class="page-item text-standard">
                     <a class="page-link" href="?page={{ items.next_page_number }}">Next</a>
                 {% endif %}
                 </li>

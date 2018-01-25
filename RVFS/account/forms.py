@@ -1,6 +1,6 @@
 """."""
 from django import forms
-from account.models import Account
+from account.models import Account, ShippingInfo
 import datetime
 
 STATES = ([
@@ -63,10 +63,10 @@ YEARS = YEARS[::-1]
 
 
 class InfoRegForm(forms.ModelForm):
-    """."""
+    """Extra registration info form."""
 
-    user_name = forms.CharField(max_length=35)
     birth_date = forms.CharField(widget=forms.SelectDateWidget(years=YEARS))
+    location_name = forms.CharField(max_length=35, label='Name for this Address')
     street = forms.CharField(max_length=90, label='Address Line 1')
     adr_extra = forms.CharField(required=False, max_length=90, label='Address Line 2')
     zip_code = forms.CharField(max_length=10, label='Zip Code')
@@ -78,3 +78,16 @@ class InfoRegForm(forms.ModelForm):
 
         model = Account
         fields = ['first_name', 'last_name', 'pic']
+
+
+class AddAddressForm(forms.ModelForm):
+    """Add extra addresses form."""
+
+    state = forms.ChoiceField(required=True, choices=STATES, label='State')
+    address2 = forms.CharField(required=False, max_length=90, label='Address Line 2')
+
+    class Meta():
+        """."""
+
+        model = ShippingInfo
+        exclude = ['resident', 'address2', 'state']

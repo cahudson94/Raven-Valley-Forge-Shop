@@ -1,0 +1,39 @@
+{% extends 'rvfsite/base.html' %}
+
+{% block title %}Edit Your Account{% endblock %}
+
+{% block body %}
+    <form enctype="multipart/form-data" class="prod-form" method="post">
+        {% csrf_token %}
+        <div class="row acc-form">
+            <div class="col">
+            <h2 class="text-standard">Shipping Info:</h2>
+            <h4 class="text-standard">Address Line 1:</h4>
+            <input type="text" name="address1" value="{{ address.address1 }}"></input>
+            {% if address.address2 %}
+            <h4 class="text-standard">Address Line 2:</h4>
+            <input type="text" name="address2" value="{{ address.address2 }}"></input>
+            {% endif %}
+            <h4 class="text-standard">Zip Code:</h4>
+            <input type="text" name="zip_code" value="{{ address.zip_code }}"></input>
+            <h4 class="text-standard">City:</h4>
+            <input type="text" name="city" value="{{ address.city }}"></input>
+            <h4 class="text-standard">State:</h4>
+            <input type="text" name="state" value="{{ address.state }}"></input>
+            </div>
+            <div class="col">
+            <h2 class="text-standard">Account Info:</h2>
+            <h4 class="text-standard">Profile Picture:</h4>
+            <img src="{{ account.pic.url }}" width="35%">
+            <input type="file" name="pic" value="{{ account.pic }}"></input>
+            <h4 class="text-standard">First Name:</h4>
+            <input type="text" name="first_name" value="{{ account.first_name }}"></input>
+            <h4 class="text-standard">Last Name:</h4>
+            <input type="text" name="last_name" value="{{ account.last_name }}"></input>
+            <h4 class="text-standard">Birth Date:</h4>
+            <input type="text" name="birthday" value="{{ account.birth_day }}"></input>
+            </div>
+        </div>
+    <input class="button text-standard" type="submit" value="Update">
+    </form>
+{% endblock %}
