@@ -61,9 +61,6 @@ class Product(models.Model):
         blank=True)
     is_knife = models.BooleanField(default=False)
     description = models.TextField(default='')
-    shipping_info = models.TextField(
-        max_length=180,
-        blank=True)
     color = models.TextField(
         max_length=500,
         blank=True)

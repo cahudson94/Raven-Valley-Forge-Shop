@@ -75,7 +75,15 @@ Account
                                 <h5 class="text-standard">{{ field }}: {{ value }}</h5>
                                 {% endif %}
                             {% endfor %}
-                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                            {% if item.type == 'prod' %}
+                                <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                            {% else %}
+                                {% if item.item.price_range %}
+                                    <h5 class="text-standard">${{ item.item.price_range }}</h5>
+                                {% else %}
+                                    <h5 class="text-standard">${{ item.item.commission_fee }}</h5>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                 </a>
@@ -97,7 +105,15 @@ Account
                                 <h5 class="text-standard">{{ field }}: {{ value }}</h5>
                                 {% endif %}
                             {% endfor %}
-                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                            {% if item.type == 'prod' %}
+                                <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                            {% else %}
+                                {% if item.item.price_range %}
+                                    <h5 class="text-standard">${{ item.item.price_range }}</h5>
+                                {% else %}
+                                    <h5 class="text-standard">${{ item.item.commission_fee }}</h5>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                 </a>

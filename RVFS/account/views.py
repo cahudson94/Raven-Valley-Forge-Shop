@@ -103,7 +103,7 @@ class AccountView(LoginRequiredMixin, ListView):
             context['prod_history'] = unpack(context['account'].purchase_history)
         if context['account'].service_history:
             context['serv_history'] = unpack(context['account'].service_history)
-        context['item_fields'] = ['quantity', 'color', 'length', 'diameter']
+        context['item_fields'] = ['quantity', 'color', 'length', 'diameter', 'extras']
         context['cart_count'] = cart_count(self.request.user)
         context['galleries'] = get_galleries()
         context['nbar'] = 'account'

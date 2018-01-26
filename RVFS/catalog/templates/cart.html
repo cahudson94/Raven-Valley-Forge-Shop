@@ -1,4 +1,5 @@
 {% extends 'rvfsite/base.html' %}
+{% load thumbnail %}
 {% load mathfilters %}
 
 {% block title %}Cart{% endblock %}
@@ -7,41 +8,53 @@
 <h3 class="text-standard">Cart:</h3>
 <div class="row acc-row">
 {% if account.cart %}
-    <ul class="row">
-    {% for item in account.cart %}
-        {% if forloop.counter|mod:3 == 0 %}
+    <ul class="row acc-list-row">
+    {% for item in cart %}
+        {% if forloop.counter|mod:4 == 0 %}
         </ul>
-        <ul class="w-100">
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        {% for field, value in item.items %}
-                            {% if field == 'item' %}
-                            <h4 class="text-standard">{{ value.name }}</h4>
-                            {% else %}
-                            <h5 class="text-standard">{{ field }}: {{ value }}</h5>
-                            {% endif %}
-                        {% endfor %}
-                        <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+        <ul class="row acc-list-row">
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field == 'item' %}
+                                <h4 class="text-standard">{{ value }}</h4>
+                                {% elif field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                {% endif %}
+                            {% endfor %}
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% else %}
-            <li class="col account-list">
-                <a class="acc-item-link" href="{% url 'prod' item.id %}"><div class="row">
-                    <div class="col"><img src="{{ item.item.image.url }}" width="100" height="100"></div>
-                    <div class="col">
-                        {% for field, value in item.items %}
-                            {% if field == 'item' %}
-                            <h4 class="text-standard">{{ value.name }}</h4>
-                            {% else %}
-                            <h5 class="text-standard">{{ field }}: {{ value }}</h5>
-                            {% endif %}
-                        {% endfor %}
-                        <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field == 'item' %}
+                                <h4 class="text-standard">{{ value.name }}</h4>
+                                {% elif field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                {% endif %}
+                            {% endfor %}
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
                     </div>
-                </div></a>
+                </a>
             </li>
         {% endif %}
     {% endfor %}
@@ -49,4 +62,18 @@
 {% else %}
 <h5 class="w-100 text-standard">Your cart is empty.</h5>
 {% endif %}
+</div>
+<div class="w-100">
+    <h3 class="text-right text-standard">Total: $
+        {% if account.cart_total %}
+            {% if account.cart_total.endswith == 0 %}
+                {{ account.cart_total }}0
+            {% else %}
+                {{ account.cart_total }}
+            {% endif %}
+        {% else %}
+        0
+        {% endif %}
+    </h3>
+</div>
 {% endblock %}

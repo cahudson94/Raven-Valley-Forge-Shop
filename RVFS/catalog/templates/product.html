@@ -86,7 +86,7 @@
                 <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">
             {% endif %}
         {% elif product.stock == 0 %}
-            <p>Out of Stock</p>
+            <input class="btn btn-secondary text-standard" type="submit" value="Out of Stock" disabled>
         {% else %}
             {% if product.is_knife %}
                 {% if user.is_authenticated %}
@@ -99,6 +99,16 @@
             {% endif %}
         {% endif %}
         </div>
+    </div>
+    <div class="w-100">
+        {% if not user.is_authenticated %}
+            {% if product.is_knife %}
+                <p class="text-standard serv-p-font">This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+            {% endif %}
+        {% endif %}
+        {% if product.warning %}
+        <p class="text-standard serv-p-font">* {{ product.warning }}</p>
+        {% endif %}
     </div>
 </form>
 {% endblock %}

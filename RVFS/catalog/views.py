@@ -3,12 +3,12 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views.generic import ListView, DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
-from account.models import Account
+from account.models import Account, ShippingInfo
 from catalog.models import Product, Service
 from catalog.forms import ProductForm, ServiceForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect
-from account.views import get_galleries, cart_count
+from account.views import get_galleries, cart_count, unpack
 from datetime import datetime
 from decimal import Decimal
 import json
@@ -203,11 +203,10 @@ class SingleProductView(DetailView):
 
 
 class SingleServiceView(DetailView):
-    """Detail view for a product."""
+    """Detail view for a service."""
 
     template_name = 'service.html'
     model = Service
-    success_url = reverse_lazy('servs')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -224,6 +223,40 @@ class SingleServiceView(DetailView):
         data = request.POST
         account = Account.objects.get(user=request.user)
         if 'add' in data.keys():
+            success_url = reverse_lazy('serv_info', kwargs={'pk': self.get_object().id})
+        else:
+            success_url = reverse_lazy('servs')
+            item = json.dumps({'item_id': self.get_object().id, 'type': 'serv'})
+            if account.saved_services:
+                account.saved_services += '|' + item
+            else:
+                account.saved_services += item
+            account.save()
+        return HttpResponseRedirect(success_url)
+
+
+class ServiceInfoView(DetailView):
+    """View for entering details to purchase a service."""
+
+    template_name = 'service_info.html'
+    model = Service
+    success_url = reverse_lazy('servs')
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(ServiceInfoView, self).get_context_data(**kwargs)
+        if context['object'].extras:
+            context['object'].extras = context['object'].extras.split(', ')
+        context['cart_count'] = cart_count(self.request.user)
+        context['nbar'] = 'servs'
+        context['galleries'] = get_galleries()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Add item to appropriate list."""
+        data = request.POST, request.FILES
+        account = Account.objects.get(user=request.user)
+        if 'add' in data.keys():
             fields = []
             for field in data:
                 if field != 'csrfmiddlewaretoken' and field != 'add':
@@ -238,13 +271,6 @@ class SingleServiceView(DetailView):
                 account.cart += cart_item
             account.cart.append(cart_item)
             account.cart_total += Decimal(self.get_object().price)
-            account.save()
-        else:
-            item = json.dumps({'item_id': self.get_object().id, 'type': 'serv'})
-            if account.saved_services:
-                account.saved_services += '|' + item
-            else:
-                account.saved_services += item
             account.save()
         return HttpResponseRedirect(self.success_url)
 
@@ -355,7 +381,19 @@ class CartView(TemplateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CartView, self).get_context_data(**kwargs)
+        context['account'] = context['view'].request.user.account
+        context['address'] = ShippingInfo.objects.get(pk=context['account'].main_address)
+        if context['account'].cart:
+            cart = unpack(context['account'].cart)
+        context['prods'] = []
+        context['servs'] = []
+        for item in cart:
+            if item['type'] == 'prod':
+                context['prods'].append(item)
+            else:
+                context['servs'].append(item)
+        context['item_fields'] = ['quantity', 'color', 'length', 'diameter']
         context['cart_count'] = cart_count(self.request.user)
-        context['nbar'] = 'cart'
         context['galleries'] = get_galleries()
+        context['nbar'] = 'cart'
         return context
