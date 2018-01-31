@@ -13,7 +13,7 @@
     <div class="row item-container">
         <div class="col">
             {% if service.commission_fee %}
-            <h4 class="text-standard">Commission Fee: ${{ service.commission_fee }}</h4>
+            <h4 class="text-standard">Commission Fee: ${{ service.commission_fee }} *</h4>
             {% endif %}
             {% if service.price_range %}
             <h4 class="text-standard">Price Range: ${{ service.price_range }}</h4>
@@ -86,7 +86,7 @@
                   </span>
                 </div>
             </div>
-            <p class="text-standard serv-p-font">See calendar for openings, you will recieve an email confirming this time or to adjust if the time you select is unavailable.</p>
+            <p class="text-standard serv-p-font">See calendar for openings, you will recieve an email confirming this time or to adjust if the time you select is unavailable. *</p>
             {% if service.requires_address %}
             <p class="text-standard serv-section-font">Please provide an Address for this service:</p>
             <input class="text-standard" type="checkbox" name="use_acc" value="Use saved address">Use saved address<br>
@@ -138,17 +138,17 @@
                 <p class="text-standard serv-p-font">* This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
             {% endif %}
         {% endif %}
+        {% if service.warning %}
+        <p class="text-standard serv-p-font">* Warnings: {{ service.warning }}</p>
+        {% endif %}
+        {% if service.limitations %}
+        <p class="text-standard serv-p-font">* Limitations: {{ service.limitations }}</p>
+        {% endif %}
         {% if service.requires_address %}
         <p class="text-standard serv-p-font">* Services only available within 50 miles of shop.</p>
         {% endif %}
         {% if service.commission_fee %}
         <p class="text-standard serv-p-font">* Commission fee is a one time appointment fee, for on site consultation.</p>
-        {% endif %}
-        {% if service.warning %}
-        <p class="text-standard serv-p-font">* {{ service.warning }}</p>
-        {% endif %}
-        {% if service.limitations %}
-        <p class="text-standard serv-p-font">* Limitations: {{ service.limitations }}</p>
         {% endif %}
     </div>
 

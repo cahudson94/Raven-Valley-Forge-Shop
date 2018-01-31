@@ -48,7 +48,7 @@ class HomeView(TemplateView):
         slide_files = drive_files('17fqQwUu1dGPOUBirLDo2O0tBg_TUXMlZ')
         rand_pics = random.sample(slide_files, min(5, len(slide_files)))
         context = super(TemplateView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['random_pics'] = rand_pics
         context['galleries'] = get_galleries()
         context['nbar'] = 'home'
@@ -76,7 +76,7 @@ class AboutView(TemplateView):
         except ObjectDoesNotExist:
             pass
         context['isis'] = os.path.join(settings.STATIC_URL, 'isis.jpg')
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'about'
         return context
@@ -104,7 +104,7 @@ class AccountView(LoginRequiredMixin, ListView):
         if context['account'].service_history:
             context['serv_history'] = unpack(context['account'].service_history)
         context['item_fields'] = ['quantity', 'color', 'length', 'diameter', 'extras']
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'account'
         return context
@@ -121,7 +121,7 @@ class AddAddressView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(AddAddressView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'account'
         return context
@@ -157,7 +157,7 @@ class AddressListView(LoginRequiredMixin, ListView):
         account = context['view'].request.user.account
         context['account'] = account
         context['addresses'] = ShippingInfo.objects.filter(resident=account)
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'account'
         return context
@@ -193,7 +193,7 @@ class DeleteAddress(LoginRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(DeleteAddress, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'account'
         return context
@@ -221,7 +221,7 @@ class EditAccountView(LoginRequiredMixin, DetailView):
         context = super(EditAccountView, self).get_context_data(**kwargs)
         account = context['view'].request.user.account
         context['address'] = ShippingInfo.objects.get(pk=account.main_address)
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'account'
         return context
@@ -265,7 +265,7 @@ class CustomRegView(RegistrationView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(RegistrationView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'register'
         return context
@@ -277,7 +277,7 @@ class CustomLogView(LoginView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(LoginView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'login'
         return context
@@ -305,7 +305,7 @@ class InfoFormView(UpdateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(InfoFormView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'login'
         return context
@@ -352,7 +352,7 @@ class GalleryView(TemplateView):
         """Add context for active page."""
         context = super(GalleryView, self).get_context_data(**kwargs)
         title = context['slug'].replace('_', ' ').title()
-        context['cart_count'] = cart_count(self.request.user)
+        context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['tab'] = title
         context['gallery'] = title
@@ -394,13 +394,18 @@ def validate_bday(date):
     return year + '-' + month + '-' + day
 
 
-def cart_count(user):
+def cart_count(request):
     """Get current count of items in cart."""
-    if user.is_authenticated:
-        cart = Account.objects.get(user=user).cart
+    if not request.user.is_anonymous:
+        cart = Account.objects.get(user=request.user).cart
         if cart:
             return len(cart.split('|'))
-    return 0
+        return 0
+    else:
+        if 'account' in request.session.keys():
+            if request.session['account']['cart']:
+                return len(request.session['account']['cart'].split('|'))
+        return 0
 
 
 def unpack(packed_list):
@@ -418,3 +423,21 @@ def unpack(packed_list):
             item['item'] = Service.objects.get(pk=item['item_id'])
             item_list.append(item)
     return item_list
+
+
+def split_cart(packed_list):
+    """Split cart into servs and products."""
+    items = {}
+    unpacked = packed_list.split('|')
+    for item in unpacked:
+        if json.loads(item)['type'] == 'prod':
+            if 'prods' in items.keys():
+                items['prods'] += '|' + item
+            else:
+                items['prods'] = item
+        if json.loads(item)['type'] == 'serv':
+            if 'servs' in items.keys():
+                items['servs'] += '|' + item
+            else:
+                items['servs'] = item
+    return items

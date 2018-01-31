@@ -5,15 +5,6 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 
 
-class Order(models.Model):
-    """Order detail model."""
-
-    number = models.IntegerField()
-    shipped = models.BooleanField(default=False)
-    tracking = models.CharField(max_length=35)
-    order_content = models.TextField()
-
-
 class Account(models.Model):
     """An account for users of RVFS app."""
 
@@ -24,8 +15,6 @@ class Account(models.Model):
     birth_day = models.DateField(auto_now_add=True)
     cart = models.TextField(default='', blank=True)
     cart_total = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    orders = models.ForeignKey(Order, on_delete=models.CASCADE,
-                               related_name='buyer', blank=True, null=True)
     purchase_history = models.TextField(default='', blank=True)
     service_history = models.TextField(default='', blank=True)
     saved_products = models.TextField(default='', blank=True)
@@ -39,6 +28,16 @@ class Account(models.Model):
     def __str__(self):
         """Print for admin."""
         return self.user.username
+
+
+class Order(models.Model):
+    """Order detail model."""
+
+    buyer = models.ForeignKey(Account, on_delete=models.CASCADE,
+                              blank=True, null=True)
+    shipped = models.BooleanField(default=False)
+    tracking = models.CharField(max_length=35)
+    order_content = models.TextField()
 
 
 class ShippingInfo(models.Model):

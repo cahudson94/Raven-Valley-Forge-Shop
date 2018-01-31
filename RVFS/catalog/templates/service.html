@@ -14,7 +14,7 @@
         <div class="col">
             <p class="text-standard serv-p-font">{{ service.description }}</p>
             {% if service.commission_fee %}
-            <h4 class="text-standard">Commission Fee: ${{ service.commission_fee }}*</h4>
+            <h4 class="text-standard">Commission Fee: ${{ service.commission_fee }} *</h4>
             {% endif %}
             {% if service.price_range %}
             <h4 class="text-standard">Price Range: ${{ service.price_range }}</h4>
@@ -50,14 +50,14 @@
         </div>
     </div>
     <div class="w-100">
-        {% if service.commission_fee %}
-        <p class="text-standard serv-p-font">* One time appointment fee, for on site consultation.</p>
-        {% endif %}
         {% if service.warning %}
-        <p class="text-standard serv-p-font">** {{ service.warning }}</p>
+        <p class="text-standard serv-p-font">* {{ service.warning }}</p>
         {% endif %}
         {% if service.limitations %}
-        <p class="text-standard serv-p-font">*** Limitations: {{ service.limitations }}</p>
+        <p class="text-standard serv-p-font">* Limitations: {{ service.limitations }}</p>
+        {% endif %}
+        {% if service.commission_fee %}
+        <p class="text-standard serv-p-font">* One time appointment fee, for on site consultation.</p>
         {% endif %}
     </div>
 </form>

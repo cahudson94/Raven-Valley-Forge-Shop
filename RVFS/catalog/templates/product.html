@@ -80,7 +80,7 @@
                 {% if user.is_authenticated %}
                     <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">
                 {% else %}
-                    <p class="text-standard">This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                    <a class="btn btn-secondary text-standard" href="{% url 'login' %}">Login</a>
                 {% endif %}
             {% else %}
                 <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">
@@ -92,7 +92,7 @@
                 {% if user.is_authenticated %}
                     <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">
                 {% else %}
-                    <p class="text-standard">This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+                    <a class="btn btn-secondary text-standard" href="{% url 'login' %}">Login</a>
                 {% endif %}
             {% else %}
                 <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">

@@ -5,11 +5,13 @@
 {% block title %}Cart{% endblock %}
 
 {% block body %}
-<h3 class="text-standard">Cart:</h3>
+<h2 class="text-standard">Cart</h2>
 <div class="row acc-row">
-{% if account.cart %}
+{% if cart %}
+    {% if prods %}
+    <h3 class="text-standard">Products:</h3>
     <ul class="row acc-list-row">
-    {% for item in cart %}
+    {% for item in prods %}
         {% if forloop.counter|mod:4 == 0 %}
         </ul>
         <ul class="row acc-list-row">
@@ -59,6 +61,61 @@
         {% endif %}
     {% endfor %}
     </ul>
+    {% endif %}
+    {% if servs %}
+    <h3 class="text-standard">Services:</h3>
+    <ul class="row acc-list-row">
+    {% for item in servs %}
+        {% if forloop.counter|mod:4 == 0 %}
+        </ul>
+        <ul class="row acc-list-row">
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field == 'item' %}
+                                <h4 class="text-standard">{{ value }}</h4>
+                                {% elif field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                {% endif %}
+                            {% endfor %}
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
+                    </div>
+                </a>
+            </li>
+        {% else %}
+            <li class="card account-list">
+                <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field == 'item' %}
+                                <h4 class="text-standard">{{ value.name }}</h4>
+                                {% elif field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                {% endif %}
+                            {% endfor %}
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
+                    </div>
+                </a>
+            </li>
+        {% endif %}
+    {% endfor %}
+    </ul>
+    {% endif %}
 {% else %}
 <h5 class="w-100 text-standard">Your cart is empty.</h5>
 {% endif %}
@@ -76,4 +133,67 @@
         {% endif %}
     </h3>
 </div>
+{% if account.cart_total %}
+<div class="w-100 d-flex">
+    <div id="paypal-button-container" class="ml-auto"></div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block js %}
+<script>
+
+paypal.Button.render({
+  env: 'sandbox', // sandbox | production
+
+
+  style: {
+    label: 'checkout',
+    size:  'medium', // small | medium | large | responsive
+    shape: 'rect', // pill | rect
+    color: 'black', // gold | blue | silver | black
+    tagline: false,
+  },
+
+  // PayPal Client IDs - replace with your own
+  // Create a PayPal app: https://developer.paypal.com/developer/applications/create
+
+  client: {
+    sandbox: 'Aa9iJNJgoHU7KRYt_O2Ox8rglbTsnxzpz0JnCChgzC03UMj2Vj4xHRC8LPXYynt3jtdy9TzB3eiQ8l0u',
+    production: '<insert production client id>'
+  },
+
+  commit: true,
+
+  payment: function(data, actions) {
+    return actions.payment.create({
+      payment: {
+        transactions: [
+          {
+            amount: { total: '{{ account.cart_total }}', currency: 'USD' }
+          }
+        ]
+      },
+
+      experience: {
+        input_fields: {
+            {% if user.is_authenticated %}
+          no_shipping: 1
+            {% else %}
+          no_shipping: 0
+            {% endif %}
+        }
+      }
+    });
+  },
+
+  onAuthorize: function(data, actions) {
+    return actions.payment.execute().then(function() {
+      window.location.replace("{% url 'check_comp' %}");
+    });
+  }
+
+}, '#paypal-button-container');
+
+</script>
 {% endblock %}
