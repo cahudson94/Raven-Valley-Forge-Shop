@@ -1,8 +1,6 @@
 """."""
 import os
-from datetime import timedelta
 import datetime
-import pytz
 from oauth2client import tools, client
 from oauth2client.file import Storage
 
@@ -49,29 +47,33 @@ def get_credentials():
     return credentials
 
 
-def create_event(info):
+def add_birthday(info):
     """."""
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
 
     service = discovery.build('calendar', 'v3', http=http)
+    year = datetime.datetime.now().year
+    event = {
+        'summary': '{}\'s Birthday'.format(info['name']),
+        'start': {
+            'date': '{}-{}-{}'.format(str(year), str(info['month']), str(info['day'])),
+        },
+        'end': {
+            'date': '{}-{}-{}'.format(str(year), str(info['month']), str(int(info['day']) + 1)),
+        },
+        'recurrence': [
+            'RRULE:FREQ=YEARLY;'
+        ],
+        'attendees': [
+            {'email': 'ravenmoorevalleyforge@gmail.com'},
+            {'email': info['email']},
+        ],
+    }
 
-    if 'birthday' in info.keys():
-        appointment = 'Birthday'
-    if 'service' in info.keys():
-        appointment = info['service'].name
-    start_datetime = info['time']
-    end_datetime = info['time'] + info['length']
-
-    start_datetime = datetime.datetime.now(tz=pytz.utc)
-    event = service.events().insert(calendarId='ravenmoorevalleyforge@gmail.com', body={
-        'summary': info['full_name'] + appointment,
-        'description': 'Bar',
-        'start': {'dateTime': start_datetime.isoformat()},
-        'end': {'dateTime': end_datetime.isoformat()},
-    }).execute()
-
-    print(event)
+    return (service.events()
+                   .insert(calendarId='0l6ami6ttn8ace17skuh3b4nkg@group.calendar.google.com',
+                           body=event).execute())
 
 
 def get_calendar():

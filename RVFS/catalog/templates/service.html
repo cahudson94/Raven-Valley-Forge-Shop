@@ -4,7 +4,7 @@
 {% block title %}{{ service.name }}{% endblock %}
 
 {% block body %}
-<form method="post">
+<form enctype="multipart/form-data" method="post">
     {% csrf_token %}
     <h2 class="text-standard">{{ service.name }}</h2>
     <div class="row service-image-banner">

@@ -7,6 +7,7 @@ from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
+from django.conf import settings
 
 try:
     flags = tools.argparser.parse_args([])
@@ -71,6 +72,19 @@ def main(drive_file):
         for item in items:
             files.append(item)
         return files
+
+
+def download(file_id):
+    """Download specified file."""
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    service = discovery.build('drive', 'v3', http=http)
+    image = service.files().get_media(fileId=file_id).execute()
+    # import pdb; pdb.set_trace()
+    with open(os.path.join(settings.BASE_DIR, 'new_image.jpg'), 'wb+') as file:
+        file.write(image)
+    return file.name
+
 
 if __name__ == '__main__':
     main(os.sys.argv[1])

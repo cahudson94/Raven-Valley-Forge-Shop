@@ -56,7 +56,7 @@ Account
 {% if account.cart %}
     <ul class="row acc-list-row">
     {% for item in cart %}
-        {% if forloop.counter|mod:4 == 0 %}
+        {% if forloop.counter0|mod:4 == 0 %}
         </ul>
         <ul class="row acc-list-row">
             <li class="card account-list">
@@ -66,12 +66,15 @@ Account
                             {% thumbnail item.item.image "100x100" crop="center" as pic %}
                             <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                             {% endthumbnail %}
+                            {% for field, value in item.items %}
+                                {% if field == 'item' %}
+                                <h4 class="text-standard">{{ value.name }}</h4>
+                                {% endif %}
+                            {% endfor %}
                         </div>
                         <div class="col">
                             {% for field, value in item.items %}
-                                {% if field == 'item' %}
-                                <h4 class="text-standard">{{ value }}</h4>
-                                {% elif field in item_fields %}
+                                {% if field in item_fields %}
                                 <h5 class="text-standard">{{ field }}: {{ value }}</h5>
                                 {% endif %}
                             {% endfor %}
@@ -94,14 +97,17 @@ Account
                     <div class="row">
                         <div class="col">
                             {% thumbnail item.item.image "100x100" crop="center" as pic %}
-                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                             {% endthumbnail %}
-                        </div>
-                        <div class="col">
                             {% for field, value in item.items %}
                                 {% if field == 'item' %}
                                 <h4 class="text-standard">{{ value.name }}</h4>
-                                {% elif field in item_fields %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field in item_fields %}
                                 <h5 class="text-standard">{{ field }}: {{ value }}</h5>
                                 {% endif %}
                             {% endfor %}
@@ -143,7 +149,7 @@ Account
 {% if account.saved_products %}
         <ul class="row acc-list-row">
     {% for item in saved_prods %}
-        {% if forloop.counter|mod:3 == 0 %}
+        {% if forloop.counter0|mod:4 == 0 %}
         </ul>
         <ul class="row acc-list-row">
             <li class="card account-list">
@@ -189,7 +195,7 @@ Account
 {% if account.saved_services %}
         <ul class="row acc-list-row">
     {% for item in saved_servs %}
-        {% if forloop.counter|mod:3 == 0 %}
+        {% if forloop.counter0|mod:4 == 0 %}
         </ul>
         <ul class="row acc-list-row">
             <li class="card account-list">
@@ -243,7 +249,7 @@ Account
 {% if account.purchase_history %}
         <ul class="row acc-list-row">
     {% for item in prod_history %}
-        {% if forloop.counter|mod:3 == 0 %}
+        {% if d|mod:4 == 0 %}
         </ul>
         <ul class="row acc-list-row">
             <li class="card account-list">
@@ -288,7 +294,7 @@ Account
 {% if account.service_history %}
         <ul class="row acc-list-row">
     {% for item in serv_history %}
-        {% if forloop.counter|mod:3 == 0 %}
+        {% if d|mod:4 == 0 %}
         </ul>
         <ul class="row acc-list-row">
             <li class="card account-list">

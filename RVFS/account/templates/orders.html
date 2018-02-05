@@ -1,0 +1,30 @@
+{% extends 'rvfsite/base.html' %}
+{% load static %}
+{% load thumbnail %}
+
+{% block title %}
+Orders
+{% endblock %}
+
+{% block body %}
+
+<h2 class="text-standard">Orders</h2>
+{% if order_list %}
+  <ul>
+  {% for order in order_list %}
+    <li>
+      <a class="text-standard link-font" href="{% url 'order' order.id %}">{{ order }}</a>
+      <p class="text-standard">Status: {% if order.shipped %}Shipped{% else %}In Progress{% endif %}</p>
+    </li>
+    {% if forloop.counter < 2 and forloop.last %}
+    <div class="placeholder"></div>
+    {% endif %}
+  {% endfor %}
+  </ul>
+{% else %}
+<h5 class="w-100 text-standard">There are no orders yet.</h5>
+<div class="placeholder"></div>
+{% endif %}
+
+
+{% endblock %}

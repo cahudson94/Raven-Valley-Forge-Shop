@@ -428,6 +428,10 @@ CATALOG
     max-width: 95%;
 }
 
+.placeholder {
+    height: 150px;
+}
+
 /* ***************************************************************************
 ACCOUNT
 *************************************************************************** */
@@ -453,7 +457,7 @@ ACCOUNT
 
 .account-list {
     list-style: none;
-    width: 31.5%;
+    width: 48%;
 }
 
 .acc-item-link {
@@ -513,7 +517,7 @@ MEDIA QUERY
         text-align: left !important;
     }
     .account-list {
-    width: 28%;
+    width: 46%;
     }
 }
 
@@ -545,7 +549,7 @@ MEDIA QUERY
     flex-basis: auto;
     }
     .account-list {
-    width: 60%;
+    width: 100%;
     }
 }
 
@@ -632,8 +636,5 @@ MEDIA QUERY
 @media (max-width: 320px) {
     .tagged-row {
         padding-left: 25px;
-    }
-    .account-list {
-    width: 80%;
     }
 }

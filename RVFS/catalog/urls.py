@@ -12,14 +12,16 @@ from catalog.views import (CreateProductView as CreateProd,
                            AllServicesView as Servs,
                            TagServicesView as TagServs,
                            CartView,
-                           CheckCompleteView,
+                           CheckoutView,
+                           CheckoutCompleteView,
                            AllItemsView,
                            )
 
 urlpatterns = [
     path('list/', AllItemsView.as_view(), name='list'),
     path('cart/', CartView.as_view(), name='cart'),
-    path('checkout-complete/', CheckCompleteView.as_view(), name='check_comp'),
+    path('checkout/', CheckoutView.as_view(), name='checkout'),
+    path('checkout-complete/', CheckoutCompleteView.as_view(), name='check_comp'),
     path('add-product/', CreateProd.as_view(), name='add_prod'),
     path('edit-product/<int:pk>/', EditProd.as_view(), name='edit_prod'),
     path('products/<int:pk>/', Prod.as_view(), name='prod'),

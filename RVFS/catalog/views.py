@@ -3,8 +3,9 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views.generic import ListView, DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
+from django.contrib.auth.models import User
 from account.models import Account, ShippingInfo, Order
-from catalog.models import Product, Service
+from catalog.models import Product, Service, UserServiceImage as UserImage
 from catalog.forms import ProductForm, ServiceForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect
@@ -15,6 +16,7 @@ import json
 
 
 class AllItemsView(ListView):
+    """List all items for inventory."""
 
     template_name = 'list.html'
     model = Product
@@ -161,10 +163,6 @@ class SingleProductView(DetailView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(SingleProductView, self).get_context_data(**kwargs)
-        if context['object'].diameter:
-            context['object'].diameter = context['object'].diameter.split(', ')
-        if context['object'].length:
-            context['object'].length = context['object'].length.split(', ')
         if context['object'].color:
             context['object'].color = context['object'].color.split(', ')
         if context['object'].extras:
@@ -182,9 +180,12 @@ class SingleProductView(DetailView):
             for field in data:
                 if field != 'csrfmiddlewaretoken' and field != 'add':
                     fields.append(field)
-            cart_item = {'item_id': self.get_object().id, 'type': 'prod'}
+            cart_item = {'item_id': self.get_object().id, 'type': 'prod',
+                         'description': self.get_object().description}
             for field in fields:
                 cart_item[field] = data[field]
+                if field != 'quantity':
+                    cart_item['description'] += ' ' + field + ', ' + data[field] + '. '
             cart_item = json.dumps(cart_item)
             if self.request.user.is_anonymous:
                 if not self.request.session.get_expire_at_browser_close():
@@ -208,7 +209,8 @@ class SingleProductView(DetailView):
                 account.cart_total += Decimal(self.get_object().price)
                 account.save()
         else:
-            item = json.dumps({'item_id': self.get_object().id, 'type': 'prod'})
+            item = json.dumps({'item_id': self.get_object().id, 'type': 'prod',
+                               'description': self.get_object().description})
             if account.saved_products:
                 account.saved_products += '|' + item
             else:
@@ -236,7 +238,8 @@ class SingleServiceView(DetailView):
     def post(self, request, *args, **kwargs):
         """Add item to appropriate list."""
         data = request.POST
-        account = Account.objects.get(user=request.user)
+        if request.user.is_authenticated:
+            account = Account.objects.get(user=request.user)
         if 'add' in data.keys():
             success_url = reverse_lazy('serv_info', kwargs={'pk': self.get_object().id})
         else:
@@ -270,21 +273,32 @@ class ServiceInfoView(DetailView):
     def post(self, request, *args, **kwargs):
         """Add item to appropriate list."""
         data = request.POST, request.FILES
-        if 'add' in data.keys():
+        if 'add' in data[0].keys():
             fields = []
-            for field in data:
+            for field in data[0]:
                 if field != 'csrfmiddlewaretoken' and field != 'add':
                     fields.append(field)
-            cart_item = {'item_id': self.get_object().id, 'type': 'serv'}
+            cart_item = {'item_id': self.get_object().id, 'type': 'serv',
+                         'description': self.get_object().description}
             for field in fields:
-                cart_item[field] = data[field]
+                cart_item[field] = data[0][field]
+                if field in ['color', 'length', 'diameter', 'extras']:
+                    cart_item['description'] += ' ' + field + ', ' + data[0][field] + '. '
+            if data[1]:
+                cart_item['files'] = ''
+                for file in data[1]:
+                    if data[1][file]:
+                        image = UserImage(image=data[1][file])
+                        image.save()
+                        cart_item['files'] += file + ' ' + str(image.id) + ', '
             cart_item = json.dumps(cart_item)
             if self.request.user.is_anonymous:
-                if not self.request.session.get_expire_at_browser_close():
-                    self.request.session.set_expiry(0)
+                session = self.request.session
+                if not session.get_expire_at_browser_close():
+                    session.set_expiry(0)
                 if 'account' not in self.request.session.keys():
-                    self.request.session['account'] = {'cart': '', 'cart_total': Decimal(0.0)}
-                account = self.request.session['account']
+                    session['account'] = {'cart': '', 'cart_total': 0.0}
+                account = session['account']
                 if account['cart']:
                     account['cart'] += '|' + cart_item
                 else:
@@ -292,14 +306,13 @@ class ServiceInfoView(DetailView):
                 if self.get_object().commission_fee:
                     account['cart_total'] = str(Decimal(self.get_object().commission_fee) +
                                                 Decimal(account['cart_total']))
-                self.request.session.save()
+                session.save()
             else:
                 account = Account.objects.get(user=request.user)
                 if account.cart:
                     account.cart += '|' + cart_item
                 else:
                     account.cart += cart_item
-                account.cart.append(cart_item)
                 if self.get_object().commission_fee:
                     account.cart_total += Decimal(self.get_object().commission_fee)
                 account.save()
@@ -408,6 +421,7 @@ class CartView(TemplateView):
     """Cart and checkout page."""
 
     template_name = 'cart.html'
+    success_url = reverse_lazy('checkout')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -416,41 +430,174 @@ class CartView(TemplateView):
             if not self.request.session.get_expire_at_browser_close():
                 self.request.session.set_expiry(0)
             if 'account' not in self.request.session.keys():
-                self.request.session['account'] = {'cart': '', 'cart_total': Decimal(0.0)}
+                self.request.session['account'] = {'cart': '', 'cart_total': 0.0}
             context['cart'] = self.request.session['account']['cart']
             context['account'] = self.request.session['account']
+            if 'shipping' in context['account'].keys():
+                context['shipping'] = context['account']['shipping']
+            if 'info' in context['account'].keys():
+                context['info'] = context['account']['info']
         else:
             context['account'] = context['view'].request.user.account
             context['cart'] = context['account'].cart
+            context['info'] = {'first': context['account'].first_name,
+                               'last': context['account'].last_name,
+                               'email': context['view'].request.user.email}
+            context['shipping'] = ShippingInfo.objects.get(pk=context['account'].main_address)
+            if len(context['account'].shippinginfo_set.values()) > 1:
+                addresses = context['account'].shippinginfo_set.values()
+                context['alt_add'] = [address for address in addresses]
         if context['cart']:
-            cart_items = unpack(context['cart'])
+            context['cart'] = unpack(context['cart'])
             context['prods'] = []
             context['servs'] = []
-            for item in cart_items:
+            for item in context['cart']:
                 if item['type'] == 'prod':
                     context['prods'].append(item)
                 else:
                     context['servs'].append(item)
-        context['item_fields'] = ['quantity', 'color', 'length', 'diameter']
+        context['item_fields'] = ['quantity', 'color', 'length', 'diameter', 'extras']
+        context['cart_count'] = cart_count(self.request)
+        context['galleries'] = get_galleries()
+        context['nbar'] = 'cart'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Apply shipping info for guest user."""
+        data = request.POST
+        field_count = 0
+        fields = ['first_name', 'last_name', 'email',
+                  'add_1', 'city', 'state', 'zip']
+        if request.user.is_anonymous:
+            request.session['account']['info'] = {'first': '', 'last': '', 'email': ''}
+            if data['first_name']:
+                request.session['account']['info']['first'] = data['first_name']
+            if data['last_name']:
+                request.session['account']['info']['last'] = data['last_name']
+            if data['email']:
+                request.session['account']['info']['email'] = data['email']
+            request.session.save()
+            request.session['account']['shipping'] = {'address1': '',
+                                                      'address2': '',
+                                                      'city': '',
+                                                      'state': '',
+                                                      'zip_code': ''}
+            if data['add_1']:
+                request.session['account']['shipping']['address1'] = data['add_1']
+            if data['add_2']:
+                request.session['account']['shipping']['address2'] = data['add_2']
+            if data['city']:
+                request.session['account']['shipping']['city'] = data['city']
+            if data['state']:
+                request.session['account']['shipping']['state'] = data['state']
+            if data['zip']:
+                request.session['account']['shipping']['zip_code'] = data['zip']
+            request.session.save()
+        for i in fields:
+            if data[i]:
+                field_count += 1
+        if field_count == 7:
+            shipping_data = {
+                'info': {
+                    'first': data['first_name'],
+                    'last': data['last_name'],
+                    'email': data['email'],
+                },
+                'shipping': {
+                    'address1': data['add_1'],
+                    'address2': data['add_2'],
+                    'city': data['city'],
+                    'state': data['state'],
+                    'zip_code': data['zip'],
+                }
+            }
+            if request.user.is_authenticated:
+                exists = check_address(data)
+                if exists:
+                    shipping_data['exists'] = exists
+            request.session['shipping_data'] = shipping_data
+            request.session.save()
+            return HttpResponseRedirect(self.success_url)
+        return HttpResponseRedirect(reverse_lazy('cart'))
+
+
+class CheckoutView(TemplateView):
+    """Format order info to send to paypal."""
+
+    template_name = 'checkout.html'
+
+    def get(self, request, *args, **kwargs):
+        """Check for shipping data."""
+        if 'shipping_data' not in request.session.keys():
+            return HttpResponseRedirect(reverse_lazy('cart'))
+        return super(CheckoutView, self).get(self, request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(CheckoutView, self).get_context_data(**kwargs)
+        shipping_data = self.request.session['shipping_data']
+        if context['view'].request.user.is_authenticated:
+            account = context['view'].request.user.account
+            cart = account.cart
+            cart_total = account.cart_total
+        else:
+            guest_user = User.objects.get(username='Guest')
+            account = Account.objects.get(user=guest_user)
+            cart = self.request.session['account']['cart']
+            cart_total = self.request.session['account']['cart_total']
+        if 'exists' in shipping_data.keys():
+            address = ShippingInfo.objects.get(id=shipping_data['exists'])
+        else:
+            address = ShippingInfo(
+                address1=shipping_data['shipping']['address1'],
+                address2=shipping_data['shipping']['address2'],
+                zip_code=shipping_data['shipping']['zip_code'],
+                city=shipping_data['shipping']['city'],
+                state=shipping_data['shipping']['state'])
+            address.save()
+            if context['view'].request.user.is_authenticated:
+                address.resident = Account.objects.get(user=context['view'].request.user)
+            else:
+                address.resident = Account.objects.get(user=guest_user)
+            address.save()
+        order = Order(
+            buyer=account,
+            order_content=cart,
+            ship_to=address,
+            recipient_email=shipping_data['info']['email'],
+            recipient=(shipping_data['info']['first'] +
+                       ', ' + shipping_data['info']['last'])
+        )
+        order.save()
+        self.request.session['order_num'] = order.id
+        self.request.session.save()
+        context['shipping'] = address
+        context['info'] = shipping_data['info']
+        context['total'] = cart_total
         context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'cart'
         return context
 
 
-class CheckCompleteView(TemplateView):
+class CheckoutCompleteView(TemplateView):
     """Checkout complete page which shifts products from cart to history and resets cart."""
 
     template_name = 'checkout_complete.html'
 
+    def get(self, request, *args, **kwargs):
+        """Check for shipping data."""
+        if 'shipping_data' not in request.session.keys():
+            return HttpResponseRedirect(reverse_lazy('cart'))
+        return super(CheckoutCompleteView, self).get(self, request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         """Add context for active page."""
-        context = super(CheckCompleteView, self).get_context_data(**kwargs)
-        account = context['view'].request.user.account
-        order = Order(buyer=account, order_content=account.cart)
-        order.save()
-        context['order'] = order
-        if account.cart:
+        context = super(CheckoutCompleteView, self).get_context_data(**kwargs)
+        session = self.request.session
+        context['order'] = session['order_num']
+        if context['view'].request.user.is_authenticated:
+            account = context['view'].request.user.account
             cart = split_cart(account.cart)
             if 'prods' in cart.keys():
                 if account.purchase_history:
@@ -465,7 +612,28 @@ class CheckCompleteView(TemplateView):
             account.cart = ''
             account.cart_total = 0.0
             account.save()
+        else:
+            session['account'] = {'cart': '', 'cart_total': 0.0}
         context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'cart'
         return context
+
+
+def check_address(data):
+    """Check if user is using an existing address."""
+    add_id = data['address_name'].split(', ')[0].split(': ')[1]
+    address = ShippingInfo.objects.get(id=add_id)
+    equal = 0
+    if data['add_1'] == address.address1:
+        equal += 1
+    if data['add_2'] == address.address2:
+        equal += 1
+    if data['city'] == address.city:
+        equal += 1
+    if data['state'] == address.state:
+        equal += 1
+    if data['zip'] == address.zip_code:
+        equal += 1
+    if equal == 5:
+        return address.id

@@ -4,7 +4,7 @@
 {% block title %}{{ service.name }}{% endblock %}
 
 {% block body %}
-<form method="post">
+<form enctype="multipart/form-data" method="post">
     {% csrf_token %}
     <h2 class="text-standard">{{ service.name }}</h2>
     <div class="row service-image-banner">
@@ -79,17 +79,14 @@
                     <select id="hour" name="hour">
                     </select>
                   </span>
-                  <span>
-                    <label class="text-standard date-picker-font" for="minute">Minute:</label>
-                    <select id="minute" name="minute">
-                    </select>
-                  </span>
                 </div>
             </div>
             <p class="text-standard serv-p-font">See calendar for openings, you will recieve an email confirming this time or to adjust if the time you select is unavailable. *</p>
             {% if service.requires_address %}
             <p class="text-standard serv-section-font">Please provide an Address for this service:</p>
+            {% if user.is_authenticated %}
             <input class="text-standard" type="checkbox" name="use_acc" value="Use saved address">Use saved address<br>
+            {% endif %}
             <label class="text-standard">Address Line 1:</label><input type="text" name="Address1" required><br>
             <label class="text-standard">Address Line 2:</label><input type="text" name="Address2"><br>
             <label class="text-standard">City:</label><input type="text" name="City" required><br>
@@ -149,6 +146,9 @@
         {% endif %}
         {% if service.commission_fee %}
         <p class="text-standard serv-p-font">* Commission fee is a one time appointment fee, for on site consultation.</p>
+        {% endif %}
+        {% if service.price_range %}
+        <p class="text-standard serv-p-font">* The price range of a service is an estimate of the final cost to be paid by or before the completion of the service, actual values vary.</p>
         {% endif %}
     </div>
 

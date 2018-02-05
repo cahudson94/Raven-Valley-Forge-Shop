@@ -1,7 +1,22 @@
 """."""
 from django import forms
-from account.models import Account, ShippingInfo
+from account.models import Account, ShippingInfo, Order
 import datetime
+
+MONTHS = {
+    'Jan.': 'Jan.',
+    'Feb.': 'Feb.',
+    'Mar.': 'Mar.',
+    'Apr.': 'Apr.',
+    'May': 'May',
+    'Jun.': 'Jun.',
+    'Jul.': 'Jul.',
+    'Aug.': 'Aug.',
+    'Sep.': 'Sep.',
+    'Oct.': 'Oct.',
+    'Nov.': 'Nov.',
+    'Dec.': 'Dec.',
+}
 
 STATES = ([
     ('Alabama', 'AL'),
@@ -65,7 +80,7 @@ YEARS = YEARS[::-1]
 class InfoRegForm(forms.ModelForm):
     """Extra registration info form."""
 
-    birth_date = forms.CharField(widget=forms.SelectDateWidget(years=YEARS))
+    birth_date = forms.CharField(widget=forms.SelectDateWidget(years=YEARS, months=MONTHS))
     location_name = forms.CharField(max_length=35, label='Name for this Address')
     street = forms.CharField(max_length=90, label='Address Line 1')
     adr_extra = forms.CharField(required=False, max_length=90, label='Address Line 2')
@@ -91,3 +106,15 @@ class AddAddressForm(forms.ModelForm):
 
         model = ShippingInfo
         exclude = ['resident', 'address2', 'state']
+
+
+class OrderUpdateForm(forms.ModelForm):
+    """Update orders with shipping or changes."""
+
+    tracking = forms.CharField(required=False)
+
+    class Meta():
+        """."""
+
+        model = Order
+        exclude = ['buyer', 'ship_to', 'order_content']

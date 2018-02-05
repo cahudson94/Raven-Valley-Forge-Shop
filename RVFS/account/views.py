@@ -4,37 +4,39 @@ from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from registration.backends.hmac.views import RegistrationView
 from registration.forms import RegistrationForm
-from account.models import Account, ShippingInfo
+from account.models import Account, ShippingInfo, SlideShowImage, Order
 from catalog.models import Product, Service
-from account.forms import InfoRegForm, AddAddressForm
+from account.forms import InfoRegForm, AddAddressForm, OrderUpdateForm
 from django.views.generic import ListView, TemplateView, DetailView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
 from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
 from django.contrib.auth import login as auth_login
-from RVFS.google_drive import main as drive_files
-from RVFS.google_calendar import create_event
+from RVFS.google_drive import main as drive_files, download
+from django.core.files.uploadedfile import SimpleUploadedFile
+from RVFS.google_calendar import add_birthday, get_calendar
 from django.urls import reverse_lazy
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
 import os
 import random
 import json
 
 
 MONTHS = {
-    'January': '01',
-    'Febuary': '02',
-    'March': '03',
-    'April': '04',
+    'Jan.': '01',
+    'Feb.': '02',
+    'Mar.': '03',
+    'Apr.': '04',
     'May': '05',
-    'June': '06',
-    'July': '07',
-    'August': '08',
-    'September': '09',
-    'October': '10',
-    'November': '11',
-    'December': '12'
+    'Jun.': '06',
+    'Jul.': '07',
+    'Aug.': '08',
+    'Sep.': '09',
+    'Oct.': '10',
+    'Nov.': '11',
+    'Dec.': '12'
 }
 
 
@@ -45,14 +47,41 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         """."""
-        slide_files = drive_files('17fqQwUu1dGPOUBirLDo2O0tBg_TUXMlZ')
-        rand_pics = random.sample(slide_files, min(5, len(slide_files)))
+        slides = set(SlideShowImage.objects.all())
+        rand_pics = random.sample(slides, min(5, len(slides)))
         context = super(TemplateView, self).get_context_data(**kwargs)
         context['cart_count'] = cart_count(self.request)
         context['random_pics'] = rand_pics
         context['galleries'] = get_galleries()
         context['nbar'] = 'home'
         return context
+
+
+@staff_member_required
+def updateslideshow(request):
+    """Button update the files of slide images."""
+    slide_files = drive_files('17fqQwUu1dGPOUBirLDo2O0tBg_TUXMlZ')
+    current_slides = SlideShowImage.objects.all()
+    new_names = {}
+    current_names = []
+    for slide in slide_files:
+        new_names[slide['name'].split('.')[0]] = slide
+    for slide in current_slides:
+        current_names.append(slide.name)
+    for name in current_names:
+        if name not in new_names:
+            SlideShowImage.objects.get(name=name).delete()
+    for name in new_names:
+        if name not in current_names:
+            new_image = SlideShowImage(
+                image=SimpleUploadedFile(name=name + '.jpg',
+                                         content=open(download(new_names[name]['id']), 'rb').read(),
+                                         content_type='image/jpeg'),
+                name=name)
+            new_image.save()
+            with open(os.path.join(settings.BASE_DIR, 'new_image.jpg'), 'w+') as file:
+                file.write('')
+    return HttpResponseRedirect(reverse_lazy('home'))
 
 
 class AboutView(TemplateView):
@@ -314,16 +343,20 @@ class InfoFormView(UpdateView):
         """Creating shipping model and update user account."""
         user = User.objects.get(username=self.object.user.username)
         account = form.save(commit=False)
+        account.birth_day = validate_bday(form.data['birth_date_month'] + ' ' +
+                                          form.data['birth_date_day'] + ' ' +
+                                          form.data['birth_date_year'])
         if account.registration_complete:
             return HttpResponseRedirect(self.get_success_url())
         account.birthday_set = True
         account.save()
-        # google calendar birthday add
         event = {}
-        event['full_name'] = account.first_name + account.last_name
-        event['time'] = account.birth_day
-        event['birthday'] = 'True'
-        event['length'] = 2400
+        event['name'] = account.first_name + account.last_name
+        event['email'] = user.email
+        birthday = account.birth_day.split('-')
+        event['month'] = birthday[1]
+        event['day'] = birthday[2]
+        add_birthday(event)
         new_info = ShippingInfo()
         new_info.address1 = form.cleaned_data['street']
         if form.cleaned_data['adr_extra']:
@@ -366,6 +399,44 @@ class GalleryView(TemplateView):
         return context
 
 
+class OrderView(UpdateView):
+    """Display the details of an order."""
+
+    template_name = 'order.html'
+    model = Order
+    form_class = OrderUpdateForm
+    success_url = reverse_lazy('orders')
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(OrderView, self).get_context_data(**kwargs)
+        title = 'Order #' + str(context['object'].id)
+        context['cart_count'] = cart_count(self.request)
+        context['galleries'] = get_galleries()
+        context['title'] = title
+        context['nbar'] = 'order'
+        context['address'] = context['object'].ship_to
+        context['content'] = unpack(context['object'].order_content)
+        context['item_fields'] = ['quantity', 'color', 'length', 'diameter', 'extras']
+        return context
+
+
+class OrdersView(ListView):
+    """Display the details of an order."""
+
+    template_name = 'orders.html'
+    model = Order
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(OrdersView, self).get_context_data(**kwargs)
+        context['order_list'] = context['order_list'].order_by('id')
+        context['cart_count'] = cart_count(self.request)
+        context['galleries'] = get_galleries()
+        context['nbar'] = 'order'
+        return context
+
+
 def get_galleries():
     """Fetch list of galleries from google drive."""
     files = drive_files('18HHO951sd6wkp_tCREzHQimX8ntwVycq')
@@ -379,7 +450,7 @@ def validate_bday(date):
     date = date.split(' ')
     if len(date) != 3:
         return
-    day = date[1][:-1]
+    day = date[1]
     month = date[0]
     year = date[2]
     if len(year) != 4:
@@ -388,9 +459,9 @@ def validate_bday(date):
         return
     if len(day) == 1:
         day = '0' + day
-    if month.title() not in MONTHS:
+    if month not in MONTHS:
         return
-    month = MONTHS[month.title()]
+    month = MONTHS[month]
     return year + '-' + month + '-' + day
 
 

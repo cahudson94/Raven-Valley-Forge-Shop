@@ -1,6 +1,7 @@
 """Acount model for RVFS app."""
 from django.db import models
 from django.contrib.auth.models import User
+from sorl.thumbnail import ImageField
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
@@ -30,16 +31,6 @@ class Account(models.Model):
         return self.user.username
 
 
-class Order(models.Model):
-    """Order detail model."""
-
-    buyer = models.ForeignKey(Account, on_delete=models.CASCADE,
-                              blank=True, null=True)
-    shipped = models.BooleanField(default=False)
-    tracking = models.CharField(max_length=35)
-    order_content = models.TextField()
-
-
 class ShippingInfo(models.Model):
     """Address model for accounts."""
 
@@ -55,7 +46,36 @@ class ShippingInfo(models.Model):
 
     def __str__(self):
         """Print for admin."""
-        return str(self.resident)
+        return str(self.resident) + ', ' + str(self.name)
+
+
+class Order(models.Model):
+    """Order detail model."""
+
+    buyer = models.ForeignKey(Account, on_delete=models.CASCADE,
+                              blank=True, null=True)
+    ship_to = models.ForeignKey(ShippingInfo, on_delete=models.CASCADE,
+                                blank=True, null=True)
+    recipient = models.CharField(max_length=40, default='')
+    recipient_email = models.CharField(max_length=40, default='')
+    shipped = models.BooleanField(default=False)
+    tracking = models.CharField(max_length=35, default='')
+    order_content = models.TextField()
+
+    def __str__(self):
+        """Print for admin."""
+        return 'Order Number %d' % self.id
+
+
+class SlideShowImage(models.Model):
+    """Slide image model."""
+
+    image = models.ImageField(upload_to='slides')
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        """Print for admin."""
+        return self.name
 
 
 @receiver(post_save, sender=User)

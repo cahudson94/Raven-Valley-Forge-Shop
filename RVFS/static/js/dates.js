@@ -40,7 +40,6 @@ if(test.type === 'text') {
   }
   populateYears();
   populateHours();
-  populateMinutes();
 }
 
 function populateDays(month) {
@@ -61,7 +60,7 @@ function populateDays(month) {
   } else {
   // If month is February, calculate whether it is a leap year or not
     var year = yearSelect.value;
-    (year - 2016) % 4 === 0 ? dayNum = 29 : dayNum = 28;
+    year % 4 === 0 ? dayNum = 29 : dayNum = 28;
   }
 
   // inject the right number of new <option> elements into the day <select>
@@ -101,9 +100,9 @@ function populateYears() {
   var year = date.getFullYear();
 
   // Make this year, and the 100 years before it available in the year <select>
-  for(var i = 0; i <= 100; i++) {
+  for(var i = 0; i <= 2; i++) {
     var option = document.createElement('option');
-    option.textContent = year-i;
+    option.textContent = year+i;
     if (yearSelect) {
       yearSelect.appendChild(option);
     }
@@ -112,22 +111,19 @@ function populateYears() {
 
 function populateHours() {
   // populate the hours <select> with the 24 hours of the day
-  for(var i = 0; i <= 23; i++) {
+  for(var i = 0; i <= 11; i++) {
     var option = document.createElement('option');
-    option.textContent = (i < 10) ? ('0' + i) : i;
+    if (i <= 1) {
+      option.textContent = '1' + i + ' AM';
+    }
+    else if (i === 2) {
+      option.textContent = '1' + i + ' PM';
+    }
+    else {
+      option.textContent = i - 2 + ' PM';
+    }
     if (hourSelect) {
       hourSelect.appendChild(option);
-    }
-  }
-}
-
-function populateMinutes() {
-  // populate the minutes <select> with the 60 hours of each minute
-  for(var i = 0; i <= 59; i++) {
-    var option = document.createElement('option');
-    option.textContent = (i < 10) ? ('0' + i) : i;
-    if (minuteSelect) {
-      minuteSelect.appendChild(option);
     }
   }
 }
