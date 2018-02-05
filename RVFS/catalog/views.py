@@ -512,7 +512,8 @@ class CartView(TemplateView):
                 }
             }
             if request.user.is_authenticated:
-                exists = check_address(data)
+                account = Account.objects.get(user=request.user)
+                exists = check_address(data, account)
                 if exists:
                     shipping_data['exists'] = exists
             request.session['shipping_data'] = shipping_data
@@ -620,10 +621,13 @@ class CheckoutCompleteView(TemplateView):
         return context
 
 
-def check_address(data):
+def check_address(data, account):
     """Check if user is using an existing address."""
-    add_id = data['address_name'].split(', ')[0].split(': ')[1]
-    address = ShippingInfo.objects.get(id=add_id)
+    if 'address_name' in data.keys():
+        add_id = data['address_name'].split(', ')[0].split(': ')[1]
+        address = ShippingInfo.objects.get(id=add_id)
+    else:
+        address = ShippingInfo.objects.get(resident=account)
     equal = 0
     if data['add_1'] == address.address1:
         equal += 1
