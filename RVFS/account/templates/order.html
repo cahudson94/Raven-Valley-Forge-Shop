@@ -1,0 +1,109 @@
+{% extends 'rvfsite/base.html' %}
+{% load mathfilters %}
+{% load thumbnail %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+    <form enctype="multipart/form-data" class="prod-form" method="post">
+        {% csrf_token %}
+        <h2>Order Content:</h2>
+        <ul class="row acc-list-row">
+        {% for item in content %}
+            {% if forloop.counter0|mod:4 == 0 %}
+            </ul>
+            <ul class="row acc-list-row">
+                <li class="card account-list">
+                    <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                        <div class="row">
+                            <div class="col">
+                                {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                                {% endthumbnail %}
+                            </div>
+                            <div class="col">
+                                {% for field, value in item.items %}
+                                    {% if field == 'item' %}
+                                    <h4 class="text-standard">{{ value }}</h4>
+                                    {% elif field in item_fields %}
+                                    <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if item.type == 'prod' %}
+                                    <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                                {% else %}
+                                    {% if item.item.price_range %}
+                                        <h5 class="text-standard">${{ item.item.price_range }}</h5>
+                                    {% else %}
+                                        <h5 class="text-standard">${{ item.item.commission_fee }}</h5>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            {% else %}
+                <li class="card account-list">
+                    <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                        <div class="row">
+                            <div class="col">
+                                {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                                    <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                                {% endthumbnail %}
+                            </div>
+                            <div class="col">
+                                {% for field, value in item.items %}
+                                    {% if field == 'item' %}
+                                    <h4 class="text-standard">{{ value.name }}</h4>
+                                    {% elif field in item_fields %}
+                                    <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if item.type == 'prod' %}
+                                    <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                                {% else %}
+                                    {% if item.item.price_range %}
+                                        <h5 class="text-standard">${{ item.item.price_range }}</h5>
+                                    {% else %}
+                                        <h5 class="text-standard">${{ item.item.commission_fee }}</h5>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+        <h2>Shipping To:</h2>
+        <div class="row">
+            <div class="col">
+                <ul>
+                    <li class="footer-info">
+                        <h4>{{ address.address1 }}</h4>
+                    {% if address.address2 %}
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ address.address2 }}</h4>
+                    {% endif %}
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ address.city }}</h4>
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ address.state }}</h4>
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ address.zip_code }}</h4>
+                    </li>
+                </ul>
+            </div>
+            <div class="col">
+            {{ form.as_p }}
+            </div>
+        </div>
+        <div class="d-flex">
+            <input class="btn btn-secondary text-standard ml-auto" type="submit" value="Update">
+        </div>
+    </form>
+{% endblock %}

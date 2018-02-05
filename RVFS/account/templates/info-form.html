@@ -3,12 +3,13 @@
 {% block title %}Info Form{% endblock %}
 
 {% block body %}
-  <h2>Info</h2>
-  <form method="post">
+  <h2 class="text-standard">Info</h2>
+  <form enctype="multipart/form-data" method="post">
     {% csrf_token %}
-    <h4>Please provide your username for confirmation</h4>
-    {{ form.as_p }}
-    <input class="button" type="submit" value="Login">
-    <p class="disclaimer">*By submmiting this for you verify and consent to the unserstanding that you are above the age of 18, this verification is required for the purchase of knives from this site as they are weapons and physical harm may result from the improper use of these tools.</p>
+    {% for field in form %}
+        <p class="form-font"><label class="text-standard">{{ field.label }}:</label><br>{{ field }}</p>
+    {% endfor %}
+    <input class="btn btn-secondary text-standard" type="submit" value="Login*">
+    <p class="disclaimer text-standard">* By submmiting this for you verify and consent to the unserstanding that you are above the age of 18, this verification is required for the purchase of knives from this site as they are weapons and physical harm may result from the improper use of these tools.</p>
   </form>
 {% endblock %}

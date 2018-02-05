@@ -22,11 +22,18 @@ from account.views import (CustomRegView,
                            CustomLogView,
                            AboutView,
                            HomeView,
-                           GalleryView)
+                           GalleryView,
+                           OrdersView,
+                           OrderView
+                           )
+from account import views
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
+    path('update/', views.updateslideshow, name='update'),
     path('about/', AboutView.as_view(), name='about'),
+    path('orders/', OrdersView.as_view(), name='orders'),
+    path('orders/<int:pk>/', OrderView.as_view(), name='order'),
     path('gallery/<slug:slug>/', GalleryView.as_view(), name='gallery'),
     path('login/', CustomLogView.as_view(), name='login'),
     path('logout/', auth_views.logout, {'next_page': '/'}, name='logout'),
@@ -36,6 +43,7 @@ urlpatterns = [
     path('account/', include('account.urls')),
     path('shop/', include('catalog.urls')),
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(

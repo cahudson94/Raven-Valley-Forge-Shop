@@ -1,0 +1,11 @@
+{% extends 'rvfsite/base.html' %}
+
+{% block title %}Info Form{% endblock %}
+
+{% block body %}
+  <form enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <h4 class="text-standard">Click delete to confirm that you want to delete your {{ shippinginfo.name }} shipping address.</h4>
+    <input class="btn btn-danger text-standard" type="submit" value="Delete">
+  </form>
+{% endblock %}

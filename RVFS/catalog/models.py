@@ -11,27 +11,27 @@ PUB_STATUS = (
 )
 
 LENGTHS = (
-    ('4', 4),
-    ('5', 5),
-    ('6', 6),
-    ('7', 7),
-    ('8', 8),
-    ('9', 9),
-    ('10', 10),
-    ('11', 11),
-    ('12', 12),
-    ('13', 13),
-    ('14', 14),
-    ('15', 15),
-    ('16', 16),
+    ('4\"', '4\"'),
+    ('5\"', '5\"'),
+    ('6\"', '6\"'),
+    ('7\"', '7\"'),
+    ('8\"', '8\"'),
+    ('9\"', '9\"'),
+    ('10\"', '10\"'),
+    ('11\"', '11\"'),
+    ('12\"', '12\"'),
+    ('13\"', '13\"'),
+    ('14\"', '14\"'),
+    ('15\"', '15\"'),
+    ('16\"', '16\"'),
 )
 
 DIAMS = (
-    ('1/8', '1/8'),
-    ('1/4', '1/4'),
-    ('3/8', '3/8'),
-    ('1/2', '1/2'),
-    ('5/8', '5/8'),
+    ('1/8\"', '1/8\"'),
+    ('1/4\"', '1/4\"'),
+    ('3/8\"', '3/8\"'),
+    ('1/2\"', '1/2\"'),
+    ('5/8\"', '5/8\"'),
 )
 
 
@@ -59,17 +59,14 @@ class Product(models.Model):
         choices=DIAMS,
         default='',
         blank=True)
+    is_knife = models.BooleanField(default=False)
     description = models.TextField(default='')
-    shipping_info = models.TextField(
-        max_length=180,
-        blank=True)
     color = models.TextField(
         max_length=500,
         blank=True)
     extras = models.TextField(
         max_length=500,
         blank=True)
-    is_knife = models.BooleanField(default=False)
 
     def __str__(self):
         """Print for admin."""
@@ -88,11 +85,15 @@ class Service(models.Model):
     date_published = models.DateTimeField(blank=True, null=True)
     name = models.CharField(max_length=100)
     description = models.TextField(max_length=500, default='')
-    limitations = models.TextField(max_length=500, default='')
-    commision_fee = models.IntegerField(blank=True, default=0)
+    is_knife = models.BooleanField(default=False)
+    requires_pictures = models.BooleanField(default=False)
+    requires_description = models.BooleanField(default=False)
+    requires_address = models.BooleanField(default=False)
+    commission_fee = models.IntegerField(blank=True, default=0)
     price_range = models.CharField(
         max_length=15,
         default='')
+    limitations = models.TextField(max_length=500, default='')
     extras = models.TextField(
         max_length=500,
         blank=True)
@@ -100,11 +101,17 @@ class Service(models.Model):
         max_length=500,
         blank=True)
     tags = TaggableManager()
-    is_knife = models.BooleanField(default=False)
-    requires_pictures = models.BooleanField(default=False)
-    requires_description = models.BooleanField(default=False)
-    requires_address = models.BooleanField(default=False)
 
     def __str__(self):
         """Print for admin."""
         return self.name
+
+
+class UserServiceImage(models.Model):
+    """Model to store images uploaded for a requested service."""
+
+    image = ImageField(upload_to='service_images')
+
+    def __str__(self):
+        """Print for admin."""
+        return str(self.id)

@@ -39,8 +39,12 @@ NAV
     padding: 35px 30px 15px 5px;
 }
 
-.email {
-    font-size: 40px !important;
+.text-standard {
+    font-family: 'Cardo', serif;
+}
+
+.form-font {
+    font-size: 18px;
 }
 
 .header-sub {
@@ -137,8 +141,12 @@ MAIN SECTION
 }
 
 .about-text {
-    font-family: 'Tangerine', serif;
-    font-size: 32px;
+    font-size: 18px;
+    text-align: center;
+}
+
+.abt-text-col {
+    flex-grow: 3;
 }
 
 .section-heads {
@@ -176,13 +184,17 @@ MAIN SECTION
     margin: 10px;
 }
 
-.prod-form li {
+.item-form li {
     list-style: none;
     display: inline;
 }
 
-.serv-form, .prod-form {
+.item-form {
     margin-left: 15px;
+}
+
+.form-image {
+    max-width: 100%;
 }
 
 .carousel-link {
@@ -210,13 +222,74 @@ MAIN SECTION
     padding: 0 20px;
 }
 
-.gallery-images {
+.gallery-card {
     padding-top: 20px;
     padding-bottom: 5px;
+    width: 30%;
+}
+
+.gallery-image {
+    max-width: 100%;
 }
 
 .lightbox-img {
     width: 100%;
+}
+
+.abt-pic {
+    width: 175px;
+    height: 175px;
+    border-radius: 50%;
+}
+
+.link-font {
+    font-size: 22px;
+    color: rgba(0, 0, 0, 0.9);
+}
+
+.link-font:hover {
+    color: rgba(0, 0, 0, 0.7);
+    text-decoration: none;
+}
+
+.fa-stack[data-count]:after {
+  position: absolute;
+  right: -45%;
+  top: -30%;
+  content: attr(data-count);
+  font-size: 14px;
+  padding: .6em;
+  line-height: .75em;
+  color: rgb(122, 0, 0);
+  text-align: right;
+  font-weight: bold;
+}
+
+.cart {
+    height: 27px;
+    width: 27px;
+}
+
+.description-font {
+    font-size: 18px;
+}
+
+.serv-p-font {
+    font-size: 18px;
+}
+
+.date-picker-font {
+    font-size: 18px;
+    padding-top: 10px;
+}
+
+.serv-section-font {
+    font-size: 22px;
+    font-style: bold;
+}
+
+.page-404 {
+    background-image: url('static/404-image.jpg');
 }
 
 /* ***************************************************************************
@@ -351,14 +424,22 @@ CATALOG
     height: 600px;
 }
 
+.textarea-form > textarea, input {
+    max-width: 95%;
+}
+
+.placeholder {
+    height: 150px;
+}
+
 /* ***************************************************************************
 ACCOUNT
 *************************************************************************** */
 
 .acc-pic {
-    width: 250px;
-    height: 250px;
     border-radius: 50%;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .acc-info-row {
@@ -369,8 +450,14 @@ ACCOUNT
     padding: 25px 15px;
 }
 
+.acc-list-row {
+    margin-left: -30px;
+    width: 100%;
+}
+
 .account-list {
     list-style: none;
+    width: 48%;
 }
 
 .acc-item-link {
@@ -380,6 +467,15 @@ ACCOUNT
 .acc-item-link:hover {
     color: rgba(0, 0, 0, 0.7);
     text-decoration: none;
+}
+
+.acc-form {
+    padding-bottom: 25px;
+}
+
+.add-col {
+    padding-top: 15px;
+    padding-bottom: 15px;
 }
 
 /* ***************************************************************************
@@ -420,6 +516,9 @@ MEDIA QUERY
         padding-left: 0;
         text-align: left !important;
     }
+    .account-list {
+    width: 46%;
+    }
 }
 
 @media (max-width: 990px) {
@@ -427,13 +526,37 @@ MEDIA QUERY
         padding-left: 20px;
     }
     .calendar {
-    height: 400px;
+        height: 400px;
+    }
+    .acc-pic-col {
+        width: 200px;
+        height: 200px;
     }
 }
 
 @media (max-width: 770px) {
     .side-bar {
         visibility: hidden;
+    }
+    .gallery-card {
+    width: 45%;
+    }
+    .acc-pic-col {
+        width: 170px;
+        height: 170px;
+    }
+    .abt-text-col {
+    flex-basis: auto;
+    }
+    .account-list {
+    width: 100%;
+    }
+}
+
+@media (max-width: 758px) {
+    .acc-pic-col {
+        width: 120px;
+        height: 120px;
     }
 }
 
@@ -451,6 +574,9 @@ MEDIA QUERY
     .reg_button {
         float: none !important;
     }
+    .acc-pic-col {
+        width: 100%;
+    }
 }
 
 @media (max-width: 490px) {
@@ -459,6 +585,12 @@ MEDIA QUERY
     }
     .calendar {
     height: 300px;
+    }
+    .acc-pic-col {
+        visibility: hidden;
+        flex-grow: 0;
+        padding-left: 0;
+        padding-right: 0;
     }
 }
 
@@ -469,6 +601,12 @@ MEDIA QUERY
     .side-bar {
         padding: 5px;
         margin: 5px;
+    }
+    .gallery-card {
+    width: 100%;
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-bottom: 10px;
     }
 }
 

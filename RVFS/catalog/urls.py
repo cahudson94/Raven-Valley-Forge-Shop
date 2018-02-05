@@ -8,15 +8,20 @@ from catalog.views import (CreateProductView as CreateProd,
                            CreateServiceView as CreateServ,
                            EditServiceView as EditServ,
                            SingleServiceView as Serv,
+                           ServiceInfoView as ServInfo,
                            AllServicesView as Servs,
                            TagServicesView as TagServs,
                            CartView,
+                           CheckoutView,
+                           CheckoutCompleteView,
                            AllItemsView,
                            )
 
 urlpatterns = [
     path('list/', AllItemsView.as_view(), name='list'),
     path('cart/', CartView.as_view(), name='cart'),
+    path('checkout/', CheckoutView.as_view(), name='checkout'),
+    path('checkout-complete/', CheckoutCompleteView.as_view(), name='check_comp'),
     path('add-product/', CreateProd.as_view(), name='add_prod'),
     path('edit-product/<int:pk>/', EditProd.as_view(), name='edit_prod'),
     path('products/<int:pk>/', Prod.as_view(), name='prod'),
@@ -25,6 +30,7 @@ urlpatterns = [
     path('add-service/', CreateServ.as_view(), name='add_serv'),
     path('edit-service/<int:pk>/', EditServ.as_view(), name='edit_serv'),
     path('services/<int:pk>/', Serv.as_view(), name='serv'),
+    path('services/info/<int:pk>/', ServInfo.as_view(), name='serv_info'),
     path('services/', Servs.as_view(), name='servs'),
     path('services/<slug:slug>/', TagServs.as_view(), name='tagged_services'),
 ]

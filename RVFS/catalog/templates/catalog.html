@@ -12,7 +12,7 @@ Services
 {% block body %}
 <div class="row">
     <div class="col-1 side-bar">
-        <h5>{% if nbar == 'prods' %}
+        <h5 class="text-standard">{% if nbar == 'prods' %}
         Product
         {% else %}
         Service
@@ -22,21 +22,21 @@ Services
         {% for tag in all_tags %}
             {% if forloop.counter < 10 %}
                 {% if nbar == 'prods' %}
-                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories text-standard">{{ tag }}</li></a>
                 {% else %}
-                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories">{{ tag }}</li></a>
+                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories text-standard">{{ tag }}</li></a>
                 {% endif %}
             {% endif %}
             {% if forloop.counter == 10 %}
                 <button class="side-bar-more" type="button" data-toggle="collapse" data-target=".more-catagories" aria-controls=".more-catagories" aria-expanded="false" aria-label="Toggle navigation">
-                    <span>more...</span>
+                    <span class="text-standard">more...</span>
                 </button>
             {% endif %}
             {% if forloop.counter > 10 %}
                 {% if nbar == 'prods' %}
-                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories more-catagories collapse">{{ tag }}</li></a>
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories more-catagories collapse text-standard">{{ tag }}</li></a>
                 {% else %}
-                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories more-catagories collapse">{{ tag }}</li></a>
+                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories more-catagories collapse text-standard">{{ tag }}</li></a>
                 {% endif %}
             {% endif %}
         {% endfor %}
@@ -50,30 +50,30 @@ Services
                 <li class="page-item">
                     <a class="page-link" href="?page={{ tags.previous_page_number }}" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">Previous</span>
+                        <span class="sr-only text-standard">Previous</span>
                     </a>
                 {% else %}
                 <li class="page-item disabled">
                     <a class="page-link" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">Previous</span>
+                        <span class="sr-only text-standard">Previous</span>
                     </a>
                 {% endif %}
                 </li>
                 <li class="page-item disabled">
-                    <span class="page-link">{{ tags.number }} of {{ tags.paginator.num_pages }}</span>
+                    <span class="page-link text-standard">{{ tags.number }} of {{ tags.paginator.num_pages }}</span>
                 </li>
                 {% if tags.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ tags.next_page_number }}" aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">Next</span>
+                        <span class="sr-only text-standard">Next</span>
                     </a>
                 {% else %}
                 <li class="page-item disabled">
                     <a class="page-link" aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">Next</span>
+                        <span class="sr-only text-standard">Next</span>
                     </a>
                 {% endif %}
                 </li>
@@ -81,7 +81,7 @@ Services
         </nav>
     {% endif %}
     {% for tag in tags %}
-        <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories">{{ tag }}</h2></a>
+        <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories text-standard">{{ tag }}</h2></a>
         <div class="row card-row">
         {% for key_tag, prod_or_serv in items.items %}
             {% if tag == key_tag %}
@@ -96,8 +96,12 @@ Services
                             {% thumbnail item.image "140x140" crop="center" as pic %}
                             <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                             {% endthumbnail %}
-                            <h4 class="card-title">{{ item.name }}</h4>
-                            <p class="card-text">${{ item.price }}</p>
+                            <h4 class="card-title text-standard">{{ item.name }}</h4>
+                            {% if nbar == 'prods' %}
+                                <p class="card-text text-standard">${{ item.price }}</p>
+                            {% else %}
+                                <p class="card-text text-standard">${{ item.price_range }}</p>
+                            {% endif %}
                         </div></a>
                     {% endif %}
                 {% endfor %}
@@ -112,30 +116,30 @@ Services
                 <li class="page-item">
                     <a class="page-link" href="?page={{ tags.previous_page_number }}" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">Previous</span>
+                        <span class="sr-only text-standard">Previous</span>
                     </a>
                 {% else %}
                 <li class="page-item disabled">
                     <a class="page-link" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">Previous</span>
+                        <span class="sr-only text-standard">Previous</span>
                     </a>
                 {% endif %}
                 </li>
                 <li class="page-item disabled">
-                    <span class="page-link">{{ tags.number }} of {{ tags.paginator.num_pages }}</span>
+                    <span class="page-link text-standard">{{ tags.number }} of {{ tags.paginator.num_pages }}</span>
                 </li>
                 {% if tags.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ tags.next_page_number }}" aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">Next</span>
+                        <span class="sr-only text-standard">Next</span>
                     </a>
                 {% else %}
                 <li class="page-item disabled">
                     <a class="page-link" aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">Next</span>
+                        <span class="sr-only text-standard">Next</span>
                     </a>
                 {% endif %}
                 </li>

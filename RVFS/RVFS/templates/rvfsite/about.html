@@ -8,13 +8,13 @@ About
 
 {% block body %}
 <h1 class="section-heads">About the Shop:</h1>
-<p class="about-text">
+<p class="text-standard about-text">
 Our Burien workshop is crewed by a team of designers and artisans who will help you bring your creations to life. We offer a variety of metalworking services out of our forge and fabrication shops, including made-to-order custom fabrication, maintenance and repair of metalwork items, removal of scrap metal and materials in addition to a catalog of pre-made metal tools and artwork. Our capabilities as a shop are constantly advancing as we add new tools to our shops and new skills to our repertoire to refine our craft and our wares.
 </p>
-<p class="about-text">
+<p class="text-standard about-text">
 Our crew consists of Muninn and Huginn Ravenmoore, the owner and manager of RVFM respectively, along with Gordon Baylock out in the shop. When you arrive, you will likely meet with Huginn if Muninn is out in the shop with Gordon to place your order or consult on your design. From there, Muninn and Gordon will work to fabricate your design and have it ready for you to pick up from the shop. You might even meet Isis the shop dog, too!
 </p>
-<p class="about-text">
+<p class="text-standard about-text">
 Take a look in the shop Gallery for a glimpse at where the magic happens!
 </p>
 
@@ -24,51 +24,59 @@ Take a look in the shop Gallery for a glimpse at where the magic happens!
 
 <h2 class="section-heads section-sub-heads">The Office</h2>
 
-<div class="bio-left row">
+<div class="row">
     <div class="col">
-        <img src="#">
+        <img class="abt-pic d-block mx-auto" src="{% if becky %}{{ becky.pic.url }}{% else %}{% static 'becky.jpg' %}{% endif %}">
         <h3 class="names">Huginn Ravenmoore </h3>
     </div>
 
-    <p class="col-9 about-text">
-    Huginn serves as an office manager and PR rep for the shop, and is who you will likely be first meeting with when doing business with RVFM. In addition, she is an artist and a designer for the shop, and can help you put your ideas down on paper before the Boys take them out to the forge.  Huginn is among many other things: a performer with fire and steel, a lover of animals, the lovely fiance to Muninn, and an expectant mother; she is looking forward to the future with high anticipation.  Once her family and the forge are in order, Huginn dreams of traveling with Muninn and capturing the sights of the world with him.
-    </p>
+    <div class="col abt-text-col">
+        <p class="text-standard about-text">
+        Huginn serves as an office manager and PR rep for the shop, and is who you will likely be first meeting with when doing business with RVFM. In addition, she is an artist and a designer for the shop, and can help you put your ideas down on paper before the Boys take them out to the forge.  Huginn is among many other things: a performer with fire and steel, a lover of animals, the lovely fiance to Muninn, and an expectant mother; she is looking forward to the future with high anticipation.  Once her family and the forge are in order, Huginn dreams of traveling with Muninn and capturing the sights of the world with him.
+        </p>
+    </div>
 </div>
 <img class="dividor" src="{% static 'arrow-divider.png' %}">
 <h2 class="section-heads section-sub-heads">The Boys in the Shop</h2>
 
-<div class="bio-right row">
+<div class="row">
     <div class="col">
-        <img src="#">
+        <img class="abt-pic d-block mx-auto" src="{% if matt %}{{ matt.pic.url }}{% else %}{% static 'matt.jpg' %}{% endif %}">
         <h3 class="names">Muninn Ravenmoore </h3>
     </div>
 
-    <p class="col-9 about-text">
-    Both the owner and lead designer for the shop Muninn, has 10 years of experience in both craft and design work, along with a firm understanding of the science of metal. As the leader of a fire troupe and the captain of a pirate-LARP  eventing crew, Muninn frequently works out on the field with what he makes in the shop. Muninn discovered both a talent and a passion for metalworking in the course of eventing, admiring the work of others and opting to try his hand at it. While focusing on his family and getting RVFM operational for now, Muninn dreams of traveling and refining his craft under the tutelage of masters from around the world.
-    </p>
+    <div class="col abt-text-col">
+        <p class="text-standard about-text">
+        Both the owner and lead designer for the shop Muninn, has 10 years of experience in both craft and design work, along with a firm understanding of the science of metal. As the leader of a fire troupe and the captain of a pirate-LARP  eventing crew, Muninn frequently works out on the field with what he makes in the shop. Muninn discovered both a talent and a passion for metalworking in the course of eventing, admiring the work of others and opting to try his hand at it. While focusing on his family and getting RVFM operational for now, Muninn dreams of traveling and refining his craft under the tutelage of masters from around the world.
+        </p>
+    </div>
 </div>
 <img class="dividor" src="{% static 'arrow-divider.png' %}">
-<div class="bio-left row">
+<div class="row">
     <div class="col">
-        <img src="#">
+        <img class="abt-pic d-block mx-auto" src="{% if gordon %}{{ gordon.pic.url }}{% else %}{% static 'gordon.jpg' %}{% endif %}">
         <h3 class="names">Gordon Blaylock </h3>
     </div>
 
-    <p class="col-9 about-text">
-    Gordon is our shop apprentice from Salem, Oregon, and is the youngest member of our crew at 17. Gordon is working on finishing his GED and moving on to getting an education in metalworking and mechanics. He has a passion for old trucks and cars, from which he has developed an acute attention to detail that serves him well in the shops. He is a member of Muninn’s LARP and fire crews as well, and met Muninn in the eventing world before becoming his apprentice.
-    </p>
+    <div class="col abt-text-col">
+        <p class="text-standard about-text">
+        Gordon is our shop apprentice from Salem, Oregon, and is the youngest member of our crew at 17. Gordon is working on finishing his GED and moving on to getting an education in metalworking and mechanics. He has a passion for old trucks and cars, from which he has developed an acute attention to detail that serves him well in the shops. He is a member of Muninn’s LARP and fire crews as well, and met Muninn in the eventing world before becoming his apprentice.
+        </p>
+    </div>
 </div>
 <img class="dividor" src="{% static 'arrow-divider.png' %}">
-<div class="bio-right row">
+<div class="row">
     <div class="col">
-        <img src="#">
+        <img class="abt-pic d-block mx-auto" src="{% static 'isis.jpg' %}">
         <h3 class="names">Isis</h3>
         <h4 class="names">(shop Dog)</h4>
     </div>
 
-    <p class="col-9 about-text">
-    Our dutiful shop pup, Isis (named for the ancient Egyptian goddess of magic and wisdom) is an excitable but laid-back girl who would be delighted to meet you! She is very attentive to the needs of the crew in determining when they need to take breaks, often by dropping tennis balls at their feet and staring expectantly.
-    </p>
+    <div class="col abt-text-col">
+        <p class="text-standard about-text">
+        Our dutiful shop pup, Isis (named for the ancient Egyptian goddess of magic and wisdom) is an excitable but laid-back girl who would be delighted to meet you! She is very attentive to the needs of the crew in determining when they need to take breaks, often by dropping tennis balls at their feet and staring expectantly.
+        </p>
+    </div>
 </div>
 
 {% endblock %}
