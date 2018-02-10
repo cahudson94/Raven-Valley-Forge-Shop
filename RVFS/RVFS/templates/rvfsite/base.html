@@ -51,7 +51,7 @@
                   <br>
                 </li>
                 <li>
-                  <a href="https://www.facebook.com/Ravenmoorevalleyforge/"><img class="nav-social" src="{% static 'Facebook.png' %}"></a>
+                  <a href="https://www.facebook.com/RavenVFM/"><img class="nav-social" src="{% static 'Facebook.png' %}"></a>
                 </li>
                 <li>
                   <a href="https://www.linkedin.com/in/muninn-ravenmoore-a5215a142/"><img class="nav-social" src="{% static 'linkedin-round.png' %}"></a>
@@ -111,7 +111,7 @@
                 {% endif %}
                   <li class="nav-item text-standard {% if nbar == 'cart' %}active{% endif %}">
                     <a class="nav-link" href="{% url 'cart' %}">
-                      <span class="fa-stack fa has-badge cart" data-count="{{ cart_count }}">
+                      <span id="cart-count" class="fa-stack fa has-badge cart" data-count="{{ cart_count }}">
                         <i class="fa fa-shopping-cart fa-stack-1x"></i>
                       </span>
                     </a>
@@ -159,7 +159,7 @@
               <hr class="footer-break">
               <ul class="links">
                 <li>
-                  <a href="https://www.facebook.com/Ravenmoorevalleyforge/"><img class="nav-social" src="{% static 'Facebook.png' %}"></a>
+                  <a href="https://www.facebook.com/RavenVFM/"><img class="nav-social" src="{% static 'Facebook.png' %}"></a>
                 </li>
                 <li>
                   <a href="https://www.linkedin.com/in/muninn-ravenmoore-a5215a142/"><img class="nav-social" src="{% static 'linkedin-round.png' %}"></a>
@@ -182,8 +182,7 @@
     </div>
   </div>
 
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.3.0.js" integrity="sha256-TFWSuDJt6kS+huV+vVlyV1jM3dwGdeNWqezhTxXB/X8=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
   <script src="{% static 'js/dates.js' %}"></script>
   <script src="https://www.paypalobjects.com/api/checkout.js"></script>

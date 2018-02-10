@@ -8,7 +8,7 @@
         {% csrf_token %}
         <div class="row">
         {% for address in addresses %}
-            {% if forloop.counter > 2 and forloop.counter|sub:1|mod:3 == 0 %}
+            {% if forloop.counter > 2 and forloop.counter0|mod:3 == 0 %}
             </div>
             <div class="row">
                 <div class="col add-col">

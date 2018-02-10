@@ -7,7 +7,6 @@ var yearSelect = document.querySelector('#year');
 var monthSelect = document.querySelector('#month');
 var daySelect = document.querySelector('#day');
 var hourSelect = document.querySelector('#hour');
-var minuteSelect = document.querySelector('#minute');
 
 // hide fallback initially
 if (fallbackPicker) {
