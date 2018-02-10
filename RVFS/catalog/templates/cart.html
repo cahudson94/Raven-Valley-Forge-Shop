@@ -9,133 +9,153 @@
 <form enctype="multipart/form-data" method="post">
     {% csrf_token %}
     <h2 class="text-standard">Cart</h2>
-    <div class="row acc-row">
+    <div id='cart' class="row acc-row">
     {% if cart %}
         {% if prods %}
-        <h3 class="text-standard">Products:</h3>
+        <h3 class="section-head text-standard">Products:</h3>
         <ul class="row acc-list-row">
         {% for item in prods %}
-            {% if forloop.counter0|mod:4 == 0 %}
+            {% if forloop.counter0|mod:4 == 0 and forloop.counter0 > 0 %}
             </ul>
             <ul class="row acc-list-row">
-                <li class="card account-list">
-                    <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
+                <li id="prod {{ forloop.counter0 }}" class="card account-list">
                         <div class="row">
                             <div class="col">
                                 {% thumbnail item.item.image "100x100" crop="center" as pic %}
                                 <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                                 {% endthumbnail %}
-                                {% for field, value in item.items %}
-                                    {% if field == 'item' %}
-                                    <h4 class="text-standard">{{ value.name }}</h4>
-                                    {% endif %}
-                                {% endfor %}
+                                <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
                             </div>
                             <div class="col">
+                                <label class="text-standard">Quantity:</label>
+                                <select name="{{ item.count }}" onchange="updatecart(this.value, this.name)">
+                                    <option value="1" {% if item.quantity == '1' %}selected{% endif %}>1</option>
+                                    <option value="2" {% if item.quantity == '2' %}selected{% endif %}>2</option>
+                                    <option value="3" {% if item.quantity == '3' %}selected{% endif %}>3</option>
+                                    <option value="4" {% if item.quantity == '4' %}selected{% endif %}>4</option>
+                                    <option value="5" {% if item.quantity == '5' %}selected{% endif %}>5</option>
+                                </select>
                                 {% for field, value in item.items %}
                                     {% if field in item_fields %}
                                     <h5 class="text-standard">{{ field }}: {{ value }}</h5>
                                     {% endif %}
                                 {% endfor %}
                                 <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                                <div class="del-button d-flex">
+                                    <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
+                                </div>
                             </div>
                         </div>
-                    </a>
                 </li>
             {% else %}
-                <li class="card account-list">
-                    <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
-                        <div class="row">
-                            <div class="col">
-                                {% thumbnail item.item.image "100x100" crop="center" as pic %}
-                                    <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
-                                {% endthumbnail %}
-                                {% for field, value in item.items %}
-                                    {% if field == 'item' %}
-                                    <h4 class="text-standard">{{ value.name }}</h4>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                            <div class="col">
-                                {% for field, value in item.items %}
-                                    {% if field in item_fields %}
-                                    <h5 class="text-standard">{{ field }}: {{ value }}</h5>
-                                    {% endif %}
-                                {% endfor %}
-                                <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                <li id="prod {{ forloop.counter0 }}" class="card account-list">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                            <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
+                        </div>
+                        <div class="col">
+                            <label class="text-standard">Quantity:</label>
+                            <select name="{{ item.count }}" onchange="updatecart(this.value, this.name)">
+                                <option value="1" {% if item.quantity == '1' %}selected{% endif %}>1</option>
+                                <option value="2" {% if item.quantity == '2' %}selected{% endif %}>2</option>
+                                <option value="3" {% if item.quantity == '3' %}selected{% endif %}>3</option>
+                                <option value="4" {% if item.quantity == '4' %}selected{% endif %}>4</option>
+                                <option value="5" {% if item.quantity == '5' %}selected{% endif %}>5</option>
+                            </select>
+                            {% for field, value in item.items %}
+                                {% if field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                {% endif %}
+                            {% endfor %}
+                            <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                            <div class="del-button d-flex">
+                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 </li>
             {% endif %}
         {% endfor %}
         </ul>
         {% endif %}
         {% if servs %}
-        <h3 class="text-standard">Services:</h3>
+        <h3 class="section-head text-standard">Services:</h3>
         <ul class="row acc-list-row">
         {% for item in servs %}
             {% if forloop.counter0|mod:4 == 0 %}
             </ul>
             <ul class="row acc-list-row">
-                <li class="card account-list">
-                    <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
-                        <div class="row">
-                            <div class="col">
-                                {% thumbnail item.item.image "100x100" crop="center" as pic %}
-                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
-                                {% endthumbnail %}
-                                {% for field, value in item.items %}
-                                    {% if field == 'item' %}
-                                    <h4 class="text-standard">{{ value.name }}</h4>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                            <div class="col">
-                                {% for field, value in item.items %}
-                                    {% if field in item_fields %}
-                                    <h5 class="text-standard">{{ field }}: {{ value }}</h5>
-                                    {% endif %}
-                                {% endfor %}
-                                {% if item.item.commission_fee %}
-                                <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
+                <li id="serv {{ forloop.counter0 }}" class="card account-list">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                            <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
+                        </div>
+                        <div class="col">
+                            <label class="text-standard">Quantity:</label>
+                            <select name="{{ item.count }}" onchange="updatecart(this.value, this.name)">
+                                <option value="1" {% if item.quantity == '1' %}selected{% endif %}>1</option>
+                                <option value="2" {% if item.quantity == '2' %}selected{% endif %}>2</option>
+                                <option value="3" {% if item.quantity == '3' %}selected{% endif %}>3</option>
+                                <option value="4" {% if item.quantity == '4' %}selected{% endif %}>4</option>
+                                <option value="5" {% if item.quantity == '5' %}selected{% endif %}>5</option>
+                            </select>
+                            {% for field, value in item.items %}
+                                {% if field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
                                 {% endif %}
-                                {% if item.item.price_range %}
-                                <h5 class="text-standard">${{ item.item.price_range }} price range</h5>
-                                {% endif %}
+                            {% endfor %}
+                            {% if item.item.commission_fee %}
+                            <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
+                            {% endif %}
+                            {% if item.item.price_range %}
+                            <h5 class="text-standard">${{ item.item.price_range }} price range</h5>
+                            {% endif %}
+                            <div class="del-button d-flex">
+                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 </li>
             {% else %}
-                <li class="card account-list">
-                    <a class="acc-item-link" href="{% url 'prod' item.item_id %}">
-                        <div class="row">
-                            <div class="col">
-                                {% thumbnail item.item.image "100x100" crop="center" as pic %}
-                                    <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
-                                {% endthumbnail %}
-                                {% for field, value in item.items %}
-                                    {% if field == 'item' %}
-                                    <h4 class="text-standard">{{ value.name }}</h4>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                            <div class="col">
-                                {% for field, value in item.items %}
-                                    {% if field in item_fields %}
-                                    <h5 class="text-standard">{{ field }}: {{ value }}</h5>
-                                    {% endif %}
-                                {% endfor %}
-                                {% if item.item.commission_fee %}
-                                <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
+                <li id="serv {{ forloop.counter0 }}" class="card account-list">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                            <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
+                        </div>
+                        <div class="col">
+                            <label class="text-standard">Quantity:</label>
+                            <select name="{{ item.count }}" onchange="updatecart(this.value, this.name)">
+                                <option value="1" {% if item.quantity == '1' %}selected{% endif %}>1</option>
+                                <option value="2" {% if item.quantity == '2' %}selected{% endif %}>2</option>
+                                <option value="3" {% if item.quantity == '3' %}selected{% endif %}>3</option>
+                                <option value="4" {% if item.quantity == '4' %}selected{% endif %}>4</option>
+                                <option value="5" {% if item.quantity == '5' %}selected{% endif %}>5</option>
+                            </select>
+                            {% for field, value in item.items %}
+                                {% if field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
                                 {% endif %}
-                                {% if item.item.price_range %}
-                                <h5 class="text-standard">${{ item.item.price_range }} price range</h5>
-                                {% endif %}
+                            {% endfor %}
+                            {% if item.item.commission_fee %}
+                            <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
+                            {% endif %}
+                            {% if item.item.price_range %}
+                            <h5 class="text-standard">${{ item.item.price_range }} price range</h5>
+                            {% endif %}
+                            <div class="del-button d-flex">
+                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 </li>
             {% endif %}
         {% endfor %}
@@ -147,7 +167,7 @@
     {% endif %}
     </div>
     <div class="w-100">
-        <h3 class="text-right text-standard">Total:
+        <h3 id="total" class="text-right text-standard">Total:
             {% if account.cart_total %}
                 {% if account.cart_total.endswith == 0 %}
                     ${{ account.cart_total }}0
@@ -160,6 +180,7 @@
         </h3>
     </div>
     {% if account.cart_total %}
+    <div id="shipping">
     <img class="dividor" src="{% static 'arrow-divider.png' %}">
     <h2 class="text-standard">Shipping Info:</h2>
     <div class="row acc-row">
@@ -225,6 +246,7 @@
     <div class="w-100 d-flex">
         <input class="btn btn-secondary text-standard ml-auto" type="submit" name="check" value="Continue to Checkout">
     </div>
+    </div>
     {% endif %}
 </form>
 {% endblock %}
@@ -233,6 +255,7 @@
 {% block js %}
 
 <script src="{% static 'js/add_swap.js' %}"></script>
+<script src="{% static 'js/update_cart.js' %}"></script>
 
 {% endblock %}
 {% endif %}

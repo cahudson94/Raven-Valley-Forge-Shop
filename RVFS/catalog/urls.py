@@ -16,10 +16,13 @@ from catalog.views import (CreateProductView as CreateProd,
                            CheckoutCompleteView,
                            AllItemsView,
                            )
+from catalog import views
 
 urlpatterns = [
     path('list/', AllItemsView.as_view(), name='list'),
     path('cart/', CartView.as_view(), name='cart'),
+    path('cart/update_cart/', views.update_cart, name='update_cart'),
+    path('cart/delete_item/', views.delete_item, name='delete_item'),
     path('checkout/', CheckoutView.as_view(), name='checkout'),
     path('checkout-complete/', CheckoutCompleteView.as_view(), name='check_comp'),
     path('add-product/', CreateProd.as_view(), name='add_prod'),

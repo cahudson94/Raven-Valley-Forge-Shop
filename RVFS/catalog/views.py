@@ -1,15 +1,16 @@
 """."""
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic import ListView, DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
-from django.contrib.auth.models import User
+from account.views import get_galleries, cart_count, unpack, split_cart
 from account.models import Account, ShippingInfo, Order
 from catalog.models import Product, Service, UserServiceImage as UserImage
 from catalog.forms import ProductForm, ServiceForm
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponseRedirect
-from account.views import get_galleries, cart_count, unpack, split_cart
 from datetime import datetime
 from decimal import Decimal
 import json
@@ -228,6 +229,7 @@ class SingleServiceView(DetailView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(SingleServiceView, self).get_context_data(**kwargs)
+        import pdb; pdb.set_trace()
         if context['object'].extras:
             context['object'].extras = context['object'].extras.split(', ')
         context['cart_count'] = cart_count(self.request)
@@ -265,6 +267,15 @@ class ServiceInfoView(DetailView):
         context = super(ServiceInfoView, self).get_context_data(**kwargs)
         if context['object'].extras:
             context['object'].extras = context['object'].extras.split(', ')
+        import pdb; pdb.set_trace()
+        if self.request.user.is_authenticated:
+            if context['object'].requires_address:
+                account = self.request.user.account
+                add_id = account.main_address
+                context['address'] = ShippingInfo.objects.get(id=add_id)
+                if len(account.shippinginfo_set.values()) > 1:
+                    addresses = account.shippinginfo_set.values()
+                    context['alt_add'] = [address for address in addresses]
         context['cart_count'] = cart_count(self.request)
         context['nbar'] = 'servs'
         context['galleries'] = get_galleries()
@@ -274,6 +285,7 @@ class ServiceInfoView(DetailView):
         """Add item to appropriate list."""
         data = request.POST, request.FILES
         if 'add' in data[0].keys():
+            import pdb; pdb.set_trace()
             fields = []
             for field in data[0]:
                 if field != 'csrfmiddlewaretoken' and field != 'add':
@@ -282,7 +294,7 @@ class ServiceInfoView(DetailView):
                          'description': self.get_object().description}
             for field in fields:
                 cart_item[field] = data[0][field]
-                if field in ['color', 'length', 'diameter', 'extras']:
+                if field == 'extras':
                     cart_item['description'] += ' ' + field + ', ' + data[0][field] + '. '
             if data[1]:
                 cart_item['files'] = ''
@@ -453,10 +465,12 @@ class CartView(TemplateView):
             context['servs'] = []
             for item in context['cart']:
                 if item['type'] == 'prod':
+                    item['count'] = 'prod ' + str(len(context['prods']))
                     context['prods'].append(item)
                 else:
+                    item['count'] = 'serv ' + str(len(context['servs']))
                     context['servs'].append(item)
-        context['item_fields'] = ['quantity', 'color', 'length', 'diameter', 'extras']
+        context['item_fields'] = ['color', 'length', 'diameter', 'extras']
         context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'cart'
@@ -520,6 +534,75 @@ class CartView(TemplateView):
             request.session.save()
             return HttpResponseRedirect(self.success_url)
         return HttpResponseRedirect(reverse_lazy('cart'))
+
+
+@login_required
+def update_cart(request):
+    """Change quantity of items in cart and update total."""
+    cart_item = request.GET['cart_data'].split(' ')
+    if request.user.is_authenticated:
+        cart = unpack(request.user.account.cart)
+        cart_total = request.user.account.cart_total
+    else:
+        cart = unpack(request.session['account']['cart'])
+        cart_total = request.session['account']['cart_total']
+    prods = []
+    servs = []
+    for item in cart:
+        if item['type'] == 'prod':
+            prods.append(item)
+        else:
+            servs.append(item)
+    if cart_item[0] == 'prod':
+        difference = int(request.GET['quantity']) - int(prods[int(cart_item[1])]['quantity'])
+        cart_total += Decimal(prods[int(cart_item[1])]['item'].price * difference)
+        prods[int(cart_item[1])]['quantity'] = request.GET['quantity']
+    else:
+        if servs[int(cart_item[1])]['item'].commission_fee:
+            difference = int(request.GET['quantity']) - int(servs[int(cart_item[1])]['quantity'])
+            cart_total += Decimal(servs[int(cart_item[1])]['item'].commission_fee * difference)
+        servs[int(cart_item[1])]['quantity'] = request.GET['quantity']
+    cart_repack(prods, servs, request, cart_total)
+    return HttpResponse(cart_total)
+
+
+@login_required
+def delete_item(request):
+    """Remove items from cart and update total."""
+    cart_item = request.GET['item'].split(' ')
+    if request.user.is_authenticated:
+        cart = unpack(request.user.account.cart)
+        cart_total = request.user.account.cart_total
+    else:
+        cart = unpack(request.session['account']['cart'])
+        cart_total = request.session['account']['cart_total']
+    prods = []
+    servs = []
+    for item in cart:
+        if item['type'] == 'prod':
+            prods.append(item)
+        else:
+            servs.append(item)
+    if len(prods) + len(servs) == 1:
+        cart_total = Decimal(0.0)
+        if request.user.is_authenticated:
+            request.user.account.cart_total = cart_total
+            request.user.account.cart = ''
+            request.user.account.save()
+        else:
+            request.session['account']['cart_total'] = cart_total
+            request.session['account']['cart'] = ''
+            request.session.save()
+        return HttpResponse('empty')
+    if cart_item[0] == 'prod':
+        cart_total -= Decimal(prods[int(cart_item[1])]['item'].price * int(prods[int(cart_item[1])]['quantity']))
+        prods.pop(int(cart_item[1]))
+    else:
+        if servs[int(cart_item[1])]['item'].commission_fee:
+            cart_total -= Decimal(servs[int(cart_item[1])]['item'].commission_fee * int(servs[int(cart_item[1])]['quantity']))
+        servs.pop(int(cart_item[1]))
+    cart_repack(prods, servs, request, cart_total)
+    return HttpResponse(cart_total)
 
 
 class CheckoutView(TemplateView):
@@ -641,3 +724,28 @@ def check_address(data, account):
         equal += 1
     if equal == 5:
         return address.id
+
+
+def cart_repack(prods, servs, request, cart_total):
+    """Repack items into the cart."""
+    cart_repack = ''
+    for i in prods:
+        i.pop('item')
+        if cart_repack:
+            cart_repack += '|' + json.dumps(i)
+        else:
+            cart_repack += json.dumps(i)
+    for i in servs:
+        i.pop('item')
+        if cart_repack:
+            cart_repack += '|' + json.dumps(i)
+        else:
+            cart_repack += json.dumps(i)
+    if request.user.is_authenticated:
+        request.user.account.cart = cart_repack
+        request.user.account.cart_total = cart_total
+        request.user.account.save()
+    else:
+        request.session['account']['cart'] = cart_repack
+        request.session['account']['cart_total'] = cart_total
+        request.session.save()
