@@ -5,9 +5,10 @@
 {% block title %}Checkout{% endblock %}
 
 {% block body %}
-
-<h2>Shipping To:</h2>
 <div class="row">
+{% if shipping %}
+  <div class="col">
+  <h2>Shipping To:</h2>
     <ul>
         <li class="footer-info">
             <h4>{{ info.first }}, {{ info.last }}</h4>
@@ -33,6 +34,38 @@
             <h4>{{ shipping.zip_code }}</h4>
         </li>
     </ul>
+  </div>
+{% endif %}
+{% if serv %}
+  <div class="col">
+  <h2>Address for Services:</h2>
+    <ul>
+        <li class="footer-info">
+            <h4>{{ info.first }}, {{ info.last }}</h4>
+        </li>
+        <li class="footer-info">
+            <h4>{{ info.email }}</h4>
+        </li>
+        <li class="footer-info">
+            <h4>{{ serv.address1 }}</h4>
+        {% if serv.address2 %}
+        </li>
+        <li class="footer-info">
+            <h4>{{ serv.address2 }}</h4>
+        {% endif %}
+        </li>
+        <li class="footer-info">
+            <h4>{{ serv.city }}</h4>
+        </li>
+        <li class="footer-info">
+            <h4>{{ serv.state }}</h4>
+        </li>
+        <li class="footer-info">
+            <h4>{{ serv.zip_code }}</h4>
+        </li>
+    </ul>
+  </div>
+{% endif %}
 </div>
 
 <div class="w-100">
@@ -51,7 +84,11 @@
 
 <div class="w-100 d-flex">
     <a class="btn btn-secondary text-standard" href="{% url 'cart' %}">Back</a>
+    {% if total %}
     <div id="paypal-button-container" class="ml-auto"></div>
+    {% else %}
+    <a class="btn btn-secondary text-standard" href="{% url 'check_comp' %}">Request Service</a>
+    {% endif %}
 </div>
 <p class="text-standard">
     * Items will ship in approximatly 4 weeks and you will recieve an email with tracking information when they go out. If you have an account this information will also be available in your orders.
@@ -60,6 +97,12 @@
 <p class="text-standard">
     * If you have schedualed a service you will recieve an email confirming your time and date, or if a reschedual is needed, we will reach out to set an available time.
 </p>
+{% if not account.cart_total %}
+<br>
+<p class="text-standard">
+    * Rate for services will depend on the scope of services provided payment is due, either before delivery of finished product, or prior to departcher for on premises services.
+</p>
+{% endif %}
 {% endblock %}
 
 {% block js %}

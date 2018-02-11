@@ -415,7 +415,12 @@ class OrderView(UpdateView):
         context['galleries'] = get_galleries()
         context['title'] = title
         context['nbar'] = 'order'
-        context['address'] = context['object'].ship_to
+        if context['object'].ship_to:
+            context['address'] = context['object'].ship_to
+        if context['object'].serv_address:
+            context['serv'] = context['object'].serv_address
+        if context['object'].appointment:
+            context['time'] = context['object'].appointment
         context['content'] = unpack(context['object'].order_content)
         context['item_fields'] = ['quantity', 'color', 'length', 'diameter', 'extras']
         return context
@@ -430,7 +435,8 @@ class OrdersView(ListView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(OrdersView, self).get_context_data(**kwargs)
-        context['order_list'] = context['order_list'].order_by('id')
+        context['order_list'] = (context['order_list'].filter(paid=True)
+                                                      .order_by('id'))
         context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
         context['nbar'] = 'order'

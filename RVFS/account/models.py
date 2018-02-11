@@ -56,10 +56,14 @@ class Order(models.Model):
                               blank=True, null=True)
     ship_to = models.ForeignKey(ShippingInfo, on_delete=models.CASCADE,
                                 blank=True, null=True)
+    serv_address = models.ForeignKey(ShippingInfo, on_delete=models.CASCADE,
+                                     blank=True, null=True, related_name='ordered_service')
     recipient = models.CharField(max_length=40, default='')
     recipient_email = models.CharField(max_length=40, default='')
-    shipped = models.BooleanField(default=False)
+    appointment = models.CharField(max_length=40, default='')
     tracking = models.CharField(max_length=35, default='')
+    shipped = models.BooleanField(default=False)
+    paid = models.BooleanField(default=False)
     order_content = models.TextField()
 
     def __str__(self):

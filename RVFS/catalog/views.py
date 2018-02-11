@@ -229,7 +229,6 @@ class SingleServiceView(DetailView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(SingleServiceView, self).get_context_data(**kwargs)
-        import pdb; pdb.set_trace()
         if context['object'].extras:
             context['object'].extras = context['object'].extras.split(', ')
         context['cart_count'] = cart_count(self.request)
@@ -267,15 +266,6 @@ class ServiceInfoView(DetailView):
         context = super(ServiceInfoView, self).get_context_data(**kwargs)
         if context['object'].extras:
             context['object'].extras = context['object'].extras.split(', ')
-        import pdb; pdb.set_trace()
-        if self.request.user.is_authenticated:
-            if context['object'].requires_address:
-                account = self.request.user.account
-                add_id = account.main_address
-                context['address'] = ShippingInfo.objects.get(id=add_id)
-                if len(account.shippinginfo_set.values()) > 1:
-                    addresses = account.shippinginfo_set.values()
-                    context['alt_add'] = [address for address in addresses]
         context['cart_count'] = cart_count(self.request)
         context['nbar'] = 'servs'
         context['galleries'] = get_galleries()
@@ -285,7 +275,6 @@ class ServiceInfoView(DetailView):
         """Add item to appropriate list."""
         data = request.POST, request.FILES
         if 'add' in data[0].keys():
-            import pdb; pdb.set_trace()
             fields = []
             for field in data[0]:
                 if field != 'csrfmiddlewaretoken' and field != 'add':
@@ -438,6 +427,30 @@ class CartView(TemplateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CartView, self).get_context_data(**kwargs)
+        if 'shipping_data' in self.request.session.keys():
+            context['shipping'] = self.request.session['shipping_data']['shipping']
+            context['info'] = self.request.session['shipping_data']['info']
+            if 'exists' in self.request.session['shipping_data'].keys():
+                context['ship_exists'] = self.request.session['shipping_data']['exists']
+        else:
+            if self.request.user.is_authenticated:
+                context['account'] = context['view'].request.user.account
+                context['shipping'] = ShippingInfo.objects.get(pk=context['account'].main_address)
+                context['info'] = {'first': context['account'].first_name,
+                                   'last': context['account'].last_name,
+                                   'email': context['view'].request.user.email}
+        if 'service_data' in self.request.session.keys():
+            context['serv_add'] = self.request.session['service_data']['shipping']
+            context['serv_info'] = self.request.session['service_data']['info']
+            if 'exists' in self.request.session['service_data'].keys():
+                context['serv_exists'] = self.request.session['service_data']['exists']
+        else:
+            if self.request.user.is_authenticated:
+                context['account'] = context['view'].request.user.account
+                context['serv_add'] = ShippingInfo.objects.get(pk=context['account'].main_address)
+                context['serv_info'] = {'first': context['account'].first_name,
+                                        'last': context['account'].last_name,
+                                        'email': context['view'].request.user.email}
         if self.request.user.is_anonymous:
             if not self.request.session.get_expire_at_browser_close():
                 self.request.session.set_expiry(0)
@@ -445,17 +458,9 @@ class CartView(TemplateView):
                 self.request.session['account'] = {'cart': '', 'cart_total': 0.0}
             context['cart'] = self.request.session['account']['cart']
             context['account'] = self.request.session['account']
-            if 'shipping' in context['account'].keys():
-                context['shipping'] = context['account']['shipping']
-            if 'info' in context['account'].keys():
-                context['info'] = context['account']['info']
         else:
             context['account'] = context['view'].request.user.account
             context['cart'] = context['account'].cart
-            context['info'] = {'first': context['account'].first_name,
-                               'last': context['account'].last_name,
-                               'email': context['view'].request.user.email}
-            context['shipping'] = ShippingInfo.objects.get(pk=context['account'].main_address)
             if len(context['account'].shippinginfo_set.values()) > 1:
                 addresses = context['account'].shippinginfo_set.values()
                 context['alt_add'] = [address for address in addresses]
@@ -463,11 +468,14 @@ class CartView(TemplateView):
             context['cart'] = unpack(context['cart'])
             context['prods'] = []
             context['servs'] = []
+            context['serv_address'] = False
             for item in context['cart']:
                 if item['type'] == 'prod':
                     item['count'] = 'prod ' + str(len(context['prods']))
                     context['prods'].append(item)
                 else:
+                    if item['item'].requires_address:
+                        context['serv_address'] = True
                     item['count'] = 'serv ' + str(len(context['servs']))
                     context['servs'].append(item)
         context['item_fields'] = ['color', 'length', 'diameter', 'extras']
@@ -479,59 +487,68 @@ class CartView(TemplateView):
     def post(self, request, *args, **kwargs):
         """Apply shipping info for guest user."""
         data = request.POST
+        exists = False
+        exists_serv = False
         field_count = 0
-        fields = ['first_name', 'last_name', 'email',
-                  'add_1', 'city', 'state', 'zip']
-        if request.user.is_anonymous:
-            request.session['account']['info'] = {'first': '', 'last': '', 'email': ''}
-            if data['first_name']:
-                request.session['account']['info']['first'] = data['first_name']
-            if data['last_name']:
-                request.session['account']['info']['last'] = data['last_name']
-            if data['email']:
-                request.session['account']['info']['email'] = data['email']
-            request.session.save()
-            request.session['account']['shipping'] = {'address1': '',
-                                                      'address2': '',
-                                                      'city': '',
-                                                      'state': '',
-                                                      'zip_code': ''}
-            if data['add_1']:
-                request.session['account']['shipping']['address1'] = data['add_1']
-            if data['add_2']:
-                request.session['account']['shipping']['address2'] = data['add_2']
-            if data['city']:
-                request.session['account']['shipping']['city'] = data['city']
-            if data['state']:
-                request.session['account']['shipping']['state'] = data['state']
-            if data['zip']:
-                request.session['account']['shipping']['zip_code'] = data['zip']
-            request.session.save()
-        for i in fields:
-            if data[i]:
-                field_count += 1
-        if field_count == 7:
-            shipping_data = {
-                'info': {
-                    'first': data['first_name'],
-                    'last': data['last_name'],
-                    'email': data['email'],
-                },
-                'shipping': {
-                    'address1': data['add_1'],
-                    'address2': data['add_2'],
-                    'city': data['city'],
-                    'state': data['state'],
-                    'zip_code': data['zip'],
-                }
-            }
+        ship_fields = ['ship_first_name', 'ship_last_name', 'ship_email',
+                       'ship_add_1', 'ship_city', 'ship_state', 'ship_zip']
+        serv_fields = ['serv_first_name', 'serv_last_name', 'serv_email',
+                       'serv_add_1', 'serv_city', 'serv_state', 'serv_zip']
+        # import pdb; pdb.set_trace()
+        if 'ship_address_name' in data.keys():
             if request.user.is_authenticated:
                 account = Account.objects.get(user=request.user)
-                exists = check_address(data, account)
-                if exists:
-                    shipping_data['exists'] = exists
-            request.session['shipping_data'] = shipping_data
-            request.session.save()
+                exists = check_address(data, account, 0)
+            for i in ship_fields:
+                if data[i]:
+                    field_count += 1
+            if field_count == 7:
+                shipping_data = {
+                    'info': {
+                        'first': data['ship_first_name'],
+                        'last': data['ship_last_name'],
+                        'email': data['ship_email'],
+                    },
+                    'shipping': {
+                        'address1': data['ship_add_1'],
+                        'address2': data['ship_add_2'],
+                        'city': data['ship_city'],
+                        'state': data['ship_state'],
+                        'zip_code': data['ship_zip'],
+                    }
+                }
+                request.session['shipping_data'] = shipping_data
+                request.session.save()
+        if 'serv_address_name' in data.keys():
+            if request.user.is_authenticated:
+                account = Account.objects.get(user=request.user)
+                exists_serv = check_address(data, account, 1)
+            field_count = 0
+            for i in serv_fields:
+                if data[i]:
+                    field_count += 1
+            if field_count == 7:
+                serv_data = {
+                    'info': {
+                        'first': data['serv_first_name'],
+                        'last': data['serv_last_name'],
+                        'email': data['serv_email'],
+                    },
+                    'shipping': {
+                        'address1': data['serv_add_1'],
+                        'address2': data['serv_add_2'],
+                        'city': data['serv_city'],
+                        'state': data['serv_state'],
+                        'zip_code': data['serv_zip'],
+                    }
+                }
+                request.session['service_data'] = serv_data
+                request.session.save()
+        if exists:
+            shipping_data['exists'] = exists
+        if exists_serv:
+            serv_data['exists'] = exists_serv
+        if field_count == 7:
             return HttpResponseRedirect(self.success_url)
         return HttpResponseRedirect(reverse_lazy('cart'))
 
@@ -557,11 +574,6 @@ def update_cart(request):
         difference = int(request.GET['quantity']) - int(prods[int(cart_item[1])]['quantity'])
         cart_total += Decimal(prods[int(cart_item[1])]['item'].price * difference)
         prods[int(cart_item[1])]['quantity'] = request.GET['quantity']
-    else:
-        if servs[int(cart_item[1])]['item'].commission_fee:
-            difference = int(request.GET['quantity']) - int(servs[int(cart_item[1])]['quantity'])
-            cart_total += Decimal(servs[int(cart_item[1])]['item'].commission_fee * difference)
-        servs[int(cart_item[1])]['quantity'] = request.GET['quantity']
     cart_repack(prods, servs, request, cart_total)
     return HttpResponse(cart_total)
 
@@ -599,7 +611,7 @@ def delete_item(request):
         prods.pop(int(cart_item[1]))
     else:
         if servs[int(cart_item[1])]['item'].commission_fee:
-            cart_total -= Decimal(servs[int(cart_item[1])]['item'].commission_fee * int(servs[int(cart_item[1])]['quantity']))
+            cart_total -= Decimal(servs[int(cart_item[1])]['item'].commission_fee)
         servs.pop(int(cart_item[1]))
     cart_repack(prods, servs, request, cart_total)
     return HttpResponse(cart_total)
@@ -612,14 +624,17 @@ class CheckoutView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Check for shipping data."""
-        if 'shipping_data' not in request.session.keys():
+        if 'shipping_data' not in request.session.keys() or 'service_data' not in request.session.keys():
             return HttpResponseRedirect(reverse_lazy('cart'))
         return super(CheckoutView, self).get(self, request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CheckoutView, self).get_context_data(**kwargs)
-        shipping_data = self.request.session['shipping_data']
+        if 'shipping_data' in self.request.session.keys():
+            shipping_data = self.request.session['shipping_data']
+        if 'service_data' in self.request.session.keys():
+            service_data = self.request.session['service_data']
         if context['view'].request.user.is_authenticated:
             account = context['view'].request.user.account
             cart = account.cart
@@ -629,34 +644,96 @@ class CheckoutView(TemplateView):
             account = Account.objects.get(user=guest_user)
             cart = self.request.session['account']['cart']
             cart_total = self.request.session['account']['cart_total']
-        if 'exists' in shipping_data.keys():
-            address = ShippingInfo.objects.get(id=shipping_data['exists'])
-        else:
-            address = ShippingInfo(
-                address1=shipping_data['shipping']['address1'],
-                address2=shipping_data['shipping']['address2'],
-                zip_code=shipping_data['shipping']['zip_code'],
-                city=shipping_data['shipping']['city'],
-                state=shipping_data['shipping']['state'])
-            address.save()
-            if context['view'].request.user.is_authenticated:
-                address.resident = Account.objects.get(user=context['view'].request.user)
+        if shipping_data:
+            if 'exists' in shipping_data.keys():
+                address = ShippingInfo.objects.get(id=shipping_data['exists'])
             else:
-                address.resident = Account.objects.get(user=guest_user)
-            address.save()
-        order = Order(
-            buyer=account,
-            order_content=cart,
-            ship_to=address,
-            recipient_email=shipping_data['info']['email'],
-            recipient=(shipping_data['info']['first'] +
-                       ', ' + shipping_data['info']['last'])
-        )
-        order.save()
+                address = ShippingInfo(
+                    address1=shipping_data['shipping']['address1'],
+                    address2=shipping_data['shipping']['address2'],
+                    zip_code=shipping_data['shipping']['zip_code'],
+                    city=shipping_data['shipping']['city'],
+                    state=shipping_data['shipping']['state'])
+                address.save()
+                if context['view'].request.user.is_authenticated:
+                    address.resident = Account.objects.get(user=context['view'].request.user)
+                else:
+                    address.resident = Account.objects.get(user=guest_user)
+                address.save()
+            email = shipping_data['info']['email']
+            name = (shipping_data['info']['first'] +
+                    ', ' + shipping_data['info']['last'])
+        if service_data:
+            if 'exists' in service_data.keys():
+                if address:
+                    serv_address = ShippingInfo.objects.get(id=service_data['exists'])
+                else:
+                    address = ShippingInfo.objects.get(id=service_data['exists'])
+            else:
+                if address:
+                    serv_address = ShippingInfo(
+                        address1=service_data['shipping']['address1'],
+                        address2=service_data['shipping']['address2'],
+                        zip_code=service_data['shipping']['zip_code'],
+                        city=service_data['shipping']['city'],
+                        state=service_data['shipping']['state'])
+                    serv_address.save()
+                    if context['view'].request.user.is_authenticated:
+                        serv_address.resident = Account.objects.get(user=context['view'].request.user)
+                    else:
+                        serv_address.resident = Account.objects.get(user=guest_user)
+                    serv_address.save()
+                else:
+                    address = ShippingInfo(
+                        address1=service_data['shipping']['address1'],
+                        address2=service_data['shipping']['address2'],
+                        zip_code=service_data['shipping']['zip_code'],
+                        city=service_data['shipping']['city'],
+                        state=service_data['shipping']['state'])
+                    address.save()
+                    if context['view'].request.user.is_authenticated:
+                        address.resident = Account.objects.get(user=context['view'].request.user)
+                    else:
+                        address.resident = Account.objects.get(user=guest_user)
+                    address.save()
+        if serv_address and address:
+            order = Order(
+                buyer=account,
+                order_content=cart,
+                ship_to=address,
+                recipient_email=email,
+                recipient=name,
+                serv_address=serv_address,
+            )
+            order.save()
+        elif shipping_data:
+            order = Order(
+                buyer=account,
+                order_content=cart,
+                ship_to=address,
+                recipient_email=email,
+                recipient=name,
+            )
+            order.save()
+        else:
+            order = Order(
+                buyer=account,
+                order_content=cart,
+                serv_address=address,
+                recipient_email=email,
+                recipient=name,
+            )
+            order.save()
         self.request.session['order_num'] = order.id
         self.request.session.save()
-        context['shipping'] = address
-        context['info'] = shipping_data['info']
+        if shipping_data:
+            context['shipping'] = address
+            context['info'] = shipping_data['info']
+            if service_data:
+                context['serv'] = serv_address
+        elif service_data:
+            context['serv'] = address
+            context['info'] = service_data['info']
         context['total'] = cart_total
         context['cart_count'] = cart_count(self.request)
         context['galleries'] = get_galleries()
@@ -671,7 +748,7 @@ class CheckoutCompleteView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Check for shipping data."""
-        if 'shipping_data' not in request.session.keys():
+        if 'shipping_data' not in request.session.keys() or 'service_data' not in request.session.keys():
             return HttpResponseRedirect(reverse_lazy('cart'))
         return super(CheckoutCompleteView, self).get(self, request, *args, **kwargs)
 
@@ -680,6 +757,9 @@ class CheckoutCompleteView(TemplateView):
         context = super(CheckoutCompleteView, self).get_context_data(**kwargs)
         session = self.request.session
         context['order'] = session['order_num']
+        order = Order.objects.get(session['order_num'])
+        order.paid = True
+        order.save()
         if context['view'].request.user.is_authenticated:
             account = context['view'].request.user.account
             cart = split_cart(account.cart)
@@ -704,24 +784,26 @@ class CheckoutCompleteView(TemplateView):
         return context
 
 
-def check_address(data, account):
+def check_address(data, account, version):
     """Check if user is using an existing address."""
-    if 'address_name' in data.keys():
-        add_id = data['address_name'].split(', ')[0].split(': ')[1]
+    types = ['ship_address_name', 'serv_address_name']
+    types_data = {
+        'ship_address_name': ['ship_add_1', 'ship_add_2',
+                              'ship_city', 'ship_state', 'ship_zip'],
+        'serv_address_name': ['serv_add_1', 'serv_add_2',
+                              'serv_city', 'serv_state', 'serv_zip']
+    }
+    if types[version] in data.keys():
+        add_id = data[types[version]].split(', ')[0].split(': ')[1]
         address = ShippingInfo.objects.get(id=add_id)
     else:
         address = ShippingInfo.objects.get(resident=account)
+    types_data['address'] = [address.address1, address.address2,
+                             address.city, address.state, address.zip_code]
     equal = 0
-    if data['add_1'] == address.address1:
-        equal += 1
-    if data['add_2'] == address.address2:
-        equal += 1
-    if data['city'] == address.city:
-        equal += 1
-    if data['state'] == address.state:
-        equal += 1
-    if data['zip'] == address.zip_code:
-        equal += 1
+    for idx, item in enumerate(types_data[types[version]]):
+        if data[item] == types_data['address'][idx]:
+            equal += 1
     if equal == 5:
         return address.id
 
