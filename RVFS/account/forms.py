@@ -112,9 +112,10 @@ class OrderUpdateForm(forms.ModelForm):
     """Update orders with shipping or changes."""
 
     tracking = forms.CharField(required=False)
+    appointment = forms.CharField(required=False)
 
     class Meta():
         """."""
 
         model = Order
-        exclude = ['buyer', 'ship_to', 'order_content']
+        exclude = ['buyer', 'ship_to', 'order_content', 'payed']

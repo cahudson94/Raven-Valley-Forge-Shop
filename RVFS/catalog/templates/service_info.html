@@ -34,65 +34,6 @@
             <p class="text-standard serv-section-font">Please provide a detailed description:</p>
             <textarea name="description" rows="6" cols="40" required></textarea>
             {% endif %}
-            {% if user.is_authenticated %}
-            <h2 class="text-standard">Address for service:</h2>
-            <ul class="row acc-row">
-                {% if alt_add %}
-                <li class="account-list">
-                <label class="text-standard">Address:</label>
-                <select id="address_name" name="address_name">
-                    {% for add in alt_add %}
-                        {% if add.main %}
-                        <option value="{{ add }}" selected="selected">{{ add.name }}</option>
-                        {% else %}
-                        <option value="{{ add }}">{{ add.name }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-                </li>
-                {% endif %}
-            {% endif %}
-                <li class="account-list">
-                <label class="text-standard">First Name:</label>
-                <br>
-                <input id="first_name" type="text" name="first_name" value="{% if info %}{{ info.first }}{% endif %}">
-                </li>
-                <li class="account-list">
-                <label class="text-standard">Last Name:</label>
-                <br>
-                <input id="last_name" type="text" name="last_name" value="{% if info %}{{ info.last }}{% endif %}">
-                </li>
-                <li class="account-list">
-                <label class="text-standard">Email:</label>
-                <br>
-                <input id="email" type="text" name="email" value="{% if info %}{{ info.email }}{% endif %}">
-                </li>
-                <li class="account-list">
-                <label class="text-standard">Address Line 1:</label>
-                <br>
-                <input id="add_1" type="text" name="add_1" value="{% if address %}{{ address.address1 }}{% endif %}">
-                </li>
-                <li class="account-list">
-                <label class="text-standard">Address Line 2:</label>
-                <br>
-                <input id="add_2" type="text" name="add_2" value="{% if address %}{{ address.address2 }}{% endif %}">
-                </li>
-                <li class="account-list">
-                <label class="text-standard">City:</label>
-                <br>
-                <input id="city" type="text" name="city" value="{% if address %}{{ address.city }}{% endif %}">
-                </li>
-                <li class="account-list">
-                <label class="text-standard">State:</label>
-                <br>
-                <input id="state" type="text" name="state" value="{% if address %}{{ address.state }}{% endif %}">
-                </li>
-                <li class="account-list">
-                <label class="text-standard">Zip Code:</label>
-                <br>
-                <input id="zip" type="text" name="zip" value="{% if address %}{{ address.zip_code }}{% endif %}">
-                </li>
-            </ul>
         </div>
         <div class="col">
             <div class="nativeDateTimePicker">
@@ -140,17 +81,6 @@
                 </div>
             </div>
             <p class="text-standard serv-p-font">See calendar for openings, you will recieve an email confirming this time or to adjust if the time you select is unavailable. *</p>
-            {% if service.requires_address %}
-            <p class="text-standard serv-section-font">Please provide an Address for this service:</p>
-            {% if user.is_authenticated %}
-            <input class="text-standard" type="checkbox" name="use_acc" value="Use saved address">Use saved address<br>
-            {% endif %}
-            <label class="text-standard">Address Line 1:</label><input type="text" name="Address1" required><br>
-            <label class="text-standard">Address Line 2:</label><input type="text" name="Address2"><br>
-            <label class="text-standard">City:</label><input type="text" name="City" required><br>
-            <label class="text-standard">State:</label><input type="text" name="State" required><br>
-            <label class="text-standard">Zip Code:</label><input type="text" name="Zip" required><br>
-            {% endif %}
             {% if service.requires_pictures %}
             <input type="file" name="pic1" required>
             <input type="file" name="pic2">

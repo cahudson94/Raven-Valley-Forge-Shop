@@ -75,9 +75,10 @@
             {% endif %}
         {% endfor %}
         </ul>
-        <h2>Shipping To:</h2>
         <div class="row">
             <div class="col">
+                {% if address %}
+                <h2>Shipping To:</h2>
                 <ul>
                     <li class="footer-info">
                         <h4>{{ address.address1 }}</h4>
@@ -97,6 +98,29 @@
                         <h4>{{ address.zip_code }}</h4>
                     </li>
                 </ul>
+                {% endif %}
+                {% if serv %}
+                <h2>Address for services:</h2>
+                <ul>
+                    <li class="footer-info">
+                        <h4>{{ serv.address1 }}</h4>
+                    {% if serv.address2 %}
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ serv.address2 }}</h4>
+                    {% endif %}
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ serv.city }}</h4>
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ serv.state }}</h4>
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ serv.zip_code }}</h4>
+                    </li>
+                </ul>
+                {% endif %}
             </div>
             <div class="col">
             {{ form.as_p }}
