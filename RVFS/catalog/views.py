@@ -631,6 +631,8 @@ class CheckoutView(TemplateView):
         """Add context for active page."""
         shipping_data = ''
         service_data = ''
+        serv_address = ''
+        address = ''
         context = super(CheckoutView, self).get_context_data(**kwargs)
         if 'shipping_data' in self.request.session.keys():
             shipping_data = self.request.session['shipping_data']
