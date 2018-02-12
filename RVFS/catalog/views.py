@@ -547,7 +547,6 @@ class CartView(TemplateView):
             shipping_data['exists'] = exists
         if exists_serv:
             serv_data['exists'] = exists_serv
-        import pdb; pdb.set_trace()
         if field_count == 7:
             return HttpResponseRedirect(self.success_url)
         return HttpResponseRedirect(reverse_lazy('cart'))
@@ -630,6 +629,10 @@ class CheckoutView(TemplateView):
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
+        shipping_data = ''
+        service_data = ''
+        serv_address = ''
+        address = ''
         context = super(CheckoutView, self).get_context_data(**kwargs)
         if 'shipping_data' in self.request.session.keys():
             shipping_data = self.request.session['shipping_data']
