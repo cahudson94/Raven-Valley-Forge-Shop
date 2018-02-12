@@ -494,8 +494,7 @@ class CartView(TemplateView):
                        'ship_add_1', 'ship_city', 'ship_state', 'ship_zip']
         serv_fields = ['serv_first_name', 'serv_last_name', 'serv_email',
                        'serv_add_1', 'serv_city', 'serv_state', 'serv_zip']
-        # import pdb; pdb.set_trace()
-        if 'ship_address_name' in data.keys():
+        if 'ship_first_name' in data.keys():
             if request.user.is_authenticated:
                 account = Account.objects.get(user=request.user)
                 exists = check_address(data, account, 0)
@@ -519,7 +518,7 @@ class CartView(TemplateView):
                 }
                 request.session['shipping_data'] = shipping_data
                 request.session.save()
-        if 'serv_address_name' in data.keys():
+        if 'serv_first_name' in data.keys():
             if request.user.is_authenticated:
                 account = Account.objects.get(user=request.user)
                 exists_serv = check_address(data, account, 1)
@@ -548,6 +547,7 @@ class CartView(TemplateView):
             shipping_data['exists'] = exists
         if exists_serv:
             serv_data['exists'] = exists_serv
+        import pdb; pdb.set_trace()
         if field_count == 7:
             return HttpResponseRedirect(self.success_url)
         return HttpResponseRedirect(reverse_lazy('cart'))
@@ -624,7 +624,7 @@ class CheckoutView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Check for shipping data."""
-        if 'shipping_data' not in request.session.keys() or 'service_data' not in request.session.keys():
+        if 'shipping_data' not in request.session.keys() and 'service_data' not in request.session.keys():
             return HttpResponseRedirect(reverse_lazy('cart'))
         return super(CheckoutView, self).get(self, request, *args, **kwargs)
 
