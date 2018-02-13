@@ -42,7 +42,7 @@ urlpatterns = [
     path('accounts/', include('registration.backends.hmac.urls')),
     path('account/', include('account.urls')),
     path('shop/', include('catalog.urls')),
-    path('contact/', include('contact_form.urls')),
+    path('', include('sendemail.urls')),
 ]
 
 

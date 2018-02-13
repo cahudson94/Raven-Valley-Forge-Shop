@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'taggit',
     'storages',
     'mathfilters',
+    'sendemail',
 ]
 
 MIDDLEWARE = [
