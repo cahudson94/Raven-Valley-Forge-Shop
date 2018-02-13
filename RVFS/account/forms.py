@@ -119,3 +119,21 @@ class OrderUpdateForm(forms.ModelForm):
 
         model = Order
         exclude = ['buyer', 'ship_to', 'order_content', 'payed']
+
+
+class ContactForm(forms.Form):
+    """Form to contact shop."""
+
+    subject = forms.CharField(required=True)
+    from_email = forms.EmailField(required=True)
+    message = forms.CharField(
+        required=True,
+        widget=forms.Textarea
+    )
+
+    def __init__(self, *args, **kwargs):
+        """."""
+        super(ContactForm, self).__init__(*args, **kwargs)
+        self.fields['subject'].label = "Your name:"
+        self.fields['from_email'].label = "Your email:"
+        self.fields['message'].label = "What can we help you with?"
