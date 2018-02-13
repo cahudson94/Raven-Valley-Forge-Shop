@@ -3,7 +3,7 @@
 {% block title %}Add an Address{% endblock %}
 
 {% block body %}
-    <form enctype="multipart/form-data" class="prod-form" method="post">
+    <form enctype="multipart/form-data" method="post">
         {% csrf_token %}
         <h2 class="text-standard">New Shipping Address:</h2>
         {% for field in form %}

@@ -7,12 +7,13 @@ from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.mail import EmailMessage
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, TemplateView, DetailView
-from django.views.generic.edit import UpdateView, CreateView, DeleteView
-from account.forms import InfoRegForm, AddAddressForm, OrderUpdateForm
+from django.views.generic.edit import UpdateView, CreateView, DeleteView, FormView
+from account.forms import InfoRegForm, AddAddressForm, OrderUpdateForm, ContactForm
 from account.models import Account, ShippingInfo, SlideShowImage, Order
 from catalog.models import Product, Service, UserServiceImage
 from registration.backends.hmac.views import RegistrationView
@@ -444,6 +445,32 @@ class OrdersView(ListView):
                                                       .order_by('id'))
         set_basic_context(context, 'order')
         return context
+
+
+class ContactView(FormView):
+    """Form to contact the shop."""
+
+    template_name = 'contact.html'
+    form_class = ContactForm
+    success_url = reverse_lazy('home')
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(ContactView, self).get_context_data(**kwargs)
+        set_basic_context(context, 'contact')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Send email with conact info."""
+        form = ContactForm(request.POST)
+        # import pdb; pdb.set_trace()
+        if form.is_valid():
+            subject = form.cleaned_data['subject']
+            from_email = form.cleaned_data['from_email']
+            message = form.cleaned_data['message']
+            contact = EmailMessage(subject, message, from_email, ['ravenmoorevalleyforge@gmail.com'])
+            contact.send(fail_silently=True)
+            return HttpResponseRedirect(self.success_url)
 
 
 def get_galleries():

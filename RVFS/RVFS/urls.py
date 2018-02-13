@@ -24,7 +24,8 @@ from account.views import (CustomRegView,
                            HomeView,
                            GalleryView,
                            OrdersView,
-                           OrderView
+                           OrderView,
+                           ContactView
                            )
 from account import views
 
@@ -32,6 +33,7 @@ urlpatterns = [
     path('', HomeView.as_view(), name='home'),
     path('update/', views.updateslideshow, name='update'),
     path('about/', AboutView.as_view(), name='about'),
+    path('contact/', ContactView.as_view(), name='contact'),
     path('orders/', OrdersView.as_view(), name='orders'),
     path('orders/<int:pk>/', OrderView.as_view(), name='order'),
     path('gallery/<slug:slug>/', GalleryView.as_view(), name='gallery'),
