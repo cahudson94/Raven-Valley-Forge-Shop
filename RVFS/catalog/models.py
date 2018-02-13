@@ -111,6 +111,7 @@ class UserServiceImage(models.Model):
     """Model to store images uploaded for a requested service."""
 
     image = ImageField(upload_to='service_images')
+    used = models.BooleanField(default=False)
 
     def __str__(self):
         """Print for admin."""

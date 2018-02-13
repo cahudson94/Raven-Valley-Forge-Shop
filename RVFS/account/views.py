@@ -1,27 +1,27 @@
 """."""
+from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
-from registration.backends.hmac.views import RegistrationView
-from registration.forms import RegistrationForm
-from account.models import Account, ShippingInfo, SlideShowImage, Order
-from catalog.models import Product, Service
-from account.forms import InfoRegForm, AddAddressForm, OrderUpdateForm
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
 from django.views.generic import ListView, TemplateView, DetailView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
-from django.shortcuts import redirect
-from django.http import HttpResponseRedirect
-from django.contrib.auth import login as auth_login
+from account.forms import InfoRegForm, AddAddressForm, OrderUpdateForm
+from account.models import Account, ShippingInfo, SlideShowImage, Order
+from catalog.models import Product, Service, UserServiceImage
+from registration.backends.hmac.views import RegistrationView
+from registration.forms import RegistrationForm
+from RVFS.google_calendar import add_birthday
 from RVFS.google_drive import main as drive_files, download
-from django.core.files.uploadedfile import SimpleUploadedFile
-from RVFS.google_calendar import add_birthday, get_calendar
-from django.urls import reverse_lazy
-from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
-from django.contrib.admin.views.decorators import staff_member_required
+import json
 import os
 import random
-import json
 
 
 MONTHS = {
@@ -50,16 +50,14 @@ class HomeView(TemplateView):
         slides = set(SlideShowImage.objects.all())
         rand_pics = random.sample(slides, min(5, len(slides)))
         context = super(TemplateView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request)
         context['random_pics'] = rand_pics
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'home'
+        set_basic_context(context, 'home')
         return context
 
 
 @staff_member_required
 def updateslideshow(request):
-    """Button update the files of slide images."""
+    """Button to update the files of slide images."""
     slide_files = drive_files('17fqQwUu1dGPOUBirLDo2O0tBg_TUXMlZ')
     current_slides = SlideShowImage.objects.all()
     new_names = {}
@@ -74,12 +72,14 @@ def updateslideshow(request):
     for name in new_names:
         if name not in current_names:
             new_image = SlideShowImage(
-                image=SimpleUploadedFile(name=name + '.jpg',
-                                         content=open(download(new_names[name]['id']), 'rb').read(),
-                                         content_type='image/jpeg'),
+                image=SimpleUploadedFile(
+                    name=name + '.jpg',
+                    content=open(download(new_names[name]['id']), 'rb').read(),
+                    content_type='image/jpeg'),
                 name=name)
             new_image.save()
-            with open(os.path.join(settings.BASE_DIR, 'new_image.jpg'), 'w+') as file:
+            file_path = os.path.join(settings.BASE_DIR, 'new_image.jpg')
+            with open(file_path, 'w+') as file:
                 file.write('')
     return HttpResponseRedirect(reverse_lazy('home'))
 
@@ -93,21 +93,22 @@ class AboutView(TemplateView):
         """."""
         context = super(TemplateView, self).get_context_data(**kwargs)
         try:
-            context['matt'] = User.objects.get(username='m.ravenmoore').account
+            matt = User.objects.get(username='m.ravenmoore')
+            context['matt'] = matt.account
         except ObjectDoesNotExist:
             pass
         try:
-            context['becky'] = User.objects.get(username='b.ravenmoore').account
+            becky = User.objects.get(username='b.ravenmoore')
+            context['becky'] = becky.account
         except ObjectDoesNotExist:
             pass
         try:
-            context['gordon'] = User.objects.get(username='gordon').account
+            gordon = User.objects.get(username='gordon')
+            context['gordon'] = gordon.account
         except ObjectDoesNotExist:
             pass
         context['isis'] = os.path.join(settings.STATIC_URL, 'isis.jpg')
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'about'
+        set_basic_context(context, 'about')
         return context
 
 
@@ -120,22 +121,26 @@ class AccountView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(ListView, self).get_context_data(**kwargs)
-        context['account'] = context['view'].request.user.account
-        context['address'] = ShippingInfo.objects.get(pk=context['account'].main_address)
-        if context['account'].cart:
-            context['cart'] = unpack(context['account'].cart)
-        if context['account'].saved_products:
-            context['saved_prods'] = unpack(context['account'].saved_products)
-        if context['account'].saved_services:
-            context['saved_servs'] = unpack(context['account'].saved_services)
-        if context['account'].purchase_history:
-            context['prod_history'] = unpack(context['account'].purchase_history)
-        if context['account'].service_history:
-            context['serv_history'] = unpack(context['account'].service_history)
-        context['item_fields'] = ['quantity', 'color', 'length', 'diameter', 'extras']
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'account'
+        account = context['view'].request.user.account
+        context['account'] = account
+        main = context['account'].main_address
+        context['address'] = ShippingInfo.objects.get(pk=main)
+        if account.cart:
+            context['cart'] = unpack(account.cart)
+        if account.saved_products:
+            context['saved_prods'] = unpack(account.saved_products)
+        if account.saved_services:
+            context['saved_servs'] = unpack(account.saved_services)
+        if account.purchase_history:
+            context['prod_history'] = unpack(account.purchase_history)
+        if account.service_history:
+            context['serv_history'] = unpack(account.service_history)
+        context['item_fields'] = ['quantity',
+                                  'color',
+                                  'length',
+                                  'diameter',
+                                  'extras']
+        set_basic_context(context, 'account')
         return context
 
 
@@ -150,9 +155,7 @@ class AddAddressView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(AddAddressView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'account'
+        set_basic_context(context, 'account')
         return context
 
     def form_valid(self, form):
@@ -186,9 +189,7 @@ class AddressListView(LoginRequiredMixin, ListView):
         account = context['view'].request.user.account
         context['account'] = account
         context['addresses'] = ShippingInfo.objects.filter(resident=account)
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'account'
+        set_basic_context(context, 'account')
         return context
 
     def post(self, request, *args, **kwargs):
@@ -222,9 +223,7 @@ class DeleteAddress(LoginRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(DeleteAddress, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'account'
+        set_basic_context(context, 'account')
         return context
 
     def post(self, request, *args, **kwargs):
@@ -250,9 +249,7 @@ class EditAccountView(LoginRequiredMixin, DetailView):
         context = super(EditAccountView, self).get_context_data(**kwargs)
         account = context['view'].request.user.account
         context['address'] = ShippingInfo.objects.get(pk=account.main_address)
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'account'
+        set_basic_context(context, 'account')
         return context
 
     def post(self, request, *args, **kwargs):
@@ -268,6 +265,7 @@ class EditAccountView(LoginRequiredMixin, DetailView):
         if 'last_name' in data[0].keys():
             account.last_name = data[0]['last_name']
         if 'pic' in data[1].keys():
+            account.pic.delete()
             account.pic = data[1]['pic']
         account.save()
         info = ShippingInfo.objects.get(pk=account.main_address)
@@ -294,9 +292,7 @@ class CustomRegView(RegistrationView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(RegistrationView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'register'
+        set_basic_context(context, 'register')
         return context
 
 
@@ -306,9 +302,7 @@ class CustomLogView(LoginView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(LoginView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'login'
+        set_basic_context(context, 'login')
         return context
 
     def form_valid(self, form):
@@ -334,9 +328,7 @@ class InfoFormView(UpdateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(InfoFormView, self).get_context_data(**kwargs)
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'login'
+        set_basic_context(context, 'login')
         return context
 
     def form_valid(self, form):
@@ -385,17 +377,15 @@ class GalleryView(TemplateView):
         """Add context for active page."""
         context = super(GalleryView, self).get_context_data(**kwargs)
         title = context['slug'].replace('_', ' ').title()
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
         context['tab'] = title
         context['gallery'] = title
-        context['nbar'] = 'gallery'
         for file in context['galleries']:
             if file['name'].title() == title:
                 folder = file['id']
         context['photos'] = drive_files(folder)
         for photo in context['photos']:
             photo['name'] = photo['name'].split('.')[0]
+        set_basic_context(context, 'gallery')
         return context
 
 
@@ -411,18 +401,33 @@ class OrderView(UpdateView):
         """Add context for active page."""
         context = super(OrderView, self).get_context_data(**kwargs)
         title = 'Order #' + str(context['object'].id)
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
         context['title'] = title
-        context['nbar'] = 'order'
         if context['object'].ship_to:
             context['address'] = context['object'].ship_to
         if context['object'].serv_address:
             context['serv'] = context['object'].serv_address
         if context['object'].appointment:
             context['time'] = context['object'].appointment
-        context['content'] = unpack(context['object'].order_content)
-        context['item_fields'] = ['quantity', 'color', 'length', 'diameter', 'extras']
+        content = unpack(context['object'].order_content)
+        context['prods'] = []
+        context['servs'] = []
+        for item in content:
+            if item['type'] == 'prod':
+                context['prods'].append(item)
+            else:
+                item['apt_time'] = (item['hour'] + ' on ' +
+                                    item['month'] + ' ' +
+                                    item['day'] + ', ' +
+                                    item['year'])
+                images = []
+                for file in item['files'].split(', '):
+                    image = UserServiceImage.objects
+                    images.append(image.get(id=file.split(' ')[1]))
+                item['files'] = images
+                context['servs'].append(item)
+        context['item_fields'] = ['quantity', 'color', 'length', 'diameter',
+                                  'extras', 'files', 'description']
+        set_basic_context(context, 'order')
         return context
 
 
@@ -437,9 +442,7 @@ class OrdersView(ListView):
         context = super(OrdersView, self).get_context_data(**kwargs)
         context['order_list'] = (context['order_list'].filter(paid=True)
                                                       .order_by('id'))
-        context['cart_count'] = cart_count(self.request)
-        context['galleries'] = get_galleries()
-        context['nbar'] = 'order'
+        set_basic_context(context, 'order')
         return context
 
 
@@ -518,3 +521,11 @@ def split_cart(packed_list):
             else:
                 items['servs'] = item
     return items
+
+
+def set_basic_context(context, page):
+    """Helper function to set the basics per page."""
+    context['cart_count'] = cart_count(context['view'].request)
+    context['nbar'] = page
+    context['galleries'] = get_galleries()
+    return context
