@@ -24,6 +24,7 @@
             <p>
                 <label class="text-standard">extras:</label>
                 <select name="extras">
+                    <option value="----">----</option>
                     {% for extra in service.extras %}
                     <option value="{{ extra }}">{{ extra }}</option>
                     {% endfor %}
@@ -144,7 +145,7 @@
       <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-body">
-            <iframe class="calendar" src="https://calendar.google.com/calendar/b/4/embed?title=Raven%20Valley%20Forge%20Calendar&amp;showDate=0&amp;showPrint=0&amp;showCalendars=0&amp;height=600&amp;wkst=1&amp;bgcolor=%23ffffff&amp;src=ravenmoorevalleyforge%40gmail.com&amp;color=%23711616&amp;src=%23contacts%40group.v.calendar.google.com&amp;color=%2328754E&amp;src=en.usa%23holiday%40group.v.calendar.google.com&amp;color=%23125A12&amp;src=rsbvvpdq2vkmefr4690mi11afo%40group.calendar.google.com&amp;color=%23333333&amp;ctz=America%2FLos_Angeles" frameborder="0" scrolling="no"></iframe>
+            <iframe class="calendar" src="https://calendar.google.com/calendar/b/4/embed?showTitle=0&amp;showNav=0&amp;showPrint=0&amp;showCalendars=0&amp;height=600&amp;wkst=1&amp;bgcolor=%23ffffff&amp;src=rsbvvpdq2vkmefr4690mi11afo%40group.calendar.google.com&amp;color=%23333333&amp;ctz=America%2FLos_Angeles" frameborder="0" scrolling="no"></iframe>
           </div>
         </div>
       </div>

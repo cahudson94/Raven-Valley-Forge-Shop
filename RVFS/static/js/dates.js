@@ -64,9 +64,13 @@ function populateDays(month) {
 
   // inject the right number of new <option> elements into the day <select>
   for(var i = 1; i <= dayNum; i++) {
-    var option = document.createElement('option');
-    option.textContent = i;
-    daySelect.appendChild(option);
+    var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var date = new Date(yearSelect.value, months.indexOf(month), [i]);
+    if (date.getDay() > 1) {
+      var option = document.createElement('option');
+      option.textContent = i;
+      daySelect.appendChild(option);
+    }
   }
 
   // if previous day has already been set, set daySelect's value
@@ -110,7 +114,7 @@ function populateYears() {
 
 function populateHours() {
   // populate the hours <select> with the 24 hours of the day
-  for(var i = 0; i <= 11; i++) {
+  for(var i = 0; i <= 9; i++) {
     var option = document.createElement('option');
     if (i <= 1) {
       option.textContent = '1' + i + ' AM';

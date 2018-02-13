@@ -49,6 +49,7 @@
                 {% if product.extras %}
                     <label class="text-standard">extras:</label>
                     <select name="extras">
+                        <option value="----">----</option>
                         {% for extra in product.extras %}
                         <option value="{{ extra }}">{{ extra }}</option>
                         {% endfor %}
