@@ -463,7 +463,6 @@ class ContactView(FormView):
     def post(self, request, *args, **kwargs):
         """Send email with conact info."""
         form = ContactForm(request.POST)
-        # import pdb; pdb.set_trace()
         if form.is_valid():
             subject = form.cleaned_data['subject']
             from_email = form.cleaned_data['from_email']
