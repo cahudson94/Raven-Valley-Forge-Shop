@@ -1,4 +1,5 @@
 # Raven-Valley-Forge-Shop
+[![Build Status](https://travis-ci.org/cahudson94/Raven-Valley-Forge-Shop.svg?branch=master)](https://travis-ci.org/cahudson94/Raven-Valley-Forge-Shop) [![Coverage Status](https://coveralls.io/repos/github/cahudson94/Raven-Valley-Forge-Shop/badge.svg?branch=master)](https://coveralls.io/github/cahudson94/Raven-Valley-Forge-Shop?branch=master)
 ---
 ### Description
 Version: 1.0.1
