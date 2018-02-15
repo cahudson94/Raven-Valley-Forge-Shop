@@ -25,7 +25,9 @@ from account.views import (CustomRegView,
                            GalleryView,
                            OrdersView,
                            OrderView,
-                           ContactView
+                           ContactView,
+                           UsersView,
+                           CommentView,
                            )
 from account import views
 
@@ -34,6 +36,8 @@ urlpatterns = [
     path('update/', views.updateslideshow, name='update'),
     path('about/', AboutView.as_view(), name='about'),
     path('contact/', ContactView.as_view(), name='contact'),
+    path('users/', UsersView.as_view(), name='users'),
+    path('users/<int:pk>/comment/', CommentView.as_view(), name='comment'),
     path('orders/', OrdersView.as_view(), name='orders'),
     path('orders/<int:pk>/', OrderView.as_view(), name='order'),
     path('gallery/<slug:slug>/', GalleryView.as_view(), name='gallery'),

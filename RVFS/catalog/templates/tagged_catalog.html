@@ -1,4 +1,4 @@
-{% extends 'rvfsite/base.html' %}
+    {% extends 'rvfsite/base.html' %}
 {% load thumbnail %}
 
 
@@ -70,21 +70,23 @@ Services
             </ul>
         </nav>
         {% endif %}
-        <ul class="row tagged-row">
+        <div class="row card-row">
             {% for item in items %}
             {% if nbar == 'prods' %}
-            <a class="title" href="{% url 'prod' item.id %}">
+            <a href="{% url 'prod' item.id %}">
             {% else %}
-            <a class="title" href="{% url 'serv' item.id %}">
-            {% endif %}<li class="card card-tagged">
-            {% thumbnail item.image "150x150" crop="center" as pic %}
-                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
-                {% endthumbnail %}
-                <h4 class="card-title text-standard">{{ item.name }}</h4>
-                <p class="card-text text-standard">${{ item.price }}</p>
-            </li></a>
-        {% endfor %}
-        </ul>
+            <a href="{% url 'serv' item.id %}">
+            {% endif %}
+                <div class="card">
+                {% thumbnail item.image "140x140" crop="center" as pic %}
+                    <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}"></img>
+                    {% endthumbnail %}
+                    <h4 class="card-title text-standard">{{ item.name }}</h4>
+                    <p class="card-text text-standard">${{ item.price }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
         {% if items.paginator.num_pages != 1 %}
         <nav aria-label="{{ tag }} paginator">
             <ul class="pagination justify-content-center">

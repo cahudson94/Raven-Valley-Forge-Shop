@@ -1,0 +1,23 @@
+{% extends 'rvfsite/base.html' %}
+{% load static %}
+{% load thumbnail %}
+
+{% block title %}
+Users
+{% endblock %}
+
+{% block body %}
+
+<h2 class="text-standard">Users</h2>
+<ul>
+{% for account in account_list %}
+  <li>
+    <a class="text-standard link-font" href="{% url 'comment' account.id %}">{{ account }}</a>
+  </li>
+  {% if forloop.counter < 4 and forloop.last %}
+  <div class="placeholder"></div>
+  {% endif %}
+{% endfor %}
+</ul>
+
+{% endblock %}
