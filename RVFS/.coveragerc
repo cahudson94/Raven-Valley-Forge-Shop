@@ -1,0 +1,17 @@
+[run]
+source =
+    RVFS
+    account
+    catalog
+omit =
+    */migrations/*
+    */admin.py
+    */tests.py
+    */__init__.py
+    */apps.py
+    RVFS/settings.py
+    manage.py
+    RVFS/wsgi.py
+
+[report]
+show_missing = True
