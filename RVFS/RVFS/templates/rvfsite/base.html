@@ -127,6 +127,7 @@
                   <li class="nav-item text-standard {% if nbar == 'add_serv' %}active{% endif %}"><a class="nav-link" href="{% url 'add_serv' %}">Add Service</a></li>
                   <li class="nav-item text-standard {% if nbar == 'list' %}active{% endif %}"><a class="nav-link" href="{% url 'list' %}">Items</a></li>
                   <li class="nav-item text-standard {% if nbar == 'order' %}active{% endif %}"><a class="nav-link" href="{% url 'orders' %}">Orders</a></li>
+                  <li class="nav-item text-standard {% if nbar == 'users' %}active{% endif %}"><a class="nav-link" href="{% url 'users' %}">Users</a></li>
                   <li class="nav-item text-standard"><a class="nav-link" href="{% url 'update' %}">Update Slides</a></li>
                 {% if user.is_superuser %}
                   <li class="nav-item text-standard"><a class="nav-link" href="{% url 'admin:login' %}">Admin</a></li>

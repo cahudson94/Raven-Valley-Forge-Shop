@@ -205,6 +205,8 @@ class SingleProductView(DetailView):
         """Add item to appropriate list."""
         data = request.POST
         extra_cost = ''
+        if self.request.user.is_authenticated:
+            account = Account.objects.get(user=request.user)
         if 'add' in data.keys():
             fields = []
             for field in data:
@@ -236,7 +238,6 @@ class SingleProductView(DetailView):
                                             Decimal(price))
                 self.request.session.save()
             else:
-                account = Account.objects.get(user=request.user)
                 if account.cart:
                     account.cart += '|' + cart_item
                 else:
@@ -244,10 +245,10 @@ class SingleProductView(DetailView):
                 account.cart_total += Decimal(price)
                 account.save()
         else:
-            item = json.dumps({'item_id': self.get_object().id, 'type': 'prod',
-                               'description': self.get_object().description})
+            item = str(self.get_object().id)
             if account.saved_products:
-                account.saved_products += '|' + item
+                if item not in account.saved_products.split(', '):
+                    account.saved_products += ', ' + item
             else:
                 account.saved_products += item
             account.save()
@@ -278,10 +279,10 @@ class SingleServiceView(DetailView):
                                        kwargs={'pk': self.get_object().id})
         else:
             success_url = reverse_lazy('servs')
-            item = json.dumps({'item_id': self.get_object().id,
-                               'type': 'serv'})
+            item = str(self.get_object().id)
             if account.saved_services:
-                account.saved_services += '|' + item
+                if item not in account.saved_services.split(', '):
+                    account.saved_services += ', ' + item
             else:
                 account.saved_services += item
             account.save()

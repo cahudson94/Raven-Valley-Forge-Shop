@@ -12,8 +12,10 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, TemplateView, DetailView
-from django.views.generic.edit import UpdateView, CreateView, DeleteView, FormView
-from account.forms import InfoRegForm, AddAddressForm, OrderUpdateForm, ContactForm
+from django.views.generic.edit import (UpdateView, CreateView,
+                                       DeleteView, FormView)
+from account.forms import (InfoRegForm, AddAddressForm,
+                           OrderUpdateForm, ContactForm)
 from account.models import Account, ShippingInfo, SlideShowImage, Order
 from catalog.models import Product, Service, UserServiceImage
 from registration.backends.hmac.views import RegistrationView
@@ -129,9 +131,11 @@ class AccountView(LoginRequiredMixin, ListView):
         if account.cart:
             context['cart'] = unpack(account.cart)
         if account.saved_products:
-            context['saved_prods'] = unpack(account.saved_products)
+            context['saved_prods'] = [Product.objects.get(id=i) for i in
+                                      account.saved_products]
         if account.saved_services:
-            context['saved_servs'] = unpack(account.saved_services)
+            context['saved_servs'] = [Service.objects.get(id=i) for i in
+                                      account.saved_services]
         if account.purchase_history:
             context['prod_history'] = unpack(account.purchase_history)
         if account.service_history:
@@ -420,11 +424,12 @@ class OrderView(UpdateView):
                                     item['month'] + ' ' +
                                     item['day'] + ', ' +
                                     item['year'])
-                images = []
-                for file in item['files'].split(', '):
-                    image = UserServiceImage.objects
-                    images.append(image.get(id=file.split(' ')[1]))
-                item['files'] = images
+                if 'files' in item.keys():
+                    images = []
+                    for file in item['files'].split(', '):
+                        image = UserServiceImage.objects
+                        images.append(image.get(id=file.split(' ')[1]))
+                    item['files'] = images
                 context['servs'].append(item)
         context['item_fields'] = ['quantity', 'color', 'length', 'diameter',
                                   'extras', 'files', 'description']
@@ -444,6 +449,36 @@ class OrdersView(ListView):
         context['order_list'] = (context['order_list'].filter(paid=True)
                                                       .order_by('id'))
         set_basic_context(context, 'order')
+        return context
+
+
+class CommentView(UpdateView):
+    """Comment on a client."""
+
+    template_name = 'comment.html'
+    model = Account
+    success_url = reverse_lazy('users')
+    fields = ['comments']
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(CommentView, self).get_context_data(**kwargs)
+        set_basic_context(context, 'users')
+        return context
+
+
+class UsersView(ListView):
+    """Display the details of an order."""
+
+    template_name = 'users.html'
+    model = Account
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(UsersView, self).get_context_data(**kwargs)
+        context['account_list'] = (context['account_list'].filter(registration_complete=True)
+                                                          .order_by('id'))
+        set_basic_context(context, 'users')
         return context
 
 

@@ -1,0 +1,18 @@
+{% extends 'rvfsite/base.html' %}
+{% block title %}Comment{% endblock %}
+
+{% block body %}
+<form enctype="multipart/form-data" class="contact-form" method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col">
+            <h1 class="text-standard">Comments for {{ account.first_name }}, {{ account.last_name }}</h1>
+            {% for field in form %}
+            <h4 class="text-standard">{{ field.label }}</h4>
+            <p class="text-standard">{{ field }}</p>
+            {% endfor %}
+            <button class="btn btn-secondary text-standard" type="submit">Submit</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
