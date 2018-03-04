@@ -758,6 +758,7 @@ class CheckoutView(TemplateView):
             context['serv'] = address
             context['info'] = service_data['info']
         context['total'] = cart_total
+        context['paypal'] = os.environ.get('PAYPAL_KEY', '')
         set_basic_context(context, 'cart')
         return context
 
@@ -995,6 +996,7 @@ def attempt_appointment(servs, session):
         hour = str(int(hour) + 12)
     time = [year, month, day, int(hour)]
     busy = check_time_slot(time)
+    import pdb; pdb.set_trace()
     if busy:
         return True
     else:

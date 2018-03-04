@@ -1,15 +1,20 @@
 """."""
 import os
 import datetime
+import json
 from oauth2client import tools, client
 from oauth2client.file import Storage
 
 import httplib2
 from apiclient import discovery
 
+HOME = os.path.expanduser('~')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 APPLICATION_NAME = 'Web client 1'
-CLIENT_SECRET_FILE = 'client_secret.json'
-SCOPES = 'https://www.googleapis.com/auth/calendar'
+CLIENT_SECRET_FILE = os.path.join(BASE_DIR, 'RVFS/client_secrete.json')
+ENV_CLIENT_SECRET = json.loads(os.environ.get('GOOGLE_CREDS'))
+SCOPES = ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/drive']
 
 try:
     flags = tools.argparser.parse_args([])
@@ -30,23 +35,22 @@ def get_credentials():
     Returns:
         Credentials, the obtained credential.
     """
-    home_dir = os.path.expanduser('~')
+    home_dir = HOME
     credential_dir = os.path.join(home_dir, '.credentials')
     if not os.path.exists(credential_dir):
         os.makedirs(credential_dir)
     credential_path = os.path.join(credential_dir,
-                                   'calendar.json')
+                                   'google.json')
 
     store = Storage(credential_path)
     credentials = store.get()
     if not credentials or credentials.invalid:
-        flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
-        flow.user_agent = APPLICATION_NAME
-        if flags:
+        if ENV_CLIENT_SECRET:
+            credentials = Storage(ENV_CLIENT_SECRET).get()
+        else:
+            flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
+            flow.user_agent = APPLICATION_NAME
             credentials = tools.run_flow(flow, store, flags)
-        else:  # Needed only for compatibility with Python 2.6
-            credentials = tools.run(flow, store)
-        print('Storing credentials to ' + credential_path)
     return credentials
 
 
@@ -90,8 +94,8 @@ def check_time_slot(time):
     day = time[2]
     hour = time[3]
 
-    start = '{}-{}-{}T{}:00:00-08:00'.format(year, month, day, hour)
-    end = '{}-{}-{}T{}:00:00-08:00'.format(year, month, day, hour + 1)
+    start = '{}-{}-{}T{}:00:00-07:00'.format(year, month, day, hour)
+    end = '{}-{}-{}T{}:00:00-07:00'.format(year, month, day, hour + 1)
 
     body = {
         "timeMin": start,
@@ -126,11 +130,12 @@ def set_appointment(time, info):
         day = '0' + day
     hour = time[3]
 
-    start = '{}-{}-{}T{}:00:00-08:00'.format(year, month, day, hour)
-    end = '{}-{}-{}T{}:00:00-08:00'.format(year, month, day, hour + 1)
+    start = '{}-{}-{}T{}:00:00-07:00'.format(year, month, day, hour)
+    end = '{}-{}-{}T{}:00:00-07:00'.format(year, month, day, hour + 1)
 
     event = service.events().list(calendarId=shop_hours,
                                   timeMin=start, timeMax=end, singleEvents=True).execute()
+    # import pdb; pdb.set_trace()
     slot_id = event['items'][0]['id']
     event = service.events().get(calendarId=shop_hours,
                                  eventId=slot_id).execute()
@@ -151,15 +156,38 @@ def set_appointment(time, info):
     service.events().insert(calendarId='primary', body=event).execute()
 
 
-def get_calendar():
-    """."""
+def main(drive_file):
+    """Show basic usage of the Google Drive API.
+
+    Creates a Google Drive API service object and outputs the names and IDs
+    for up to 10 files.
+    """
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
+    service = discovery.build('drive', 'v3', http=http)
 
-    service = discovery.build('calendar', 'v3', http=http)
-    calendar = service.calendarList().list().execute()
+    results = service.files().list(
+        q=("'%s' in parents" % drive_file),
+        fields="nextPageToken, files(id, name, webContentLink, webViewLink)").execute()
+    items = results.get('files', [])
+    if not items:
+        return('No files found.')
+    else:
+        files = []
+        for item in items:
+            files.append(item)
+        return files
 
-    return calendar
+
+def download(file_id):
+    """Download specified file."""
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    service = discovery.build('drive', 'v3', http=http)
+    image = service.files().get_media(fileId=file_id).execute()
+    with open(os.path.join(BASE_DIR, 'new_image.jpg'), 'wb+') as file:
+        file.write(image)
+    return file.name
 
 if __name__ == '__main__':
-    get_credentials()
+    main(os.sys.argv[1])

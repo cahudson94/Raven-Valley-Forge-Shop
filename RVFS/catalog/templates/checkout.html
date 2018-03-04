@@ -10,27 +10,27 @@
   <div class="col">
   <h2>Shipping To:</h2>
     <ul>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ info.first }}, {{ info.last }}</h4>
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ info.email }}</h4>
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ shipping.address1 }}</h4>
         {% if shipping.address2 %}
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ shipping.address2 }}</h4>
         {% endif %}
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ shipping.city }}</h4>
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ shipping.state }}</h4>
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ shipping.zip_code }}</h4>
         </li>
     </ul>
@@ -40,27 +40,27 @@
   <div class="col">
   <h2>Address for Services:</h2>
     <ul>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ info.first }}, {{ info.last }}</h4>
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ info.email }}</h4>
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ serv.address1 }}</h4>
         {% if serv.address2 %}
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ serv.address2 }}</h4>
         {% endif %}
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ serv.city }}</h4>
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ serv.state }}</h4>
         </li>
-        <li class="footer-info">
+        <li class="side-bar-items">
             <h4>{{ serv.zip_code }}</h4>
         </li>
     </ul>
@@ -125,7 +125,7 @@ paypal.Button.render({
 
   client: {
     sandbox: 'Aa9iJNJgoHU7KRYt_O2Ox8rglbTsnxzpz0JnCChgzC03UMj2Vj4xHRC8LPXYynt3jtdy9TzB3eiQ8l0u',
-    production: '<insert production client id>'
+    production: '{{ paypal }}'
   },
 
   commit: true,
