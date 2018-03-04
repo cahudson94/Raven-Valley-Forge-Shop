@@ -110,7 +110,7 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST', ''),
         'PORT': '5432',
         'TEST': {
-            'NAME': 'rvfs_test'
+            'NAME': 'rvfs_test2'
         }
     }
 }

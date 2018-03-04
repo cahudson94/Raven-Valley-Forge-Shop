@@ -17,7 +17,7 @@ services:
   - postgresql
 
 before_script:
-  - psql -c "CREATE DATABASE rvfs_test;" -U postgres
+  - psql -c "CREATE DATABASE rvfs_test2;" -U postgres
   - psql -c "CREATE DATABASE rvfs_db;" -U postgres
 
 # command to run tests
