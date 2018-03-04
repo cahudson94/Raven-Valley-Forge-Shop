@@ -26,7 +26,7 @@ Take a look in the shop Gallery for a glimpse at where the magic happens!
 
 <div class="row">
     <div class="col">
-        <img class="abt-pic d-block mx-auto" src="{% if becky %}{{ becky.pic.url }}{% else %}{% static 'becky.jpg' %}{% endif %}">
+        <img class="abt-pic d-block mx-auto" src="{% if becky.pic %}{{ becky.pic.url }}{% else %}{% static 'becky.jpg' %}{% endif %}">
         <h3 class="names">Huginn Ravenmoore </h3>
     </div>
 
@@ -41,7 +41,7 @@ Take a look in the shop Gallery for a glimpse at where the magic happens!
 
 <div class="row">
     <div class="col">
-        <img class="abt-pic d-block mx-auto" src="{% if matt %}{{ matt.pic.url }}{% else %}{% static 'matt.jpg' %}{% endif %}">
+        <img class="abt-pic d-block mx-auto" src="{% if matt.pic %}{{ matt.pic.url }}{% else %}{% static 'matt.jpg' %}{% endif %}">
         <h3 class="names">Muninn Ravenmoore </h3>
     </div>
 
@@ -54,7 +54,7 @@ Take a look in the shop Gallery for a glimpse at where the magic happens!
 <img class="dividor" src="{% static 'arrow-divider.png' %}">
 <div class="row">
     <div class="col">
-        <img class="abt-pic d-block mx-auto" src="{% if gordon %}{{ gordon.pic.url }}{% else %}{% static 'gordon.jpg' %}{% endif %}">
+        <img class="abt-pic d-block mx-auto" src="{% if gordon.pic %}{{ gordon.pic.url }}{% else %}{% static 'gordon.jpg' %}{% endif %}">
         <h3 class="names">Gordon Blaylock </h3>
     </div>
 

@@ -9,9 +9,10 @@ omit =
     */tests.py
     */__init__.py
     */apps.py
-    RVFS/settings.py
     manage.py
+    RVFS/settings.py
     RVFS/wsgi.py
+    RVFS/custom_storages.py
 
 [report]
 show_missing = True

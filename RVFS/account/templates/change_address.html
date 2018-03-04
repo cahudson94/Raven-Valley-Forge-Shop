@@ -13,21 +13,21 @@
             <div class="row">
                 <div class="col add-col">
                     <h4 class="text-standard">Name:</h4>
-                    <input type="text" name="name" value="{{ address.name }}" readonly></input>
+                    <input type="text" name="name {{ address.id }}" value="{{ address.name }}"></input>
                     <h4 class="text-standard">Address Line 1:</h4>
-                    <input type="text" name="address1" value="{{ address.address1 }}" readonly></input>
+                    <input type="text" name="address1 {{ address.id }}" value="{{ address.address1 }}"></input>
                     {% if address.address2 %}
                     <h4 class="text-standard">Address Line 2:</h4>
-                    <input type="text" name="address2" value="{{ address.address2 }}" readonly></input>
+                    <input type="text" name="address2 {{ address.id }}" value="{{ address.address2 }}"></input>
                     {% endif %}
                     <h4 class="text-standard">Zip Code:</h4>
-                    <input type="text" name="zip_code" value="{{ address.zip_code }}" readonly></input>
+                    <input type="text" name="zip_code {{ address.id }}" value="{{ address.zip_code }}"></input>
                     <h4 class="text-standard">City:</h4>
-                    <input type="text" name="city" value="{{ address.city }}" readonly></input>
+                    <input type="text" name="city {{ address.id }}" value="{{ address.city }}"></input>
                     <h4 class="text-standard">State:</h4>
-                    <input type="text" name="state" value="{{ address.state }}" readonly></input>
+                    <input type="text" name="state {{ address.id }}" value="{{ address.state }}"></input>
                     <h4 class="text-standard">Main:</h4>
-                    <input class="single-checkbox" type="checkbox" name="main {{ address.id }}" value="{{ address.main }}" {% if address.main %}checked{% endif %}></input><br><br>
+                    <input class="single-checkbox" type="checkbox" name="{{ address.id }}" value="{{ address.id }}" {% if address.main %}checked{% endif %}></input><br><br>
                     {% if account.has_address_delete %}
                     <a class="btn btn-secondary text-standard del-btn" href="{% url 'del_add' address.id %}">Delete Address</a>
                     {% endif %}
@@ -35,21 +35,21 @@
             {% else %}
             <div class="col add-col">
                 <h4 class="text-standard">Name:</h4>
-                <input type="text" name="name" value="{{ address.name }}" readonly></input>
+                <input type="text" name="name {{ address.id }}" value="{{ address.name }}"></input>
                 <h4 class="text-standard">Address Line 1:</h4>
-                <input type="text" name="address1" value="{{ address.address1 }}" readonly></input>
+                <input type="text" name="address1 {{ address.id }}" value="{{ address.address1 }}"></input>
                 {% if address.address2 %}
                 <h4 class="text-standard">Address Line 2:</h4>
-                <input type="text" name="address2" value="{{ address.address2 }}" readonly></input>
+                <input type="text" name="address2 {{ address.id }}" value="{{ address.address2 }}"></input>
                 {% endif %}
                 <h4 class="text-standard">Zip Code:</h4>
-                <input type="text" name="zip_code" value="{{ address.zip_code }}" readonly></input>
+                <input type="text" name="zip_code {{ address.id }}" value="{{ address.zip_code }}"></input>
                 <h4 class="text-standard">City:</h4>
-                <input type="text" name="city" value="{{ address.city }}" readonly></input>
+                <input type="text" name="city {{ address.id }}" value="{{ address.city }}"></input>
                 <h4 class="text-standard">State:</h4>
-                <input type="text" name="state" value="{{ address.state }}" readonly></input>
+                <input type="text" name="state {{ address.id }}" value="{{ address.state }}"></input>
                 <h4 class="text-standard">Main:</h4>
-                <input class="single-checkbox" type="checkbox" name="main {{ address.id }}" value="{{ address.main }}" {% if address.main %}checked{% endif %}></input><br><br>
+                <input class="single-checkbox" type="checkbox" name="{{ address.id }}" value="{{ address.main }}" {% if address.main %}checked{% endif %}></input><br><br>
                 {% if account.has_address_delete %}
                 <a class="btn btn-secondary text-standard del-btn" href="{% url 'del_add' address.id %}">Delete Address</a>
                 {% endif %}
@@ -59,4 +59,25 @@
         </div>
     <input class="btn btn-secondary text-standard" type="submit" value="Update">
     </form>
+{% endblock %}
+{% block js %}
+  <script type="text/javascript">
+var limit = 2;
+$('input.single-checkbox').on('change', function(evt) {
+  if($('input[type=checkbox]:checked').length >= limit) {
+    this.checked = false;
+  }
+  console.log($('input.single-checkbox:checked').length);
+  if($('input.single-checkbox:checked').length > 0) {
+    for (var i = 0; i < $('input.single-checkbox').length; i++) {
+      $('input.single-checkbox')[i].required = false;
+    }
+  }
+  else {
+    for (i = 0; i < $('input.single-checkbox').length; i++) {
+      $('input.single-checkbox')[i].required = true;
+    }
+  }
+});
+  </script>
 {% endblock %}

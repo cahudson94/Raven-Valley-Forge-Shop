@@ -24,7 +24,9 @@
             <div class="col">
             <h2 class="text-standard">Account Info:</h2>
             <h4 class="text-standard">Profile Picture:</h4>
+            {% if account.pic %}
             <img src="{{ account.pic.url }}" width="35%">
+            {% endif %}
             <input type="file" name="pic" value="{{ account.pic }}"></input>
             <h4 class="text-standard">First Name:</h4>
             <input type="text" name="first_name" value="{{ account.first_name }}"></input>

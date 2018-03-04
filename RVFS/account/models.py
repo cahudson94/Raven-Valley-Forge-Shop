@@ -36,7 +36,7 @@ class ShippingInfo(models.Model):
 
     name = models.CharField("Location Name", max_length=50)
     address1 = models.CharField("Address line 1", max_length=250)
-    address2 = models.CharField("Address line 2", max_length=250)
+    address2 = models.CharField("Address line 2", max_length=250, default='')
     zip_code = models.CharField("ZIP / Postal code", max_length=12)
     city = models.CharField("City", max_length=25)
     state = models.CharField("State", max_length=25)

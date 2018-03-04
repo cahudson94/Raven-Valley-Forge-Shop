@@ -503,11 +503,6 @@ FOOTER
     border-color: black;
 }
 
-.footer-info {
-    list-style: none;
-    color: black;
-}
-
 .footer-info li {
     display: inline;
 }

@@ -20,8 +20,7 @@ from account.models import Account, ShippingInfo, SlideShowImage, Order
 from catalog.models import Product, Service, UserServiceImage
 from registration.backends.hmac.views import RegistrationView
 from registration.forms import RegistrationForm
-from RVFS.google_calendar import add_birthday
-from RVFS.google_drive import main as drive_files, download
+from RVFS.google_calendar import add_birthday, main as drive_files, download
 import json
 import os
 import random
@@ -132,10 +131,10 @@ class AccountView(LoginRequiredMixin, ListView):
             context['cart'] = unpack(account.cart)
         if account.saved_products:
             context['saved_prods'] = [Product.objects.get(id=i) for i in
-                                      account.saved_products]
+                                      account.saved_products.split(', ')]
         if account.saved_services:
             context['saved_servs'] = [Service.objects.get(id=i) for i in
-                                      account.saved_services]
+                                      account.saved_services.split(', ')]
         if account.purchase_history:
             context['prod_history'] = unpack(account.purchase_history)
         if account.service_history:
@@ -200,19 +199,30 @@ class AddressListView(LoginRequiredMixin, ListView):
     def post(self, request, *args, **kwargs):
         """Change out main address."""
         data = request.POST
+        addresses = {}
         for key in data.keys():
-            if key.startswith('main'):
-                add_key = key
-        add_id = add_key.split(' ')[1]
+            if key.isdigit():
+                add_id = key
+                addresses[key]['main'] = True
+            elif key != 'csrfmiddlewaretoken':
+                if key.split(' ')[1] in addresses.keys():
+                    addresses[key.split(' ')[1]][key.split(' ')[0]] = data[key]
+                else:
+                    addresses[key.split(' ')[1]] = {}
+                    addresses[key.split(' ')[1]][key.split(' ')[0]] = data[key]
+        for key in addresses:
+            if 'address2' not in addresses[key].keys():
+                addresses[key]['address2'] = ''
+            if 'main' not in addresses[key].keys():
+                addresses[key]['main'] = False
         account = request.user.account
-        old_main = account.main_address
-        address = ShippingInfo.objects.get(pk=old_main)
-        address.main = False
-        address.save()
+        fields = ['name', 'address1', 'address2', 'zip_code', 'city', 'state', 'main']
+        for i in account.shippinginfo_set.values():
+            info = ShippingInfo.objects.get(id=i['id'])
+            for field in fields:
+                setattr(info, field, addresses[str(i['id'])][field])
+            info.save()
         account.main_address = add_id
-        new_add = ShippingInfo.objects.get(pk=add_id)
-        new_add.main = True
-        new_add.save()
         account.save()
         return HttpResponseRedirect(self.success_url)
 
@@ -382,6 +392,7 @@ class GalleryView(TemplateView):
         """Add context for active page."""
         context = super(GalleryView, self).get_context_data(**kwargs)
         title = context['slug'].replace('_', ' ').title()
+        set_basic_context(context, 'gallery')
         context['tab'] = title
         context['gallery'] = title
         for file in context['galleries']:
@@ -390,7 +401,6 @@ class GalleryView(TemplateView):
         context['photos'] = drive_files(folder)
         for photo in context['photos']:
             photo['name'] = photo['name'].split('.')[0]
-        set_basic_context(context, 'gallery')
         return context
 
 
@@ -492,6 +502,7 @@ class ContactView(FormView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(ContactView, self).get_context_data(**kwargs)
+        context['api'] = os.environ.get('GOOGLE_API_KEY')
         set_basic_context(context, 'contact')
         return context
 

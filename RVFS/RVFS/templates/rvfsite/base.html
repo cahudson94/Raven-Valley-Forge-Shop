@@ -144,19 +144,20 @@
         <img class="dividor" src="{% static 'arrow-divider.png' %}">
           <div class="row">
             <div class="col">
-              <h5 class="footer-info text-standard">Address</h5>
+              <h5 class="text-standard">Address</h5>
               <hr class="footer-break">
-              <h6 class="footer-info text-standard">11639 13th Ave SW</h6>
-              <h6 class="footer-info text-standard">Burien, WA 98146</h6>
-              <h6 class="footer-info text-standard">United States</h6>
+              <h6 class="text-standard">11639 13th Ave SW</h6>
+              <h6 class="text-standard">Burien, WA 98146</h6>
+              <h6 class="text-standard">United States</h6>
             </div>
             <div class="col">
-              <h5 class="footer-info text-standard">Contact</h5>
+              <h5 class="text-standard">Contact</h5>
               <hr class="footer-break">
-              <h6 class="footer-info text-standard">(206)-372-6501</h6>
+              <h6 class="text-standard">m.ravenmoore@gmail.com</h6>
+              <h6 class="text-standard">(206)-372-6501</h6>
             </div>
             <div class="col">
-              <h5 class="footer-info text-standard">Follow</h5>
+              <h5 class="text-standard">Follow</h5>
               <hr class="footer-break">
               <ul class="links">
                 <li>
@@ -188,14 +189,6 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
   <script src="{% static 'js/dates.js' %}"></script>
   <script src="https://www.paypalobjects.com/api/checkout.js"></script>
-  <script type="text/javascript">
-var limit = 2;
-$('input.single-checkbox').on('change', function(evt) {
-  if($('input[type=checkbox]:checked').length >= limit) {
-    this.checked = false;
-  }
-});
-  </script>
   <script src="{% static 'js/add_swap.js' %}"></script>
   {% block js %}
   {% endblock %}
