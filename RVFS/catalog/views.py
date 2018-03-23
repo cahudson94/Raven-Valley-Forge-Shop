@@ -586,7 +586,6 @@ class CartView(TemplateView):
         return HttpResponseRedirect(reverse_lazy('cart'))
 
 
-@login_required
 def update_cart(request):
     """Change quantity of items in cart and update total."""
     cart_item = request.GET['cart_data'].split(' ')
@@ -595,7 +594,7 @@ def update_cart(request):
         cart_total = request.user.account.cart_total
     else:
         cart = unpack(request.session['account']['cart'])
-        cart_total = request.session['account']['cart_total']
+        cart_total = Decimal(request.session['account']['cart_total'])
     prods = []
     servs = []
     for item in cart:
@@ -606,8 +605,10 @@ def update_cart(request):
     if cart_item[0] == 'prod':
         difference = (int(request.GET['quantity']) -
                       int(prods[int(cart_item[1])]['quantity']))
-        cart_total += Decimal(prods[int(cart_item[1])]['item'].price *
-                              difference)
+        price = prods[int(cart_item[1])]['item'].price
+        if 'extras' in prods[int(cart_item[1])].keys():
+            price += Decimal(prods[int(cart_item[1])]['extras'].split(' $')[1])
+        cart_total += Decimal(price * difference)
         prods[int(cart_item[1])]['quantity'] = request.GET['quantity']
     cart_repack(prods, servs, request, cart_total)
     return HttpResponse(cart_total)
@@ -980,7 +981,7 @@ def cart_repack(prods, servs, request, cart_total):
         request.user.account.save()
     else:
         request.session['account']['cart'] = cart_repack
-        request.session['account']['cart_total'] = cart_total
+        request.session['account']['cart_total'] = str(cart_total)
         request.session.save()
 
 
@@ -996,7 +997,6 @@ def attempt_appointment(servs, session):
         hour = str(int(hour) + 12)
     time = [year, month, day, int(hour)]
     busy = check_time_slot(time)
-    import pdb; pdb.set_trace()
     if busy:
         return True
     else:

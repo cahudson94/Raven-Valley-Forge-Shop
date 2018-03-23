@@ -58,7 +58,7 @@ class HomeView(TemplateView):
 
 
 @staff_member_required
-def updateslideshow(request):
+def updateslideshow(request):  # pragma: no cover
     """Button to update the files of slide images."""
     slide_files = drive_files('17fqQwUu1dGPOUBirLDo2O0tBg_TUXMlZ')
     current_slides = SlideShowImage.objects.all()
