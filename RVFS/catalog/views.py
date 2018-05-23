@@ -1,7 +1,7 @@
 """Various views for the catalog and cart."""
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -36,11 +36,20 @@ MONTHS = {
 }
 
 
-class AllItemsView(ListView):
+def valid_staff(self):
+    """Validate access."""
+    return self.request.user.is_staff
+
+
+class AllItemsView(UserPassesTestMixin, ListView):
     """List all items for inventory."""
 
     template_name = 'list.html'
     model = Product
+
+    def test_func(self):
+        """Validate access."""
+        return self.request.user.is_staff
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -364,14 +373,17 @@ class ServiceInfoView(DetailView):
         return HttpResponseRedirect(self.success_url)
 
 
-class CreateProductView(PermissionRequiredMixin, CreateView):
+class CreateProductView(UserPassesTestMixin, CreateView):
     """View for creating a product."""
 
-    permission_required = 'user.is_staff'
     template_name = 'create_product.html'
     model = Product
     success_url = reverse_lazy('prods')
     form_class = ProductForm
+
+    def test_func(self):
+        """Validate access."""
+        return self.request.user.is_staff
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -386,14 +398,18 @@ class CreateProductView(PermissionRequiredMixin, CreateView):
         return super(CreateProductView, self).form_valid(form)
 
 
-class EditProductView(PermissionRequiredMixin, UpdateView):
+class EditProductView(UserPassesTestMixin, UpdateView):
     """View for editing a product."""
 
-    permission_required = 'user.is_staff'
+    permission_required = ''
     template_name = 'edit_product.html'
     model = Product
     form_class = ProductForm
     success_url = reverse_lazy('prods')
+
+    def test_func(self):
+        """Validate access."""
+        return self.request.user.is_staff
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -409,14 +425,18 @@ class EditProductView(PermissionRequiredMixin, UpdateView):
         return super(EditProductView, self).form_valid(form)
 
 
-class CreateServiceView(PermissionRequiredMixin, CreateView):
+class CreateServiceView(UserPassesTestMixin, CreateView):
     """View for creating black smith services."""
 
-    permission_required = 'user.is_staff'
+    permission_required = ''
     template_name = 'create_service.html'
     model = Service
     success_url = reverse_lazy('servs')
     form_class = ServiceForm
+
+    def test_func(self):
+        """Validate access."""
+        return self.request.user.is_staff
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -431,14 +451,18 @@ class CreateServiceView(PermissionRequiredMixin, CreateView):
         return super(CreateServiceView, self).form_valid(form)
 
 
-class EditServiceView(PermissionRequiredMixin, UpdateView):
+class EditServiceView(UserPassesTestMixin, UpdateView):
     """View for editing a product."""
 
-    permission_required = 'user.is_staff'
+    permission_required = ''
     template_name = 'edit_service.html'
     model = Service
     form_class = ServiceForm
     success_url = reverse_lazy('servs')
+
+    def test_func(self):
+        """Validate access."""
+        return self.request.user.is_staff
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -615,6 +639,7 @@ def update_cart(request):
 
 
 @login_required
+@user_passes_test(valid_staff)
 def delete_item(request):
     """Remove items from cart and update total."""
     cart_item = request.GET['item'].split(' ')
