@@ -105,7 +105,7 @@ class BasicViewTests(TestCase):
         matt.save()
         matt.account.pic = test_image
         matt.account.save()
-        becky = User(username='b.ravenmoore')
+        becky = User(username='HuginnRayne')
         becky.save()
         becky.account.pic = test_image
         becky.account.save()

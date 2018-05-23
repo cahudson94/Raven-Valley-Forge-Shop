@@ -100,7 +100,7 @@ class AboutView(TemplateView):
         except ObjectDoesNotExist:
             pass
         try:
-            becky = User.objects.get(username='b.ravenmoore')
+            becky = User.objects.get(username='HuginnRayne')
             context['becky'] = becky.account
         except ObjectDoesNotExist:
             pass
