@@ -34,7 +34,7 @@ class BasicViewTests(TestCase):
         self.products = []
         self.services = []
         for i in range(2):
-            address = ShippingInfo(name='test_name',
+            address = ShippingInfo(name='test_name{}'.format(i),
                                    address1='1234 Test Ave S',
                                    zip_code='11111',
                                    city='testville',
@@ -59,18 +59,21 @@ class BasicViewTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(reverse_lazy('account'))
         self.assertEqual(200, response.status_code)
+        self.assertIn('<title>Account</title>', response.content.decode())
 
     def test_add_address_200(self):
         """Test 200 response from add address view."""
         self.client.force_login(self.user)
         response = self.client.get(reverse_lazy('add_add'))
         self.assertEqual(200, response.status_code)
+        self.assertIn('<title>Add an Address</title>', response.content.decode())
 
     def test_address_list_200(self):
         """Test 200 response from address list view."""
         self.client.force_login(self.user)
         response = self.client.get(reverse_lazy('add_list'))
         self.assertEqual(200, response.status_code)
+        self.assertIn('<title>Change Address</title>', response.content.decode())
 
     def test_del_address_200(self):
         """Test 200 response from delete address view."""
@@ -78,6 +81,7 @@ class BasicViewTests(TestCase):
         response = self.client.get(reverse_lazy('del_add',
                                    kwargs={'pk': ShippingInfo.objects.last().id}))
         self.assertEqual(200, response.status_code)
+        self.assertIn('<title>Delete Address</title>', response.content.decode())
 
     def test_edit_account_200(self):
         """Test 200 response from edit account view."""
@@ -85,6 +89,7 @@ class BasicViewTests(TestCase):
         response = self.client.get(reverse_lazy('edit_acc',
                                    kwargs={'pk': Account.objects.last().id}))
         self.assertEqual(200, response.status_code)
+        self.assertIn('<title>Edit Your Account</title>', response.content.decode())
 
     def test_info_form_not_complete_200(self):
         """Test 200 response from info form view if not complete."""
@@ -92,6 +97,7 @@ class BasicViewTests(TestCase):
         response = self.client.get(reverse_lazy('info_reg',
                                    kwargs={'pk': Account.objects.last().id}))
         self.assertEqual(200, response.status_code)
+        self.assertIn('<title>Info Form</title>', response.content.decode())
 
     def test_about_view_with_accounts(self):
         """Test when staff have accounts."""
@@ -99,7 +105,7 @@ class BasicViewTests(TestCase):
         matt.save()
         matt.account.pic = test_image
         matt.account.save()
-        becky = User(username='b.ravenmoore')
+        becky = User(username='HuginnRayne')
         becky.save()
         becky.account.pic = test_image
         becky.account.save()
@@ -208,5 +214,40 @@ class BasicViewTests(TestCase):
     def test_change_main_address(self):
         """Test changing which address is main."""
         self.client.force_login(self.user)
-        add_id = str(ShippingInfo.objects.last().id)
-        pass
+        old_main = self.account.main_address
+        new_id = str(ShippingInfo.objects.first().id)
+        data = {'name {}'.format(new_id): ['test_name1'],
+                'address1 {}'.format(new_id): ['1234 Test Ave S'],
+                'zip_code {}'.format(new_id): ['11111'],
+                'city {}'.format(new_id): ['testville'],
+                'state {}'.format(new_id): ['testington'],
+                '{}'.format(new_id): ['False'],
+                'name {}'.format(old_main): ['test_name2'],
+                'address1 {}'.format(old_main): ['1234 Test Ave S'],
+                'zip_code {}'.format(old_main): ['11111'],
+                'city {}'.format(old_main): ['testville'],
+                'state {}'.format(old_main): ['testington']}
+        self.client.post(reverse_lazy('add_list'), data)
+        self.account = Account.objects.get(user=self.user)
+        self.assertEqual(int(new_id), self.account.main_address)
+
+    def test_change_address_info(self):
+        """Test changing info of an address."""
+        self.client.force_login(self.user)
+        old_main = self.account.main_address
+        new_id = str(ShippingInfo.objects.first().id)
+        data = {'name {}'.format(new_id): ['bob'],
+                'address1 {}'.format(new_id): ['1234 Test Ave S'],
+                'zip_code {}'.format(new_id): ['11111'],
+                'city {}'.format(new_id): ['homecity'],
+                'state {}'.format(new_id): ['testington'],
+                'name {}'.format(old_main): ['test_name2'],
+                'address1 {}'.format(old_main): ['1234 Test Ave S'],
+                'zip_code {}'.format(old_main): ['11111'],
+                'city {}'.format(old_main): ['testville'],
+                'state {}'.format(old_main): ['testington'],
+                '{}'.format(old_main): ['False']}
+        self.client.post(reverse_lazy('add_list'), data)
+        new_add = ShippingInfo.objects.get(id=new_id)
+        self.assertEqual('homecity', new_add.city)
+        self.assertEqual('bob', new_add.name)

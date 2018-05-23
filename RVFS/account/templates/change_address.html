@@ -62,14 +62,16 @@
 {% endblock %}
 {% block js %}
   <script type="text/javascript">
-var limit = 2;
 $('input.single-checkbox').on('change', function(evt) {
-  if($('input[type=checkbox]:checked').length >= limit) {
-    this.checked = false;
+  if($('input[type=checkbox]:checked').length >= 2) {
+    for (var i = 0; i < $('input.single-checkbox').length; i++) {
+      $('input[type=checkbox]')[i].checked = false;
+    }
+    this.checked = true;
   }
   console.log($('input.single-checkbox:checked').length);
   if($('input.single-checkbox:checked').length > 0) {
-    for (var i = 0; i < $('input.single-checkbox').length; i++) {
+    for (i = 0; i < $('input.single-checkbox').length; i++) {
       $('input.single-checkbox')[i].required = false;
     }
   }

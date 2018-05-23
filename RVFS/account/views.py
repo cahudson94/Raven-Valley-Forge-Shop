@@ -2,7 +2,7 @@
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login as auth_login
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ObjectDoesNotExist
@@ -58,7 +58,7 @@ class HomeView(TemplateView):
 
 
 @staff_member_required
-def updateslideshow(request):
+def updateslideshow(request):  # pragma: no cover
     """Button to update the files of slide images."""
     slide_files = drive_files('17fqQwUu1dGPOUBirLDo2O0tBg_TUXMlZ')
     current_slides = SlideShowImage.objects.all()
@@ -100,7 +100,7 @@ class AboutView(TemplateView):
         except ObjectDoesNotExist:
             pass
         try:
-            becky = User.objects.get(username='b.ravenmoore')
+            becky = User.objects.get(username='HuginnRayne')
             context['becky'] = becky.account
         except ObjectDoesNotExist:
             pass
@@ -227,13 +227,17 @@ class AddressListView(LoginRequiredMixin, ListView):
         return HttpResponseRedirect(self.success_url)
 
 
-class DeleteAddress(LoginRequiredMixin, DeleteView):
+class DeleteAddress(UserPassesTestMixin, DeleteView):
     """Delete an address."""
 
-    permission_required = 'account.has_address_delete'
+    permission_required = ''
     model = ShippingInfo
     success_url = reverse_lazy('account')
     template_name = 'del_add.html'
+
+    def test_func(self):
+        """Validate access."""
+        return self.request.user.access.has_address_delete
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
