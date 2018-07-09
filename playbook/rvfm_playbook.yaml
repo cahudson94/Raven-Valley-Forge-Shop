@@ -1,0 +1,58 @@
+---
+- hosts: us-west-2
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: update ubuntu system
+      apt: update_cache=yes
+
+    - name: install basic unix services
+      apt: name={{ item }} state=latest
+      with_items:
+        - nginx
+        - python3
+        - python3-pip
+        - python3.6-venv
+        - git
+        - gunicorn
+
+    - name: clone RVFM
+      git:
+        clone: yes
+        repo: https://github.com/cahudson94/Raven-Valley-Forge-Shop.git
+        dest: /home/ubuntu/Raven-Valley-Forge-Shop
+
+    - name: create python3 virtual enviroment
+      command: python3 -m venv /home/ubuntu/ENV
+
+    - name: update pip
+      pip:
+        name: pip
+        extra_args: --upgrade
+        virtualenv: /home/ubuntu/ENV
+
+    - name: install gunicorn in the enviroment
+      pip:
+        name: gunicorn
+        virtualenv: /home/ubuntu/ENV
+
+    - name: install required packages
+      pip:
+        requirements: /home/ubuntu/Raven-Valley-Forge-Shop/requirements.pip
+        virtualenv: /home/ubuntu/ENV
+
+    - name: update secrets
+      copy:
+        src: ~/CF/django-raven/vars
+        dest: /home/ubuntu/Raven-Valley-Forge-Shop/RVFS/supersecret
+
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: restart gunicorn
+      service:
+        name: gunicorn
+        state: restarted
