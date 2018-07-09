@@ -60,6 +60,7 @@ Now now that you have cloned your repo and changed directories into the project,
 `$ source ENV/bin/activate`
 
 `$ pip install -r requirements.txt`
+
 ### Test Suite
 ---
 ##### *Running Tests*

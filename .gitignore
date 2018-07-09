@@ -106,3 +106,4 @@ RVFS/media/*
 !RVFS/media/.gitkeep
 
 client_secret.json
+new_secret_file.txt

@@ -1,7 +1,6 @@
 """."""
 import os
 import datetime
-import json
 from oauth2client import tools, client
 from oauth2client.file import Storage
 
@@ -13,7 +12,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 APPLICATION_NAME = 'Web client 1'
 CLIENT_SECRET_FILE = os.path.join(BASE_DIR, 'RVFS/client_secrete.json')
-ENV_CLIENT_SECRET = json.loads(os.environ.get('GOOGLE_CREDS'))
+ENV_CLIENT_SECRET = os.environ.get('GOOGLE_CREDS')
 SCOPES = ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/drive']
 
 try:
@@ -46,7 +45,10 @@ def get_credentials():
     credentials = store.get()
     if not credentials or credentials.invalid:
         if ENV_CLIENT_SECRET:
-            credentials = Storage(ENV_CLIENT_SECRET).get()
+            with open('new_secret_file.txt', 'w+') as new_secret_file:
+                new_secret_file.write(ENV_CLIENT_SECRET)
+            secret_path = os.path.join(BASE_DIR, 'new_secret_file.txt')
+            credentials = Storage(secret_path).get()
         else:
             flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
             flow.user_agent = APPLICATION_NAME
