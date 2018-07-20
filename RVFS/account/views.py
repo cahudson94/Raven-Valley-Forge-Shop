@@ -1,7 +1,7 @@
 """."""
 from django.conf import settings
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login as auth_login
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
@@ -42,6 +42,11 @@ MONTHS = {
 }
 
 
+def valid_staff(self):
+    """Validate access."""
+    return self.request.user.is_staff
+
+
 class HomeView(TemplateView):
     """Home View."""
 
@@ -57,7 +62,8 @@ class HomeView(TemplateView):
         return context
 
 
-@staff_member_required
+@user_passes_test
+@login_required
 def updateslideshow(request):  # pragma: no cover
     """Button to update the files of slide images."""
     slide_files = drive_files('17fqQwUu1dGPOUBirLDo2O0tBg_TUXMlZ')

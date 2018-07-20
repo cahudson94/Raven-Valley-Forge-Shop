@@ -6,6 +6,9 @@
 Products
 {% elif nbar == 'servs' %}
 Services
+{% if slug %}
+ - {{ slug }}
+{% endif %}
 {% endif %}
 {% endblock %}
 
@@ -17,7 +20,12 @@ Services
         {% else %}
         Service
         {% endif %}
-         Catagories</h5>
+        {% if slug %}
+         - {{ slug }}
+        {% else %}
+         Catagories
+        {% endif %}
+        </h5>
         <ul class="side-bar-items">
         {% for tag in all_tags %}
             {% if forloop.counter < 10 %}
@@ -43,12 +51,12 @@ Services
         </ul>
     </div>
     <div class="col catalog">
-    {% if tags.paginator.num_pages != 1 %}
+    {% if page.paginator.num_pages != 1 %}
         <nav aria-label="{{ tag }} paginator">
             <ul class="pagination justify-content-center paginator">
-                {% if tags.has_previous %}
+                {% if page.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ tags.previous_page_number }}" aria-label="Previous">
+                    <a class="page-link" href="?page={{ page.previous_page_number }}" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
                         <span class="sr-only text-standard">Previous</span>
                     </a>
@@ -61,11 +69,11 @@ Services
                 {% endif %}
                 </li>
                 <li class="page-item disabled">
-                    <span class="page-link text-standard">{{ tags.number }} of {{ tags.paginator.num_pages }}</span>
+                    <span class="page-link text-standard">{{ page.number }} of {{ page.paginator.num_pages }}</span>
                 </li>
-                {% if tags.has_next %}
+                {% if page.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ tags.next_page_number }}" aria-label="Next">
+                    <a class="page-link" href="?page={{ page.next_page_number }}" aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
                         <span class="sr-only text-standard">Next</span>
                     </a>
@@ -80,36 +88,71 @@ Services
             </ul>
         </nav>
     {% endif %}
-    {% for tag in tags %}
-        <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories text-standard">{{ tag }}</h2></a>
+    {% if slug %}
+        <a class="catagory-a" href="{% url 'tagged_products' slug=slug %}">
+            <h2 class="catalog-catagories text-standard">
+                {% if nbar == 'prods' %}
+                Products
+                {% else %}
+                Services
+                {% endif %}
+                 - {{ slug }}
+            </h2>
+        </a>
         <div class="row card-row">
-        {% for key_tag, prod_or_serv in items.items %}
-            {% if tag == key_tag %}
-                {% for item in prod_or_serv %}
-                    {% if forloop.counter < 5 %}
-                        {% if nbar == 'prods' %}
-                        <a href="{% url 'prod' pk=item.id %}">
-                        {% else %}
-                        <a href="{% url 'serv' pk=item.id %}">
-                        {% endif %}
-                            <div class="card">
-                            {% thumbnail item.image "140x140" crop="center" as pic %}
-                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
-                            {% endthumbnail %}
-                            <h4 class="card-title text-standard">{{ item.name }}</h4>
-                            {% if nbar == 'prods' %}
-                                <p class="card-text text-standard">${{ item.price }}</p>
-                            {% else %}
-                                <p class="card-text text-standard">${{ item.price_range }}</p>
-                            {% endif %}
-                        </div></a>
+            {% for item in items %}
+                {% if forloop.counter < 5 %}
+                    {% if nbar == 'prods' %}
+                    <a href="{% url 'prod' pk=item.id %}">
+                    {% else %}
+                    <a href="{% url 'serv' pk=item.id %}">
                     {% endif %}
-                {% endfor %}
-            {% endif %}
-        {% endfor %}
+                        <div class="card">
+                        {% thumbnail item.image "180x180" crop="center" as pic %}
+                        <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                        {% endthumbnail %}
+                        <h5 class="card-title text-standard">{{ item.name }}</h5>
+                        {% if nbar == 'prods' %}
+                            <p class="card-text text-standard">${{ item.price }}</p>
+                        {% else %}
+                            <p class="card-text text-standard">${{ item.price_range }}</p>
+                        {% endif %}
+                    </div></a>
+                {% endif %}
+            {% endfor %}
         </div>
-    {% endfor %}
-    {% if tags.paginator.num_pages != 1 %}
+    {% else %}
+        {% for tag in all_tags %}
+            <a class="catagory-a" href="{% url 'tagged_products' slug=tag %}"><h2 class="catalog-catagories text-standard">{{ tag }}</h2></a>
+            <div class="row card-row">
+            {% for key_tag, prod_or_serv in items.items %}
+                {% if tag == key_tag %}
+                    {% for item in prod_or_serv %}
+                        {% if forloop.counter < 5 %}
+                            {% if nbar == 'prods' %}
+                            <a href="{% url 'prod' pk=item.id %}">
+                            {% else %}
+                            <a href="{% url 'serv' pk=item.id %}">
+                            {% endif %}
+                                <div class="card">
+                                {% thumbnail item.image "180x180" crop="center" as pic %}
+                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                                {% endthumbnail %}
+                                <h5 class="card-title text-standard">{{ item.name }}</h5>
+                                {% if nbar == 'prods' %}
+                                    <p class="card-text text-standard">${{ item.price }}</p>
+                                {% else %}
+                                    <p class="card-text text-standard">${{ item.price_range }}</p>
+                                {% endif %}
+                            </div></a>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% if page.paginator.num_pages != 1 %}
         <nav aria-label="{{ tag }} paginator">
             <ul class="pagination justify-content-center paginator">
                 {% if tags.has_previous %}
