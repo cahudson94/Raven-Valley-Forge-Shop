@@ -5,6 +5,7 @@
 {% block title %}Checkout{% endblock %}
 
 {% block body %}
+<div name="csrf_token" hidden="true">{% csrf_token %}</div>
 <div class="row">
 {% if shipping %}
   <div class="col">
@@ -83,9 +84,9 @@
 </div>
 
 <div class="w-100 d-flex">
-    <a class="btn btn-secondary text-standard" href="{% url 'cart' %}">Back</a>
+    <a class="btn btn-secondary text-standard" href="http://google.com">Back</a>
     {% if total %}
-    <div id="paypal-button-container" class="ml-auto"></div>
+    <a class="btn btn-secondary text-standard" class="ml-auto" href="{% url 'check_comp' %}">Place Order</a>
     {% else %}
     <a class="btn btn-secondary text-standard" href="{% url 'check_comp' %}">Request Service</a>
     {% endif %}
@@ -103,60 +104,4 @@
     * Rate for services will depend on the scope of services provided payment is due, either before delivery of finished product, or prior to departcher for on premises services.
 </p>
 {% endif %}
-{% endblock %}
-
-{% block js %}
-<script>
-
-paypal.Button.render({
-  env: 'sandbox', // sandbox | production
-
-
-  style: {
-    label: 'checkout',
-    size:  'medium', // small | medium | large | responsive
-    shape: 'rect', // pill | rect
-    color: 'black', // gold | blue | silver | black
-    tagline: false,
-  },
-
-  // PayPal Client IDs - replace with your own
-  // Create a PayPal app: https://developer.paypal.com/developer/applications/create
-
-  client: {
-    sandbox: 'Aa9iJNJgoHU7KRYt_O2Ox8rglbTsnxzpz0JnCChgzC03UMj2Vj4xHRC8LPXYynt3jtdy9TzB3eiQ8l0u',
-    production: '{{ paypal }}'
-  },
-
-  commit: true,
-
-  payment: function(data, actions) {
-    return actions.payment.create({
-      payment: {
-        transactions: [
-          {
-            amount: {total: '{{ total }}', currency: 'USD'},
-            description: 'Payment for goods and or services from RVFM.'
-          }
-        ]
-      },
-
-      experience: {
-        input_fields: {
-          no_shipping: 1,
-        }
-      }
-    });
-  },
-
-
-  onAuthorize: function(data, actions) {
-    return actions.payment.execute().then(function() {
-      window.location.replace("{% url 'check_comp' %}");
-    });
-  }
-
-}, '#paypal-button-container');
-
-</script>
 {% endblock %}

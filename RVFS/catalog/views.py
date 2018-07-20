@@ -1,11 +1,11 @@
 """Various views for the catalog and cart."""
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
@@ -16,6 +16,7 @@ from catalog.models import Product, Service, UserServiceImage as UserImage
 from datetime import datetime
 from decimal import Decimal
 from RVFS.google_calendar import check_time_slot, set_appointment
+import paypalrestsdk
 import json
 import os
 
@@ -36,11 +37,6 @@ MONTHS = {
 }
 
 
-def valid_staff(self):
-    """Validate access."""
-    return self.request.user.is_staff
-
-
 class AllItemsView(UserPassesTestMixin, ListView):
     """List all items for inventory."""
 
@@ -59,7 +55,7 @@ class AllItemsView(UserPassesTestMixin, ListView):
         return context
 
 
-class AllProductsView(ListView):
+class CatalogueView(ListView):
     """Catalogue view for the shop of all products and services."""
 
     template_name = 'catalog.html'
@@ -68,128 +64,43 @@ class AllProductsView(ListView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(ListView, self).get_context_data(**kwargs)
-        items = self.model.objects.filter(published='PB')
-        context['all_tags'] = sorted(set([tag for item in
-                                          items for tag in
-                                          item.tags.names()]))
-        paginator = Paginator(context['all_tags'], 5)
-        request = self.request
-        if 'page' in request.GET:
-            page = self.request.GET.get('page')
-        else:
-            page = 1
-        try:
-            context['tags'] = paginator.page(page)
-        except PageNotAnInteger:
-            context['tags'] = paginator.page(1)
-        except EmptyPage:
-            context['tags'] = paginator.page(paginator.num_pages)
-        context['items'] = {tag: [item for item in
-                                  items if tag in
-                                  item.tags.names()] for tag in
-                            context['tags']}
-        set_basic_context(context, 'prods')
-        return context
-
-
-class AllServicesView(ListView):
-    """Catalogue view for the shop of all products and services."""
-
-    template_name = 'catalog.html'
-    model = Service
-
-    def get_context_data(self, **kwargs):
-        """Add context for active page."""
-        context = super(ListView, self).get_context_data(**kwargs)
-        items = self.model.objects.filter(published='PB')
-        context['all_tags'] = sorted(set([tag for item in
-                                          items for tag in
-                                          item.tags.names()]))
-        paginator = Paginator(context['all_tags'], 5)
-        request = self.request
-        if 'page' in request.GET:
-            page = self.request.GET.get('page')
-        else:
-            page = 1
-        try:
-            context['tags'] = paginator.page(page)
-        except PageNotAnInteger:
-            context['tags'] = paginator.page(1)
-        except EmptyPage:
-            context['tags'] = paginator.page(paginator.num_pages)
-        context['items'] = {tag: [item for item in
-                                  items if tag in
-                                  item.tags.names()] for tag in
-                            context['tags']}
-        set_basic_context(context, 'servs')
-        return context
-
-
-class TagProductsView(ListView):
-    """Catalogue view for the shop of all products and services."""
-
-    template_name = 'tagged_catalog.html'
-    model = Product
-
-    def get_context_data(self, **kwargs):
-        """Add context for active page."""
-        context = super(TagProductsView, self).get_context_data(**kwargs)
-        page_tag = self.kwargs.get('slug')
-        context['tag'] = page_tag
+        view_type = 'prods'
+        slug = self.kwargs.get('slug')
+        if 'product' not in self.request.get_full_path():
+            self.model = Service
+            view_type = 'servs'
         all_items = self.model.objects.filter(published='PB')
         context['all_tags'] = sorted(set([tag for item in
                                           all_items for tag in
                                           item.tags.names()]))
-        slugs = self.kwargs.get('slug')
-        items = (self.model.objects.filter(published='PB')
-                                   .filter(tags__name__in=[slugs]).all()
-                                   .order_by('id'))
-        paginator = Paginator(items, 20)
-        page = self.request.GET.get('page')
+        if slug:
+            context['slug'] = slug
+            items = (self.model.objects.filter(published='PB')
+                                       .filter(tags__name__in=[slug]).all()
+                                       .order_by('id'))
+            page_content = items
+        else:
+            items = all_items
+            page_content = context['all_tags']
+        paginator = Paginator(page_content, 5)
+        if 'page' in self.request.GET:
+            page = self.request.GET.get('page')
+        else:
+            page = 1
         try:
-            context['items'] = paginator.page(page)
+            context['page'] = paginator.page(page)
         except PageNotAnInteger:
-            context['items'] = paginator.page(1)
+            context['page'] = paginator.page(1)
         except EmptyPage:
-            context['items'] = paginator.page(paginator.num_pages)
-        context['tags'] = sorted(set([tag for item in
-                                      context['items'] for tag in
-                                      item.tags.names()]))
-        set_basic_context(context, 'prods')
-        return context
-
-
-class TagServicesView(ListView):
-    """Catalogue view for the shop of all products and services."""
-
-    template_name = 'tagged_catalog.html'
-    model = Service
-
-    def get_context_data(self, **kwargs):
-        """Add context for active page."""
-        context = super(ListView, self).get_context_data(**kwargs)
-        page_tag = self.kwargs.get('slug')
-        context['tag'] = page_tag
-        all_items = self.model.objects.filter(published='PB')
-        context['all_tags'] = sorted(set([tag for item in
-                                          all_items for tag in
-                                          item.tags.names()]))
-        slugs = self.kwargs.get('slug')
-        items = (self.model.objects.filter(published='PB')
-                                   .filter(tags__name__in=[slugs]).all()
-                                   .order_by('id'))
-        paginator = Paginator(items, 20)
-        page = self.request.GET.get('page')
-        try:
-            context['items'] = paginator.page(page)
-        except PageNotAnInteger:
-            context['items'] = paginator.page(1)
-        except EmptyPage:
-            context['items'] = paginator.page(paginator.num_pages)
-        context['tags'] = sorted(set([tag for item in
-                                      context['items'] for tag in
-                                      item.tags.names()]))
-        set_basic_context(context, 'servs')
+            context['page'] = paginator.page(paginator.num_pages)
+        if slug:
+            context['items'] = sorted(set([item for item in items]))
+        else:
+            context['items'] = {tag: [item for item in
+                                all_items if tag in
+                                item.tags.names()] for tag in
+                                context['page']}
+        set_basic_context(context, view_type)
         return context
 
 
@@ -232,6 +143,7 @@ class SingleProductView(DetailView):
             price = Decimal(self.get_object().price)
             if extra_cost:
                 price += extra_cost
+            item_total = (Decimal(price) * Decimal(data['quantity']))
             if self.request.user.is_anonymous:
                 if not self.request.session.get_expire_at_browser_close():
                     self.request.session.set_expiry(0)
@@ -244,14 +156,14 @@ class SingleProductView(DetailView):
                 else:
                     account['cart'] += cart_item
                 account['cart_total'] = str(Decimal(account['cart_total']) +
-                                            Decimal(price))
+                                            item_total)
                 self.request.session.save()
             else:
                 if account.cart:
                     account.cart += '|' + cart_item
                 else:
                     account.cart += cart_item
-                account.cart_total += Decimal(price)
+                account.cart_total += Decimal(item_total)
                 account.save()
         else:
             item = str(self.get_object().id)
@@ -482,7 +394,7 @@ class CartView(TemplateView):
     """Cart and checkout page."""
 
     template_name = 'cart.html'
-    success_url = reverse_lazy('checkout')
+    success_url = reverse_lazy('create_payment')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -638,8 +550,6 @@ def update_cart(request):
     return HttpResponse(cart_total)
 
 
-@login_required
-@user_passes_test(valid_staff)
 def delete_item(request):
     """Remove items from cart and update total."""
     cart_item = request.GET['item'].split(' ')
@@ -774,6 +684,8 @@ class CheckoutView(TemplateView):
             order.serv_address = address
             order.save()
         self.request.session['order_num'] = order.id
+        self.request.session['payment_id'] = self.request.GET['paymentId']
+        self.request.session['payer_id'] = self.request.GET['PayerID']
         self.request.session.save()
         if shipping_data:
             context['shipping'] = address
@@ -784,9 +696,68 @@ class CheckoutView(TemplateView):
             context['serv'] = address
             context['info'] = service_data['info']
         context['total'] = cart_total
-        context['paypal'] = os.environ.get('PAYPAL_KEY', '')
         set_basic_context(context, 'cart')
         return context
+
+
+def create_payment(request):
+    """Create payment with paypal API."""
+    paypalrestsdk.configure({
+        "mode": os.environ.get('PAYPAL_MODE'),
+        "client_id": os.environ.get('PAYPAL_CLIENT_ID'),
+        "client_secret": os.environ.get('PAYPAL_CLIENT_SECRET')})
+
+    base_url = request.get_raw_uri().split('create')[0]
+    cart = unpack(request.user.account.cart)
+    items = []
+    total = 0
+    for item in cart:
+        if item['type'] == 'prod':
+            obj = Product.objects.get(id=item['item_id'])
+            price = obj.price
+            total += price * Decimal(item["quantity"])
+        else:
+            obj = Service.objects.get(id=item['item_id'])
+            if obj.commission_fee:
+                price = Decimal(obj.commission_fee)
+            else:
+                price = Decimal(0)
+            total += price
+        prod_or_serv = {
+            "name": obj.name,
+            "description": item["description"],
+            "price": str(price),
+            "currency": "USD",
+            "quantity": item["quantity"]
+        }
+        items.append(prod_or_serv)
+
+    payment = paypalrestsdk.Payment({
+        "intent": "sale",
+        "payer": {
+            "payment_method": "paypal"},
+        "redirect_urls": {
+            "return_url": base_url + "checkout/",
+            "cancel_url": base_url + "cart/"},
+        "transactions": [{
+            "item_list": {
+                "items": items
+            },
+            "amount": {
+                "total": str(total),
+                "currency": "USD"},
+            "description": "Payment for goods and or services to Ravenmoore\
+ Valley Forge and Metalworks."}]})
+
+    if payment.create():
+        print("Payment created successfully")
+        for link in payment.links:
+            if link.rel == "approval_url":
+                approval_url = str(link.href)
+                return redirect(approval_url)
+    else:
+        print(payment.error)
+        return redirect(base_url + "cart/")
 
 
 class CheckoutCompleteView(TemplateView):
@@ -798,18 +769,27 @@ class CheckoutCompleteView(TemplateView):
         """Check for shipping data."""
         keys = request.session.keys()
         view = CheckoutCompleteView
-        if 'shipping_data' not in keys or 'service_data' not in keys:
+        if 'shipping_data' not in keys and 'service_data' not in keys:
             return HttpResponseRedirect(reverse_lazy('cart'))
-        return super(view, self).get(self, request, *args, **kwargs)
+        payment_id = request.session['payment_id']
+        payment = paypalrestsdk.Payment.find(payment_id)
+        payer_id = request.session['payer_id']
+        if payment.execute({"payer_id": payer_id}):
+            print('there')
+            verify_payment = paypalrestsdk.Payment.find(payment_id)
+            print(verify_payment)
+            if verify_payment:
+                order = Order.objects.get(id=request.session['order_num'])
+                order.paid = True
+                order.save()
+                return super(view, self).get(self, request, *args, **kwargs)
+        return HttpResponseRedirect(reverse_lazy('cart'))
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CheckoutCompleteView, self).get_context_data(**kwargs)
         session = self.request.session
         context['order'] = session['order_num']
-        order = Order.objects.get(id=session['order_num'])
-        order.paid = True
-        order.save()
         files = False
         reschedule = []
         serv_names = []
@@ -905,7 +885,8 @@ are not available. You will be contacted to reschedule these appointments:\n\n'
                 for i in schedualed:
                     owner_body += i[0] + ' at ' + i[1] + '\n'
                 if 'prods' in cart.keys():
-                    client_body = 'All of your products and services are confirmed.\n'
+                    client_body = 'All of your products and services \
+are confirmed.\n'
                 else:
                     client_body = 'All of your services are confirmed.\n'
         if schedualed:
@@ -913,8 +894,13 @@ are not available. You will be contacted to reschedule these appointments:\n\n'
             for i in schedualed:
                 client_body += i[0] + ' at ' + i[1] + '\n'
         if 'prods' in cart.keys():
-            owner_body += ' They purchased:\n'
-            client_body += '\nYou will recieve an email with tracking info \
+            if schedualed:
+                owner_body += ' They purchased:\n'
+                client_body += '\nYou will recieve an email with tracking info \
+when your order ships. Your purchases:\n\n'
+            else:
+                owner_body = 'They purchased:\n'
+                client_body = 'You will recieve an email with tracking info \
 when your order ships. Your purchases:\n\n'
             prods = unpack(cart['prods'])
             for prod in prods:
@@ -957,6 +943,7 @@ when your order ships. Your purchases:\n\n'
             account.save()
         else:
             session['account'] = {'cart': '', 'cart_total': 0.0}
+            session.save()
         set_basic_context(context, 'cart')
         return context
 

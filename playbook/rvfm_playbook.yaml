@@ -16,6 +16,22 @@
         - python3.6-venv
         - git
         - gunicorn
+        - software-properties-common
+
+    - name: add certbot repo
+      apt_repository:
+          repo: ppa:certbot/certbot
+
+    - name: update ubuntu system agains
+      apt: update_cache=yes
+
+    - name: install certbot
+      apt: name={{ item }} state=latest
+      with_items:
+          - python-certbot-nginx
+
+    - name: renew cert
+      shell: certbot renew
 
     - name: clone RVFM
       git:
