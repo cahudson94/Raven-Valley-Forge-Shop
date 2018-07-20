@@ -17,6 +17,8 @@
         - git
         - gunicorn
         - software-properties-common
+        - libffi-dev
+        - libssl-dev
 
     - name: add certbot repo
       apt_repository:
