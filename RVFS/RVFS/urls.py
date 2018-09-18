@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.urls import include, path
+from django.urls import include, path, reverse_lazy
 from django.conf import settings
 from django.conf.urls.static import static
 from account.views import (CustomRegView,
@@ -43,11 +43,35 @@ urlpatterns = [
     path('gallery/<slug:slug>/', GalleryView.as_view(), name='gallery'),
     path('login/', CustomLogView.as_view(), name='login'),
     path('logout/', auth_views.logout, {'next_page': '/'}, name='logout'),
+    path('newsletter/', views.newsletter, name='newsletter'),
     path('admin/', admin.site.urls),
     path('register/', CustomRegView.as_view(), name='register'),
     path('accounts/', include('registration.backends.hmac.urls')),
     path('account/', include('account.urls')),
     path('shop/', include('catalog.urls')),
+    path('password_reset/',
+         auth_views.PasswordResetView.as_view(
+             template_name='password_reset/password_reset_form.html',
+             email_template_name='password_reset/password_reset_email.html',
+             subject_template_name='password_reset/password_reset_subject.txt',
+             success_url=reverse_lazy('password_reset_done'),
+         ),
+         name='password_reset'),
+    path('password_reset_sent/',
+         auth_views.PasswordResetDoneView.as_view(
+             template_name='password_reset/password_reset_done.html'
+         ),
+         name='password_reset_done'),
+    path('password_reset_confirmation/<uidb64>/<token>',
+         auth_views.PasswordResetConfirmView.as_view(
+             template_name='password_reset/password_reset_confirm.html',
+         ),
+         name='password_reset_confirm'),
+    path('password_reset_complete/',
+         auth_views.PasswordResetCompleteView.as_view(
+             template_name='password_reset/password_reset_complete.html',
+         ),
+         name='password_reset_complete'),
 ]
 
 

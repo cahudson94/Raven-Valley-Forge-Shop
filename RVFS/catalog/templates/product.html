@@ -6,12 +6,12 @@
 {% block body %}
 <form enctype="multipart/form-data" method="post">
     {% csrf_token %}
-    <h2 class="text-standard">{{ product.name }}</h2>
+    <h2 class="header-main item-header">{{ product.name }}</h2>
     <div class="row item-container">
         <div class="col">
             <img class="product-image" src="{{ product.image.url }}">
-            </div>
-            <div class="col item-details">
+        </div>
+        <div class="col item-details">
             <h4 class="text-standard">price: ${{ product.price }}</h4>
             <h4 class="text-standard">{% if product.stock %}stock: {{ product.stock }}{% elif product.stock == 0 %}Out of Stock{% else %}In Stock{% endif %}</h4>
             <p class="text-standard description-font">{{ product.description }}</p>

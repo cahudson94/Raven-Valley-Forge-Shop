@@ -20,7 +20,7 @@
             <ul class="row acc-list-row">
                 <li id="prod {{ forloop.counter0 }}" class="card account-list">
                         <div class="row">
-                            <div class="col">
+                            <div class="col text-center">
                                 {% thumbnail item.item.image "100x100" crop="center" as pic %}
                                 <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                                 {% endthumbnail %}
@@ -50,7 +50,7 @@
             {% else %}
                 <li id="prod {{ forloop.counter0 }}" class="card account-list">
                     <div class="row">
-                        <div class="col">
+                        <div class="col text-center">
                             {% thumbnail item.item.image "100x100" crop="center" as pic %}
                                 <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                             {% endthumbnail %}
@@ -169,128 +169,67 @@
     <div class="row acc-row">
         {% if account.cart_total %}
         <ul class="col">
-        <h2 class="text-standard">Shipping Info:</h2>
-        {% if user.is_authenticated %}
-            {% if alt_add %}
-            <li class="account-list">
-            <label class="text-standard">Address:</label>
-            <select id="ship_address_name" name="ship_address_name">
-                {% for add in alt_add %}
-                    {% if not ship_exists and add.main %}
-                    <option value="{{ add }}" selected="selected">{{ add.name }}</option>
-                    {% elif ship_exists and add.id == ship_exists %}
-                    <option value="{{ add }}" selected="selected">{{ add.name }}</option>
-                    {% else %}
-                    <option value="{{ add }}">{{ add.name }}</option>
-                    {% endif %}
-                {% endfor %}
-            </select>
-            </li>
+            <h2 class="text-standard">Shipping Info:</h2>
+            {% if user.is_authenticated %}
+                {% if alt_add %}
+                <li class="account-list">
+                <label class="text-standard">Address:</label>
+                <select id="ship_address_name" name="ship_address_name">
+                    {% for add in alt_add %}
+                        {% if not ship_exists and add.main %}
+                        <option value="{{ add }}" selected="selected">{{ add.name }}</option>
+                        {% elif ship_exists and add.id == ship_exists %}
+                        <option value="{{ add }}" selected="selected">{{ add.name }}</option>
+                        {% else %}
+                        <option value="{{ add }}">{{ add.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                </li>
+                {% endif %}
             {% endif %}
-        {% endif %}
-        <li class="account-list">
-        <label class="text-standard">First Name:</label>
-        <br>
-        <input id="first_name" type="text" name="ship_first_name" value="{% if info %}{{ info.first }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Last Name:</label>
-        <br>
-        <input id="last_name" type="text" name="ship_last_name" value="{% if info %}{{ info.last }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Email:</label>
-        <br>
-        <input id="email" type="text" name="ship_email" value="{% if info %}{{ info.email }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Address Line 1:</label>
-        <br>
-        <input id="ship_add_1" type="text" name="ship_add_1" value="{% if shipping %}{{ shipping.address1 }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Address Line 2:</label>
-        <br>
-        <input id="ship_add_2" type="text" name="ship_add_2" value="{% if shipping %}{{ shipping.address2 }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">City:</label>
-        <br>
-        <input id="ship_city" type="text" name="ship_city" value="{% if shipping %}{{ shipping.city }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">State:</label>
-        <br>
-        <input id="ship_state" type="text" name="ship_state" value="{% if shipping %}{{ shipping.state }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Zip Code:</label>
-        <br>
-        <input id="ship_zip" type="text" name="ship_zip" value="{% if shipping %}{{ shipping.zip_code }}{% endif %}">
-        </li>
+            <li class="account-list">
+            <label class="text-standard">First Name:</label>
+            <br>
+            <input id="first_name" type="text" name="ship_first_name" value="{% if info %}{{ info.first }}{% endif %}">
+            </li>
+            <li class="account-list">
+            <label class="text-standard">Address Line 1:</label>
+            <br>
+            <input id="ship_add_1" type="text" name="ship_add_1" value="{% if shipping %}{{ shipping.address1 }}{% endif %}">
+            <li class="account-list">
+            <label class="text-standard">City:</label>
+            <br>
+            <input id="ship_city" type="text" name="ship_city" value="{% if shipping %}{{ shipping.city }}{% endif %}">
+            </li>
+            <li class="account-list">
+            <label class="text-standard">Zip Code:</label>
+            <br>
+            <input id="ship_zip" type="text" name="ship_zip" value="{% if shipping %}{{ shipping.zip_code }}{% endif %}">
+            </li>
         </ul>
-        {% endif %}
-        {% if serv_address %}
-        <ul class="col">
-        <h2 class="text-standard">Service Address:</h2>
-        {% if user.is_authenticated %}
-            {% if alt_add %}
+        <ul class="col cart-form">
             <li class="account-list">
-            <label class="text-standard">Address:</label>
-            <select id="serv_address_name" name="serv_address_name">
-                {% for add in alt_add %}
-                    {% if not serv_exists and add.main %}
-                    <option value="{{ add }}" selected="selected">{{ add.name }}</option>
-                    {% elif serv_exists and add.id == serv_exists %}
-                    <option value="{{ add }}" selected="selected">{{ add.name }}</option>
-                    {% else %}
-                    <option value="{{ add }}">{{ add.name }}</option>
-                    {% endif %}
-                {% endfor %}
-            </select>
+            <label class="text-standard">Last Name:</label>
+            <br>
+            <input id="last_name" type="text" name="ship_last_name" value="{% if info %}{{ info.last }}{% endif %}">
             </li>
-            {% endif %}
-        {% endif %}
-        <li class="account-list">
-        <label class="text-standard">First Name:</label>
-        <br>
-        <input id="first_name" type="text" name="serv_first_name" value="{% if serv_info %}{{ serv_info.first }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Last Name:</label>
-        <br>
-        <input id="last_name" type="text" name="serv_last_name" value="{% if serv_info %}{{ serv_info.last }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Email:</label>
-        <br>
-        <input id="email" type="text" name="serv_email" value="{% if serv_info %}{{ serv_info.email }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Address Line 1:</label>
-        <br>
-        <input id="serv_add_1" type="text" name="serv_add_1" value="{% if serv_add %}{{ serv_add.address1 }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Address Line 2:</label>
-        <br>
-        <input id="serv_add_2" type="text" name="serv_add_2" value="{% if serv_add %}{{ serv_add.address2 }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">City:</label>
-        <br>
-        <input id="serv_city" type="text" name="serv_city" value="{% if serv_add %}{{ serv_add.city }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">State:</label>
-        <br>
-        <input id="serv_state" type="text" name="serv_state" value="{% if serv_add %}{{ serv_add.state }}{% endif %}">
-        </li>
-        <li class="account-list">
-        <label class="text-standard">Zip Code:</label>
-        <br>
-        <input id="serv_zip" type="text" name="serv_zip" value="{% if serv_add %}{{ serv_add.zip_code }}{% endif %}">
-        </li>
+            </li>
+            <li class="account-list">
+            <label class="text-standard">Address Line 2:</label>
+            <br>
+            <input id="ship_add_2" type="text" name="ship_add_2" value="{% if shipping %}{{ shipping.address2 }}{% endif %}">
+            </li>
+            <li class="account-list">
+            <label class="text-standard">State:</label>
+            <br>
+            <input id="ship_state" type="text" name="ship_state" value="{% if shipping %}{{ shipping.state }}{% endif %}">
+            </li>
+            <li class="account-list">
+            <label class="text-standard">Email:</label>
+            <br>
+            <input id="email" type="text" name="ship_email" value="{% if info %}{{ info.email }}{% endif %}">
+            </li>
         </ul>
         {% endif %}
     </div>

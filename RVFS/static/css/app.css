@@ -119,13 +119,13 @@ MAIN SECTION
 
 .left-bar {
     margin: 5px 0px 0px;
-    background-size: 100% 650px;
+    background-size: 100% 325px;
     background-image: url('../left scroll.png')
 }
 
 .right-bar {
     margin: 5px 0px 0px;
-    background-size: 100% 650px;
+    background-size: 100% 325px;
     background-image: url('../right scroll.png')
 }
 
@@ -288,6 +288,15 @@ MAIN SECTION
     font-style: bold;
 }
 
+.iframe-map {
+    width: 400px;
+    height: 300px;
+}
+
+.p-emails {
+    margin-bottom: 0;
+}
+
 .page-404 {
     background-image: url('static/404-image.jpg');
 }
@@ -355,10 +364,10 @@ CATALOG
 }
 
 .card {
-    border-width: .15rem;
+    border-width: .1rem;
     border-color: black;
     background-size: 100% 100%;
-    background-image: url('../marble.jpeg');
+    background-color: transparent;
     padding: .5rem;
     margin-left: 1rem;
     margin-top: 1rem;
@@ -410,26 +419,45 @@ CATALOG
     max-height: 400px;
 }
 
+.item-header {
+    text-align: center;
+    font-weight: normal;
+}
+
+.service {
+    padding-bottom: 20px;
+}
+
+.serv-image {
+    max-width: 100%;
+}
+
 .service-image-banner {
     padding: 10px 55px;
-}
-
-.service-image {
-    width: 100%;
-}
-
-.calendar {
-    width: 100%;
-    border-width: 0;
-    height: 600px;
 }
 
 .textarea-form > textarea, input {
     max-width: 95%;
 }
 
+.cart-form {
+    padding-top: 80px;
+}
+
 .placeholder {
     height: 250px;
+}
+
+.placeholder-small {
+    height: 52px;
+}
+
+.placeholder-md {
+    height: 100px;
+}
+
+.newsletter {
+    font-size: 14.66px;
 }
 
 .del-button {
@@ -444,6 +472,12 @@ CATALOG
     color: rgba(0, 0, 0, 0.7);
     text-decoration: none;
 }
+
+.update-order {
+    padding-right: 22px;
+    padding-left: 22px;
+}
+
 
 /* ***************************************************************************
 ACCOUNT
@@ -508,7 +542,7 @@ FOOTER
 }
 
 .links {
-    margin-left: -25px;
+    padding-left: 0;
 }
 
 .links li {
@@ -589,6 +623,10 @@ MEDIA QUERY
     .acc-pic-col {
         width: 100%;
     }
+    .iframe-map {
+    width: 250px;
+    height: 175px;
+    }
 }
 
 @media (max-width: 490px) {
@@ -633,6 +671,10 @@ MEDIA QUERY
     .side-bar {
         width: 15px;
         flex: none !important;
+    }
+    .iframe-map {
+    width: 175px;
+    height: 200px;
     }
 }
 

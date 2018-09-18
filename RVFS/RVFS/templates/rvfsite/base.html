@@ -41,13 +41,12 @@
             <div class="col">
               <ul class="info banner-text">
                 <li>
-                  <p class="text-standard">m.ravenmoore@gmail.com</p>
+                  <p class="text-standard">Muninn@ravenvfm.com</p>
                 </li>
                 <li>
                   <p class="text-standard">
                   (206)-372-6501
                   </p>
-                  <br>
                 </li>
                 <li>
                   <a href="https://www.facebook.com/RavenVFM/"><img class="nav-social" src="{% static 'Facebook.png' %}"></a>
@@ -60,6 +59,13 @@
                 </li>
                 <li>
                   <a href="https://www.instagram.com/m.ravenmoore/"><img class="nav-social" src="{% static 'insta.png' %}"></a>
+                </li>
+                <li>
+                  <form id="newsletter">
+                    {% csrf_token %}
+                    <input class="newsletter" type="text" name="newsletter" placeholder="Newsletter">
+                    <input class="btn btn-secondary" type="submit" value="Sign up!">
+                  </form>
                 </li>
               </ul>
             </div>
@@ -150,15 +156,11 @@
               <h6 class="text-standard">Burien, WA 98146</h6>
               <h6 class="text-standard">United States</h6>
             </div>
-            <div class="col">
+            <div class="col text-right">
               <h5 class="text-standard">Contact</h5>
               <hr class="footer-break">
-              <h6 class="text-standard">m.ravenmoore@gmail.com</h6>
+              <h6 class="text-standard">Muninn@ravenvfm.com</h6>
               <h6 class="text-standard">(206)-372-6501</h6>
-            </div>
-            <div class="col">
-              <h5 class="text-standard">Follow</h5>
-              <hr class="footer-break">
               <ul class="links">
                 <li>
                   <a href="https://www.facebook.com/RavenVFM/"><img class="nav-social" src="{% static 'Facebook.png' %}"></a>
@@ -190,6 +192,19 @@
   <script src="{% static 'js/dates.js' %}"></script>
   <script src="https://www.paypalobjects.com/api/checkout.js"></script>
   <script src="{% static 'js/add_swap.js' %}"></script>
+  <script src="{% static 'js/newsletter.js' %}"></script>
+  <script type="text/javascript">
+$('#newsletter').submit(function (event) {
+  event.preventDefault();
+  var email = event.target[1].value;
+  $.get('/newsletter/', {email: email},
+    function(data) {
+      console.log(data);
+      $('#newsletter').html(data);
+    }
+  );
+});
+</script>
   {% block js %}
   {% endblock %}
 </body>

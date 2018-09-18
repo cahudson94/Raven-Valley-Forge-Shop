@@ -7,22 +7,25 @@
     <form class="item-form" enctype="multipart/form-data" method="post">
         {% csrf_token %}
         <div class="row">
-        {% for field in form %}
-            {% if forloop.counter == 1 %}
-            <div class="col">
-            <h4 class="text-standard">{{ field.label }}:</h4>
-            <p class="textarea-form">{{ field }}</p>
-            {% elif forloop.counter == 11 %}
+            {% for field in form %}
+                {% if forloop.counter == 1 %}
+                <div class="col">
+                <h4 class="text-standard">{{ field.label }}:</h4>
+                <p class="textarea-form">{{ field }}</p>
+                {% elif forloop.counter == 11 %}
+                </div>
+                <div class="col">
+                <h4 class="text-standard">{{ field.label }}:</h4>
+                <p class="textarea-form">{{ field }}</p>
+                {% elif field.label == 'Tags' %}
+                <h4 class="text-standard">Catagories:</h4>
+                <p class="textarea-form">{{ field }}</p>
+                {% else %}
+                <h4 class="text-standard">{{ field.label }}:</h4>
+                <p class="textarea-form">{{ field }}</p>
+                {% endif %}
+            {% endfor %}
             </div>
-            <div class="col">
-            <h4 class="text-standard">{{ field.label }}:</h4>
-            <p class="textarea-form">{{ field }}</p>
-            {% else %}
-            <h4 class="text-standard">{{ field.label }}:</h4>
-            <p class="textarea-form">{{ field }}</p>
-            {% endif %}
-        {% endfor %}
-        </div>
         </div>
         <input class="button text-standard" type="submit" value="Create">
     </form>

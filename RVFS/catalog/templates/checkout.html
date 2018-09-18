@@ -70,23 +70,51 @@
 </div>
 
 <div class="w-100">
-    <h3 class="text-standard">Total:
-        {% if total %}
-            {% if total.endswith == 0 %}
-                ${{ total }}0
-            {% else %}
-                ${{ total }}
-            {% endif %}
-        {% else %}
-        $0
-        {% endif %}
-    </h3>
+  <h2>Order:
+    {% if prods %}
+    <h4 class="col">Products:
+      <ul>
+        {% for item in prods %}
+        <li class="side-bar-items">
+          <h5>{{ item.quantity }} x {{ item.description }}</h5>
+        </li>
+        {% endfor %}
+      </ul>
+    </h4>
+    {% endif %}
+    {% if servs %}
+    <h4 class="col">Services:
+      <ul>
+        {% for item in servs %}
+        <li class="side-bar-items">
+          <h5>{{ item.description }} x {{ item.quantity }}</h5>
+        </li>
+        {% endfor %}
+      </ul>
+    </h4>
+    {% endif %}
+  </h2>
 </div>
 
-<div class="w-100 d-flex">
-    <a class="btn btn-secondary text-standard" href="http://google.com">Back</a>
+
+<div class="w-100">
+  <h3 class="text-standard">Total:
     {% if total %}
-    <a class="btn btn-secondary text-standard" class="ml-auto" href="{% url 'check_comp' %}">Place Order</a>
+      {% if total.endswith == 0 %}
+        ${{ total }}0
+      {% else %}
+        ${{ total }}
+      {% endif %}
+    {% else %}
+    $0
+    {% endif %}
+  </h3>
+</div>
+
+<div class="row justify-content-between checkout-buttons">
+    <a class="btn btn-secondary text-standard" href="{% url 'cart' %}">Back</a>
+    {% if total %}
+    <a class="btn btn-secondary text-standard" href="{% url 'check_comp' %}">Place Order</a>
     {% else %}
     <a class="btn btn-secondary text-standard" href="{% url 'check_comp' %}">Request Service</a>
     {% endif %}

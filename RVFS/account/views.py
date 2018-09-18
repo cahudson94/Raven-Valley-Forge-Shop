@@ -5,10 +5,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.mail import EmailMessage
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, TemplateView, DetailView
@@ -17,7 +16,7 @@ from django.views.generic.edit import (UpdateView, CreateView,
 from account.forms import (InfoRegForm, AddAddressForm,
                            OrderUpdateForm, ContactForm)
 from account.models import Account, ShippingInfo, SlideShowImage, Order
-from catalog.models import Product, Service, UserServiceImage
+from catalog.models import Product, Service
 from registration.backends.hmac.views import RegistrationView
 from registration.forms import RegistrationForm
 from RVFS.google_calendar import add_birthday, main as drive_files, download
@@ -38,13 +37,35 @@ MONTHS = {
     'Sep.': '09',
     'Oct.': '10',
     'Nov.': '11',
-    'Dec.': '12'
+    'Dec.': '12',
+    'Jan': '01',
+    'Feb': '02',
+    'Mar': '03',
+    'Apr': '04',
+    'Jun': '06',
+    'Jul': '07',
+    'Aug': '08',
+    'Sep': '09',
+    'Oct': '10',
+    'Nov': '11',
+    'Dec': '12',
+    'January': '01',
+    'Febuary': '02',
+    'March': '03',
+    'April': '04',
+    'June': '06',
+    'July': '07',
+    'August': '08',
+    'September': '09',
+    'October': '10',
+    'November': '11',
+    'December': '12'
 }
 
 
 def valid_staff(self):
     """Validate access."""
-    return self.request.user.is_staff
+    return self.is_staff
 
 
 class HomeView(TemplateView):
@@ -62,7 +83,7 @@ class HomeView(TemplateView):
         return context
 
 
-@user_passes_test
+@user_passes_test(valid_staff)
 @login_required
 def updateslideshow(request):  # pragma: no cover
     """Button to update the files of slide images."""
@@ -92,6 +113,21 @@ def updateslideshow(request):  # pragma: no cover
     return HttpResponseRedirect(reverse_lazy('home'))
 
 
+def newsletter(request):
+    """Newsletter signup."""
+    email = request.GET['email']
+    if '@' not in email:
+        return HttpResponseRedirect(reverse_lazy('home'))
+    guest = User.objects.get(username='Guest')
+    if guest.account.mailing_list:
+        guest.account.mailing_list += ', ' + email
+    else:
+        guest.account.mailing_list = email
+    guest.account.save()
+    return HttpResponse("<p class='text-standard'>Thank you for \
+signing up for the newsletter.</p>")
+
+
 class AboutView(TemplateView):
     """About View."""
 
@@ -100,21 +136,18 @@ class AboutView(TemplateView):
     def get_context_data(self, **kwargs):
         """."""
         context = super(TemplateView, self).get_context_data(**kwargs)
-        try:
-            matt = User.objects.get(username='m.ravenmoore')
-            context['matt'] = matt.account
-        except ObjectDoesNotExist:
-            pass
-        try:
-            becky = User.objects.get(username='HuginnRayne')
-            context['becky'] = becky.account
-        except ObjectDoesNotExist:
-            pass
-        try:
-            gordon = User.objects.get(username='gordon')
-            context['gordon'] = gordon.account
-        except ObjectDoesNotExist:
-            pass
+        staff = User.objects.filter(is_staff=True)
+        groups = {}
+        counter = 1
+        for member in staff:
+            if member.account.group not in groups and member.account.group:
+                groups[member.account.group] = {member: counter}
+                counter += 1
+            elif member.account.group:
+                groups[member.account.group][member] = counter
+                counter += 1
+        context['groups'] = groups
+        context['count'] = counter
         context['isis'] = os.path.join(settings.STATIC_URL, 'isis.jpg')
         set_basic_context(context, 'about')
         return context
@@ -141,10 +174,12 @@ class AccountView(LoginRequiredMixin, ListView):
         if account.saved_services:
             context['saved_servs'] = [Service.objects.get(id=i) for i in
                                       account.saved_services.split(', ')]
-        if account.purchase_history:
-            context['prod_history'] = unpack(account.purchase_history)
-        if account.service_history:
-            context['serv_history'] = unpack(account.service_history)
+        orders = {}
+        for order in Order.objects.filter(buyer=account):
+            content = unpack(order.order_content, unpack_as="history")
+            if content:
+                orders[order.id] = content
+        context['prod_history'] = orders
         context['item_fields'] = ['quantity',
                                   'color',
                                   'length',
@@ -222,7 +257,8 @@ class AddressListView(LoginRequiredMixin, ListView):
             if 'main' not in addresses[key].keys():
                 addresses[key]['main'] = False
         account = request.user.account
-        fields = ['name', 'address1', 'address2', 'zip_code', 'city', 'state', 'main']
+        fields = ['name', 'address1', 'address2', 'zip_code',
+                  'city', 'state', 'main']
         for i in account.shippinginfo_set.values():
             info = ShippingInfo.objects.get(id=i['id'])
             for field in fields:
@@ -292,6 +328,27 @@ class EditAccountView(LoginRequiredMixin, DetailView):
         if 'pic' in data[1].keys():
             account.pic.delete()
             account.pic = data[1]['pic']
+        if 'about' in data[0].keys():
+            account.about = data[0]['about']
+        if 'group' in data[0].keys():
+            account.group = data[0]['group']
+        if 'newsletter' in data[0].keys():
+            account.newsletter = True
+        else:
+            account.newsletter = False
+        numbers = ['0', '1', '2', '3', '4', '5',
+                   '6', '7', '8', '9', '(', ')', '-']
+        if 'home_number' in data[0].keys():
+            number = data[0]['home_number']
+            if number:
+                if all(element in numbers for element in number):
+                    if len(number) <= 14:
+                        account.home_number = number
+        if 'cell_number' in data[0].keys():
+            number = data[0]['cell_number']
+            if all(element in numbers for element in number):
+                if len(number) <= 14:
+                    account.cell_number = number
         account.save()
         info = ShippingInfo.objects.get(pk=account.main_address)
         if 'state' in data[0].keys():
@@ -426,31 +483,17 @@ class OrderView(UpdateView):
         """Add context for active page."""
         context = super(OrderView, self).get_context_data(**kwargs)
         title = 'Order #' + str(context['object'].id)
+        if self.request.user.is_staff:
+            context['staff'] = True
         context['title'] = title
         if context['object'].ship_to:
             context['address'] = context['object'].ship_to
-        if context['object'].serv_address:
-            context['serv'] = context['object'].serv_address
-        if context['object'].appointment:
-            context['time'] = context['object'].appointment
         content = unpack(context['object'].order_content)
         context['prods'] = []
         context['servs'] = []
         for item in content:
             if item['type'] == 'prod':
                 context['prods'].append(item)
-            else:
-                item['apt_time'] = (item['hour'] + ' on ' +
-                                    item['month'] + ' ' +
-                                    item['day'] + ', ' +
-                                    item['year'])
-                if 'files' in item.keys():
-                    images = []
-                    for file in item['files'].split(', '):
-                        image = UserServiceImage.objects
-                        images.append(image.get(id=file.split(' ')[1]))
-                    item['files'] = images
-                context['servs'].append(item)
         context['item_fields'] = ['quantity', 'color', 'length', 'diameter',
                                   'extras', 'files', 'description']
         set_basic_context(context, 'order')
@@ -467,6 +510,7 @@ class OrdersView(ListView):
         """Add context for active page."""
         context = super(OrdersView, self).get_context_data(**kwargs)
         context['order_list'] = (context['order_list'].filter(paid=True)
+                                                      .filter(complete=False)
                                                       .order_by('id'))
         set_basic_context(context, 'order')
         return context
@@ -496,8 +540,26 @@ class UsersView(ListView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(UsersView, self).get_context_data(**kwargs)
-        context['account_list'] = (context['account_list'].filter(registration_complete=True)
-                                                          .order_by('id'))
+        context['account_list'] = (context['account_list']
+                                   .filter(registration_complete=True)
+                                   .order_by('id'))
+        context['email_list'] = (context['account_list']
+                                 .filter(newsletter=True)
+                                 .order_by('id'))
+        guest = User.objects.get(username='Guest')
+        mailing = guest.account.mailing_list
+        if mailing:
+            mailing = mailing.split(', ')
+            for email in mailing:
+                for user in context['email_list']:
+                    if email == user.user.email:
+                        mailing.remove(email)
+            context['unreg_email_list'] = mailing
+            new_mailing = ''.join(mailing)
+            guest.account.mailing_list = new_mailing
+            guest.account.save()
+        else:
+            context['unreg_email_list'] = ''
         set_basic_context(context, 'users')
         return context
 
@@ -523,7 +585,8 @@ class ContactView(FormView):
             subject = form.cleaned_data['subject']
             from_email = form.cleaned_data['from_email']
             message = form.cleaned_data['message']
-            contact = EmailMessage(subject, message, from_email, ['ravenmoorevalleyforge@gmail.com'])
+            contact = EmailMessage(subject, message, from_email,
+                                   ['rvfmsite@gmail.com'])
             contact.send(fail_silently=True)
             return HttpResponseRedirect(self.success_url)
 
@@ -541,7 +604,7 @@ def validate_bday(date):
     date = date.split(' ')
     if len(date) != 3:
         return
-    day = date[1]
+    day = date[1].split(',')[0]
     month = date[0]
     year = date[2]
     if len(year) != 4:
@@ -570,7 +633,7 @@ def cart_count(request):
         return 0
 
 
-def unpack(packed_list):
+def unpack(packed_list, unpack_as=None):
     """Unpack the json saved cart/list."""
     items = []
     item_list = []
@@ -581,7 +644,7 @@ def unpack(packed_list):
         if item['type'] == 'prod':
             item['item'] = Product.objects.get(pk=item['item_id'])
             item_list.append(item)
-        else:
+        elif not unpack_as:
             item['item'] = Service.objects.get(pk=item['item_id'])
             item_list.append(item)
     return item_list
