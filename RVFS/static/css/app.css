@@ -31,6 +31,10 @@ NAV
     height: 25px;
 }
 
+.staff-nav {
+    padding: 1px;
+}
+
 .hide-nav {
     visibility: hidden;
 }
@@ -214,12 +218,31 @@ MAIN SECTION
     color: rgb(142, 0, 0);
 }
 
+.slide-link {
+    font-size: 2rem;
+}
+
 .gallery-title {
     text-align: center;
 }
 
 .gallery-row {
     padding: 0 20px;
+}
+
+.galleries-row {
+    border: .1rem solid black;
+    border-radius: 5%;
+    padding: 25px 15px;
+    margin: 25px 15px;
+}
+
+.galleries-image {
+    max-height: 250px;
+}
+
+.galleries-text-row {
+    height: 50%;
 }
 
 .gallery-card {
@@ -478,6 +501,10 @@ CATALOG
     padding-left: 22px;
 }
 
+.dropdown:hover>.dropdown-menu {
+  display: block;
+}
+
 
 /* ***************************************************************************
 ACCOUNT
@@ -520,9 +547,6 @@ ACCOUNT
     padding-bottom: 25px;
 }
 
-.contact-form {
-
-}
 
 .add-col {
     padding-top: 15px;
@@ -565,6 +589,9 @@ MEDIA QUERY
     .account-list {
     width: 46%;
     }
+    .slide-link {
+        font-size: 1.5rem;
+    }
 }
 
 @media (max-width: 990px) {
@@ -577,6 +604,9 @@ MEDIA QUERY
     .acc-pic-col {
         width: 200px;
         height: 200px;
+    }
+    .slide-link {
+        font-size: 1.1rem;
     }
 }
 
@@ -596,6 +626,9 @@ MEDIA QUERY
     }
     .account-list {
     width: 100%;
+    }
+    .carousel-link {
+        width: 28%;
     }
 }
 
@@ -627,6 +660,18 @@ MEDIA QUERY
     width: 250px;
     height: 175px;
     }
+    .carousel-link {
+        width: 30%;
+    }
+    .carousel-text {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 530px) {
+    .carousel-link {
+        width: 32%;
+    }
 }
 
 @media (max-width: 490px) {
@@ -641,6 +686,9 @@ MEDIA QUERY
         flex-grow: 0;
         padding-left: 0;
         padding-right: 0;
+    }
+    .carousel-link {
+        width: 34%;
     }
 }
 

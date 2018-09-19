@@ -19,7 +19,7 @@ from account.models import Account, ShippingInfo, SlideShowImage, Order
 from catalog.models import Product, Service
 from registration.backends.hmac.views import RegistrationView
 from registration.forms import RegistrationForm
-from RVFS.google_calendar import add_birthday, main as drive_files, download
+from RVFS.google_api_access import add_birthday, main as drive_files, download
 import json
 import os
 import random
@@ -450,6 +450,25 @@ class InfoFormView(UpdateView):
         return HttpResponseRedirect(self.get_success_url())
 
 
+class GalleriesView(TemplateView):
+    """Display the covers and description for all galleries."""
+
+    template_name = 'galleries.html'
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(GalleriesView, self).get_context_data(**kwargs)
+        set_basic_context(context, 'galleries')
+        for gallery in context['galleries']:
+            folder = gallery['id']
+            photos = drive_files(folder)
+            for photo in photos:
+                if 'description' in photo.keys():
+                    if photo['description'] == 'Cover':
+                        gallery['cover'] = photo
+        return context
+
+
 class GalleryView(TemplateView):
     """Display the photos for a gallery."""
 
@@ -593,10 +612,13 @@ class ContactView(FormView):
 
 def get_galleries():
     """Fetch list of galleries from google drive."""
-    files = drive_files('18HHO951sd6wkp_tCREzHQimX8ntwVycq')
+    files = drive_files('1ycBoBD8ZZZPJCdw8jpIVJXWuzwS6DQ23')
+    good_files = []
     for file in files:
         file['url'] = file['name'].lower().replace(' ', '_')
-    return files
+        if drive_files(file['id']):
+            good_files.append(file)
+    return good_files
 
 
 def validate_bday(date):
