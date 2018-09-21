@@ -1,0 +1,16 @@
+{% extends 'rvfsite/base.html' %}
+{% load static %}
+{% load thumbnail %}
+
+{% block title %}
+Newsletter Sign up
+{% endblock %}
+
+{% block body %}
+<h2 class="text-standard text-center">Join our mailing list!</h2>
+<form id="newsletter" class="text-center">
+    <input class="newsletter" type="text" name="newsletter" placeholder="Newsletter">
+    <br>
+    <input class="btn btn-secondary" type="submit" value="Sign up!">
+</form>
+{% endblock %}

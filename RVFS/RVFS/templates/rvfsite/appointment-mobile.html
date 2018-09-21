@@ -1,0 +1,15 @@
+{% extends 'rvfsite/base.html' %}
+{% load static %}
+{% load thumbnail %}
+
+{% block title %}
+Make an Appointment
+{% endblock %}
+
+{% block body %}
+<h1 class="text-standard text-center">Make an appointment!</h1>
+<p class="text-center text-standard">Follow the bellow link to make an appointment for a 1 hour free consultation:</p>
+<div class="text-center">
+<a target="_blank" href="https://calendar.google.com/calendar/selfsched?sstoken=UURFQ1RrcFdxUFpnfGRlZmF1bHR8NGI4NTlkMThiZDg3ZTAwNTEzZjEwZGYxZGI1NTcxM2I"><img border="0" src="https://www.google.com/calendar/images/ext/gc_button1_en.gif"></a>
+</div>
+{% endblock %}

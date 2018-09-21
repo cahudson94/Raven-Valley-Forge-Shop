@@ -20,7 +20,7 @@
       <div class="col-10 content-back">
         <nav class="navbar navbar-expand-md navbar-light">
           <div class="row header header-small">
-            <div id="firstandpike" class="col-md-auto banner-text">
+            <div class="col-md-auto banner-text">
               <div class="row">
                 <div class="col">
                   <img class="banner-img" src="{% static 'RVFM logo.png' %}">
@@ -39,12 +39,14 @@
               </div>
             </div>
             <div class="col">
+              {% if nbar != 'newsletter' and nbar != 'appointment' %}
               {% if user.is_staff %}
               <ul class="nav navbar-nav justify-content-end">
                 <li class="nav-item text-standard {% if nbar == 'add_prod' %}active{% endif %}"><a class="nav-link staff-nav" href="{% url 'add_prod' %}">Add Product</a></li>
                 <li class="nav-item text-standard {% if nbar == 'add_serv' %}active{% endif %}"><a class="nav-link staff-nav" href="{% url 'add_serv' %}">Add Service</a></li>
-                <li class="nav-item text-standard"><a class="nav-link staff-nav" href="{% url 'update' %}">Update Slides</a></li>
-                <li class="nav-item text-standard"><a class="nav-link staff-nav" href="{% url 'update' %}">Update Mailing List</a></li>
+                <li class="nav-item text-standard"><a class="nav-link staff-nav" href="{% url 'update-slides' %}">Update Slides</a></li>
+                <li id="mailing-parent" class="nav-item text-standard"><a id="mailing" class="nav-link staff-nav" href="#">Update Mailing List</a></li>
+              </ul>
               {% else %}
               <ul class="info banner-text">
                 <li>
@@ -138,6 +140,8 @@
             <div class="w-100">
               <div id="collapse-right" class="collapse navbar-collapse">
                 <ul class="nav navbar-nav ml-auto">
+                  <li class="nav-item text-standard"><a class="nav-link" href="{% url 'newsletter-mobile' %}">Newsletter</a></li>
+                  <li class="nav-item text-standard"><a class="nav-link" href="{% url 'appointment-mobile' %}">Appointments</a></li>
                   <li class="nav-item text-standard {% if nbar == 'list' %}active{% endif %}"><a class="nav-link" href="{% url 'list' %}">Items</a></li>
                   <li class="nav-item text-standard {% if nbar == 'order' %}active{% endif %}"><a class="nav-link" href="{% url 'orders' %}">Orders</a></li>
                   <li class="nav-item text-standard {% if nbar == 'users' %}active{% endif %}"><a class="nav-link" href="{% url 'users' %}">Users</a></li>
@@ -148,6 +152,7 @@
               </div>
             </div>
             {% endif %}
+          {% endif %}
           </div>
         </nav>
         <img class="dividor" src="{% static 'arrow-divider.png' %}">
@@ -198,15 +203,25 @@
   <script src="{% static 'js/dates.js' %}"></script>
   <script src="https://www.paypalobjects.com/api/checkout.js"></script>
   <script src="{% static 'js/add_swap.js' %}"></script>
-  <script src="{% static 'js/newsletter.js' %}"></script>
   <script type="text/javascript">
 $('#newsletter').submit(function (event) {
   event.preventDefault();
-  var email = event.target[1].value;
+  var email = event.target[0].value;
   $.get('/newsletter/', {email: email},
     function(data) {
-      console.log(data);
       $('#newsletter').html(data);
+      if (event.currentTarget.attributes[1].value === "text-center") {
+        setTimeout(location.reload.bind(location), 6000);
+      }
+    }
+  );
+});
+$('#mailing').click(function (event) {
+  event.preventDefault();
+  $.get('/update-mailing/',
+    function(data) {
+      $('#mailing-parent').html(data);
+      console.log(data);
     }
   );
 });

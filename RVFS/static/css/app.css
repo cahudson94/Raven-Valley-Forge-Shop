@@ -13,6 +13,7 @@ body {
     background-image: url('../Backgroundonly.png');
 }
 
+
 /* ***************************************************************************
 NAV
 *************************************************************************** */
@@ -481,6 +482,7 @@ CATALOG
 
 .newsletter {
     font-size: 14.66px;
+    margin-bottom: 10px;
 }
 
 .del-button {
@@ -580,6 +582,29 @@ FOOTER
 /* ***************************************************************************
 MEDIA QUERY
 *************************************************************************** */
+
+@media (max-width: 1024px) {
+    .banner-img {
+        height: 100px;
+        width: 100px;
+    }
+    .header-main {
+        font-size: 30px;
+    }
+    .header-sub {
+        font-size: 20px;
+    }
+    .content-back {
+        padding-bottom: 0;
+    }
+    .header {
+        padding-top: 30px;
+    }
+}
+
+
+
+
 
 @media (max-width: 1199px) {
     .info {

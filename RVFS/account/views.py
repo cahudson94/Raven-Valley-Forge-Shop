@@ -19,7 +19,10 @@ from account.models import Account, ShippingInfo, SlideShowImage, Order
 from catalog.models import Product, Service
 from registration.backends.hmac.views import RegistrationView
 from registration.forms import RegistrationForm
-from RVFS.google_api_access import add_birthday, main as drive_files, download
+from RVFS.google_api_access import (
+    add_birthday, main as drive_files,
+    download, update_mailing_list
+)
 import json
 import os
 import random
@@ -83,9 +86,33 @@ class HomeView(TemplateView):
         return context
 
 
+class NewsletterMobileView(TemplateView):
+    """Home View."""
+
+    template_name = 'rvfsite/newsletter-mobile.html'
+
+    def get_context_data(self, **kwargs):
+        """."""
+        context = super(TemplateView, self).get_context_data(**kwargs)
+        set_basic_context(context, 'newsletter')
+        return context
+
+
+class AppointmentMobileView(TemplateView):
+    """Home View."""
+
+    template_name = 'rvfsite/appointment-mobile.html'
+
+    def get_context_data(self, **kwargs):
+        """."""
+        context = super(TemplateView, self).get_context_data(**kwargs)
+        set_basic_context(context, 'appointment')
+        return context
+
+
 @user_passes_test(valid_staff)
 @login_required
-def updateslideshow(request):  # pragma: no cover
+def update_slideshow_view(request):  # pragma: no cover
     """Button to update the files of slide images."""
     slide_files = drive_files('17fqQwUu1dGPOUBirLDo2O0tBg_TUXMlZ')
     current_slides = SlideShowImage.objects.all()
@@ -113,16 +140,33 @@ def updateslideshow(request):  # pragma: no cover
     return HttpResponseRedirect(reverse_lazy('home'))
 
 
+@user_passes_test(valid_staff)
+@login_required
+def update_mailing_list_view(request):  # pragma: no cover
+    """Button to update the files of slide images."""
+    mailing_list = form_mailing_list('update')
+    return HttpResponse(update_mailing_list(mailing_list))
+
+
 def newsletter(request):
     """Newsletter signup."""
     email = request.GET['email']
     if '@' not in email:
         return HttpResponseRedirect(reverse_lazy('home'))
     guest = User.objects.get(username='Guest')
-    if guest.account.mailing_list:
-        guest.account.mailing_list += ', ' + email
-    else:
+    signed_up = False
+    users = User.objects.filter(email=email)
+    if len(users) >= 1:
+        for user in users:
+            if not signed_up:
+                signed_up = user.account.newsletter
+    if not guest.account.mailing_list:
         guest.account.mailing_list = email
+    elif email in guest.account.mailing_list or signed_up:
+        return HttpResponse("<p class='text-standard'>You are already on \
+the mailing list, no need to sign up again.</p>")
+    else:
+        guest.account.mailing_list += ', ' + email
     guest.account.save()
     return HttpResponse("<p class='text-standard'>Thank you for \
 signing up for the newsletter.</p>")
@@ -425,7 +469,7 @@ class InfoFormView(UpdateView):
         account.birthday_set = True
         account.save()
         event = {}
-        event['name'] = account.first_name + account.last_name
+        event['name'] = account.first_name + ' ' + account.last_name
         event['email'] = user.email
         birthday = account.birth_day.split('-')
         event['month'] = birthday[1]
@@ -562,23 +606,9 @@ class UsersView(ListView):
         context['account_list'] = (context['account_list']
                                    .filter(registration_complete=True)
                                    .order_by('id'))
-        context['email_list'] = (context['account_list']
-                                 .filter(newsletter=True)
-                                 .order_by('id'))
-        guest = User.objects.get(username='Guest')
-        mailing = guest.account.mailing_list
-        if mailing:
-            mailing = mailing.split(', ')
-            for email in mailing:
-                for user in context['email_list']:
-                    if email == user.user.email:
-                        mailing.remove(email)
-            context['unreg_email_list'] = mailing
-            new_mailing = ''.join(mailing)
-            guest.account.mailing_list = new_mailing
-            guest.account.save()
-        else:
-            context['unreg_email_list'] = ''
+        mailing_list = form_mailing_list('site')
+        context['email_list'] = mailing_list[0]
+        context['unreg_email_list'] = mailing_list[1]
         set_basic_context(context, 'users')
         return context
 
@@ -688,6 +718,34 @@ def split_cart(packed_list):
             else:
                 items['servs'] = item
     return items
+
+
+def form_mailing_list(location):
+    """Return the mailing list for updates or listing."""
+    reg_email_list = (Account.objects
+                             .filter(newsletter=True)
+                             .order_by('id'))
+    guest = User.objects.get(username='Guest')
+    mailing = guest.account.mailing_list
+    if mailing:
+        mailing = mailing.split(', ')
+        for email in mailing:
+            for account in reg_email_list:
+                if email == account.user.email:
+                    mailing.remove(email)
+        unreg_email_list = mailing
+        new_mailing = ''.join(mailing)
+        guest.account.mailing_list = new_mailing
+        guest.account.save()
+    else:
+        unreg_email_list = ''
+    if location == 'site':
+        return reg_email_list, unreg_email_list
+    else:
+        emails = unreg_email_list
+        for account in reg_email_list:
+            emails.append(account.user.email)
+        return emails
 
 
 def set_basic_context(context, page):

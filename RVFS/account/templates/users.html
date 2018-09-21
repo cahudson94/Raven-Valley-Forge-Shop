@@ -21,7 +21,7 @@ Users
 <ul>
 {% for account in email_list %}
   <li>
-    <p class="text-standard">{{ account.user.email }}</p>
+    <p class="text-standard">{{ account.user.email }}, {{ account.first_name }} {{ account.last_name }}</p>
   </li>
 {% endfor %}
 </ul>

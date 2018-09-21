@@ -1,7 +1,7 @@
 """."""
 import os
 import datetime
-from oauth2client import tools, file
+from oauth2client import tools, file, client
 from googleapiclient.discovery import build
 from httplib2 import Http
 
@@ -20,8 +20,8 @@ try:
 except ImportError:
     flags = None
 
-shop_hours = 'rsbvvpdq2vkmefr4690mi11afo@group.calendar.google.com'
 birthdays = '0l6ami6ttn8ace17skuh3b4nkg@group.calendar.google.com'
+mailing_group = '01gf8i831vs9b7q'
 
 
 def get_creds():
@@ -39,20 +39,20 @@ def get_creds():
     if not os.path.exists(credential_dir):
         os.makedirs(credential_dir)
     credential_path = os.path.join(credential_dir,
-                                   'google.json')
+                                   'token.json')
 
     store = file.Storage(credential_path)
     creds = store.get()
     if not creds or creds.invalid:
-        with open('credentials.json', 'w+') as credentials:
+        with open('token.json', 'w+') as credentials:
             credentials.write(ENV_CLIENT_SECRET)
-        secret_path = os.path.join(BASE_DIR, 'RVFS/credentials.json')
+        secret_path = os.path.join(BASE_DIR, 'RVFS/token.json')
         creds = file.Storage(secret_path).get()
     return creds
 
 
 def add_birthday(info):
-    """."""
+    """Add a client birthday to calendar."""
     creds = get_creds()
     http = creds.authorize(Http())
 
@@ -83,78 +83,33 @@ def add_birthday(info):
                            body=event).execute())
 
 
-def check_time_slot(time):
-    """Check if slot is open."""
+def update_mailing_list(mailing_list):
+    """Check and update mailing list."""
     creds = get_creds()
     http = creds.authorize(Http())
 
-    service = build('calendar', 'v3', http=http)
-
-    year = time[0]
-    month = time[1]
-    day = time[2]
-    hour = time[3]
-
-    start = '{}-{}-{}T{}:00:00-07:00'.format(year, month, day, hour)
-    end = '{}-{}-{}T{}:00:00-07:00'.format(year, month, day, hour + 1)
-
-    body = {
-        "timeMin": start,
-        "timeMax": end,
-        "timeZone": 'America/Los_Angeles',
-        "items": [
-            {
-                'id': 'primary',
-            }
-        ]
-    }
-
-    busy = service.freebusy().query(body=body).execute()
-    busy = busy['calendars']['primary']['busy']
-
-    return busy
-
-
-def set_appointment(time, info):
-    """Update time slot on calendar and send invite."""
-    creds = get_creds()
-    http = creds.authorize(Http())
-
-    service = build('calendar', 'v3', http=http)
-
-    year = time[0]
-    month = time[1]
-    if len(month) == 1:
-        month = '0' + month
-    day = time[2]
-    if len(day) == 1:
-        day = '0' + day
-    hour = time[3]
-
-    start = '{}-{}-{}T{}:00:00-07:00'.format(year, month, day, hour)
-    end = '{}-{}-{}T{}:00:00-07:00'.format(year, month, day, hour + 1)
-
-    event = service.events().list(calendarId=shop_hours,
-                                  timeMin=start, timeMax=end,
-                                  singleEvents=True).execute()
-    slot_id = event['items'][0]['id']
-    event = service.events().get(calendarId=shop_hours,
-                                 eventId=slot_id).execute()
-    service.events().delete(calendarId=shop_hours,
-                            eventId=event['id']).execute()
-    event = {
-        'summary': 'Shop Appointment',
-        'start': {
-            'dateTime': start,
-        },
-        'end': {
-            'dateTime': end,
-        },
-        'attendees': [
-            {'email': info['email']},
-        ],
-    }
-    service.events().insert(calendarId='primary', body=event).execute()
+    service = build('admin', 'directory_v1', http=http)
+    copy_list = mailing_list[:]
+    old_members = (service.members().list(groupKey='01gf8i831vs9b7q')
+                          .execute())
+    if 'members' in old_members.keys():
+        for member in old_members['members']:
+            if member['email'] not in copy_list:
+                service.members().delete(groupKey='01gf8i831vs9b7q',
+                                         memberKey=member['id']).execute()
+            else:
+                mailing_list.remove(member['email'])
+    for email in mailing_list:
+        new_member = {
+            "kind": "admin#directory#member",
+            "email": email,
+            "role": 'MEMBER',
+            "type": 'EXTERNAL'
+        }
+        service.members().insert(groupKey='01gf8i831vs9b7q',
+                                 body=new_member
+                                 ).execute()
+    return '<p class="nav-link staff-nav">List updated!</p>'
 
 
 def main(drive_file):
@@ -176,6 +131,28 @@ webContentLink, webViewLink, properties, description)").execute()
         for item in items:
             files.append(item)
         return files
+
+
+def add_creds():
+    """Run to open oauth prompt for new creds."""
+    store = file.Storage('token.json')
+    creds = store.get()
+    if not creds or creds.invalid:
+        flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+        creds = tools.run_flow(flow, store)
+    service = build('admin', 'directory_v1', http=creds.authorize(Http()))
+    print('Getting the first 10 users in the domain')
+    results = service.groups().list(customer='my_customer', maxResults=10,
+                                    orderBy='email').execute()
+    users = results.get('groups', [])
+
+    if not users:
+        print('No users in the domain.')
+    else:
+        print('Users:')
+        for user in users:
+            print(u'{0} ({1})'.format(user['primaryEmail'],
+                                      user['name']['fullName']))
 
 
 def download(file_id):

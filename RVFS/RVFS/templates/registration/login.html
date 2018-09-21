@@ -3,6 +3,7 @@
 {% block title %}Login{% endblock %}
 
 {% block body %}
+  <div class="placeholder-small"></div>
   <h2>Login</h2>
   <form method="post">
     {% csrf_token %}
@@ -10,4 +11,5 @@
     <input class="button" type="submit" value="Login">
     <a href="{% url 'password_reset' %}">Forgot Password?</a>
   </form>
+  <div class="placeholder-small"></div>
 {% endblock %}

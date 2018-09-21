@@ -29,7 +29,7 @@ class Account(models.Model):
     newsletter = models.BooleanField(default=False)
     mailing_list = models.TextField(default='', blank=True)
     home_number = models.CharField(max_length=14, default='(000)-000-0000')
-    cell_number = models.CharField(max_length=14, default='')
+    cell_number = models.CharField(max_length=14, blank=True)
 
     def __str__(self):
         """Print for admin."""
