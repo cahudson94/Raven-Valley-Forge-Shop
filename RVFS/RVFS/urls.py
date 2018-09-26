@@ -29,23 +29,27 @@ from account.views import (CustomRegView,
                            ContactView,
                            UsersView,
                            CommentView,
+                           NewsletterUnsubView,
                            NewsletterMobileView,
                            AppointmentMobileView,
+                           DiscountsView,
                            )
 from account import views
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
+    path('about/', AboutView.as_view(), name='about'),
+    path('contact/', ContactView.as_view(), name='contact'),
     path('update-slides/', views.update_slideshow_view,
          name='update-slides'),
     path('update-mailing/', views.update_mailing_list_view,
          name='update-mailing'),
-    path('about/', AboutView.as_view(), name='about'),
-    path('contact/', ContactView.as_view(), name='contact'),
     path('newsletter-mobile/', NewsletterMobileView.as_view(),
          name='newsletter-mobile'),
     path('appointment-mobile/', AppointmentMobileView.as_view(),
          name='appointment-mobile'),
+    path('discounts/', DiscountsView.as_view(), name='discounts'),
     path('users/', UsersView.as_view(), name='users'),
     path('users/<int:pk>/comment/', CommentView.as_view(), name='comment'),
     path('orders/', OrdersView.as_view(), name='orders'),
@@ -55,6 +59,8 @@ urlpatterns = [
     path('login/', CustomLogView.as_view(), name='login'),
     path('logout/', auth_views.logout, {'next_page': '/'}, name='logout'),
     path('newsletter/', views.newsletter, name='newsletter'),
+    path('newsletter/unsub/<path:path>/', NewsletterUnsubView.as_view(),
+         name='newsletter_unsub'),
     path('admin/', admin.site.urls),
     path('register/', CustomRegView.as_view(), name='register'),
     path('accounts/', include('registration.backends.hmac.urls')),
@@ -93,3 +99,8 @@ if settings.DEBUG:
     urlpatterns += static(
         settings.STATIC_URL, document_root=settings.STATIC_ROOT
     )
+    urlpatterns += [
+        path('404/', TemplateView.as_view(template_name='404.html')),
+        path('403/', TemplateView.as_view(template_name='403.html')),
+        path('500/', TemplateView.as_view(template_name='500.html')),
+    ]

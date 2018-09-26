@@ -32,21 +32,18 @@ class QuoteForm(forms.Form):
     first_name = forms.CharField(required=True, label="* First name")
     last_name = forms.CharField(required=True, label="* Last name")
     home_phone = forms.CharField(required=True, label="* Home phone")
-    cell_phone = forms.CharField()
+    cell_phone = forms.CharField(required=False)
     service = forms.ChoiceField(choices=names, label="* Service")
     description = forms.CharField(
-        widget=forms.Textarea
+        widget=forms.Textarea,
+        required=False
     )
-    address = forms.CharField()
-    city = forms.CharField()
-    state = forms.CharField()
+    address = forms.CharField(required=False)
+    city = forms.CharField(required=False)
+    state = forms.CharField(required=False)
     zip_code = forms.CharField(required=True, label="* Zip code")
     email = forms.EmailField(required=True, label="* Email")
-    image_1 = forms.ImageField()
-    image_2 = forms.ImageField()
-    image_3 = forms.ImageField()
-    image_4 = forms.ImageField()
-
-    def __init__(self, *args, **kwargs):
-        """."""
-        super(QuoteForm, self).__init__(*args, **kwargs)
+    image_1 = forms.ImageField(required=False)
+    image_2 = forms.ImageField(required=False)
+    image_3 = forms.ImageField(required=False)
+    image_4 = forms.ImageField(required=False)

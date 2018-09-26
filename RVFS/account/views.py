@@ -1,4 +1,4 @@
-"""."""
+"""View managment for account and main pages."""
 from django.conf import settings
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -142,7 +142,7 @@ def update_slideshow_view(request):  # pragma: no cover
 
 @user_passes_test(valid_staff)
 @login_required
-def update_mailing_list_view(request):  # pragma: no cover
+def update_mailing_list_view(request):
     """Button to update the files of slide images."""
     mailing_list = form_mailing_list('update')
     return HttpResponse(update_mailing_list(mailing_list))
@@ -168,8 +168,77 @@ the mailing list, no need to sign up again.</p>")
     else:
         guest.account.mailing_list += ', ' + email
     guest.account.save()
+    subject = 'RVFM Newsletter Sign Up Confirmation'
+    body = '''
+Thank you for joining our mailing list!
+
+We will send out periodic newsletters with details about our new and \
+returning products,
+as well as any upcoming sales. You may even find a discout code for \
+use on purchases.
+
+We will also include listings of events you can find us at when available.
+
+If at anytime you wish to unsubscribe to the newsletter use the link bellow:
+
+    https://ravenvfm.com/newsletter/unsub/{}/
+
+Welcome to the community and we thank you for your support and patronage!
+'''.format(email.replace('@', '%40'))
+    unsub = EmailMessage(subject, body, 'News@ravenvfm.com',
+                         [email])
+    unsub.send(fail_silently=True)
     return HttpResponse("<p class='text-standard'>Thank you for \
 signing up for the newsletter.</p>")
+
+
+class NewsletterUnsubView(TemplateView):
+    """Newsletter opt-out."""
+
+    template_name = 'rvfsite/unsub.html'
+
+    def get_context_data(self, **kwargs):
+        """."""
+        context = super(TemplateView, self).get_context_data(**kwargs)
+        guest = User.objects.get(username='Guest')
+        mailing = guest.account.mailing_list.split(', ')
+        mailing.remove(kwargs['path'])
+        guest.account.mailing_list = ', '.join([str(x) for x in mailing])
+        guest.account.save()
+        set_basic_context(context, 'home')
+        return context
+
+
+class DiscountsView(TemplateView):
+    """View for discount code management."""
+
+    template_name = 'rvfsite/discounts.html'
+    success_url = reverse_lazy('discounts')
+
+    def get_context_data(self, **kwargs):
+        """."""
+        context = super(TemplateView, self).get_context_data(**kwargs)
+        guest_account = User.objects.get(username='Guest').account
+        current_codes = ''
+        if guest_account.comments:
+            current_codes = json.loads(guest_account.comments)
+        context['codes'] = current_codes
+        set_basic_context(context, 'discount')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Update the current discount codes."""
+        info = request.POST
+        guest_acc = User.objects.get(username='Guest').account
+        current_codes = guest_acc.comments
+        if not current_codes:
+            current_codes = {info['code']: (info['amount'], info['description'])}
+        else:
+            current_codes = json.loads(current_codes)
+            current_codes[info['code']] = (info['amount'], info['description'])
+        guest_acc.comments = json.dumps(current_codes)
+        guest_acc.save()
+        return HttpResponseRedirect(self.success_url)
 
 
 class AboutView(TemplateView):
@@ -487,6 +556,11 @@ class InfoFormView(UpdateView):
         new_info.save()
         new_info.resident = account
         account.main_address = new_info.id
+        if form.data['newsletter'] == 'on':
+            account.newsletter = True
+        account.home_phone = form.data['home_phone']
+        if form.data['cell_phone']:
+            account.cell_phone = form.data['cell_phone']
         account.registration_complete = True
         account.save()
         new_info.save()
@@ -635,7 +709,7 @@ class ContactView(FormView):
             from_email = form.cleaned_data['from_email']
             message = form.cleaned_data['message']
             contact = EmailMessage(subject, message, from_email,
-                                   ['rvfmsite@gmail.com'])
+                                   ['Contact@ravenvfm.com'])
             contact.send(fail_silently=True)
             return HttpResponseRedirect(self.success_url)
 
@@ -734,7 +808,7 @@ def form_mailing_list(location):
                 if email == account.user.email:
                     mailing.remove(email)
         unreg_email_list = mailing
-        new_mailing = ''.join(mailing)
+        new_mailing = ', '.join([str(x) for x in mailing])
         guest.account.mailing_list = new_mailing
         guest.account.save()
     else:

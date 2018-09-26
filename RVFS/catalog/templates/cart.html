@@ -11,7 +11,6 @@
     <h2 class="text-standard">Cart</h2>
     <div id='cart' class="row acc-row">
     {% if cart %}
-        {% if prods %}
         <h3 class="section-head text-standard">Products:</h3>
         <ul class="row acc-list-row">
         {% for item in prods %}
@@ -72,7 +71,7 @@
                             {% endfor %}
                             <h5 class="text-standard">${{ item.item.price }} per unit</h5>
                             <div class="del-button d-flex">
-                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
+                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">Remove</button>
                             </div>
                         </div>
                     </div>
@@ -80,71 +79,6 @@
             {% endif %}
         {% endfor %}
         </ul>
-        {% endif %}
-        {% if servs %}
-        <h3 class="section-head text-standard">Services:</h3>
-        <ul class="row acc-list-row">
-        {% for item in servs %}
-            {% if forloop.counter0|mod:4 == 0 %}
-            </ul>
-            <ul class="row acc-list-row">
-                <li id="serv {{ forloop.counter0 }}" class="card account-list">
-                    <div class="row">
-                        <div class="col">
-                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
-                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
-                            {% endthumbnail %}
-                            <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
-                        </div>
-                        <div class="col">
-                            {% for field, value in item.items %}
-                                {% if field in item_fields %}
-                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
-                                {% endif %}
-                            {% endfor %}
-                            {% if item.item.commission_fee %}
-                            <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
-                            {% endif %}
-                            {% if item.item.price_range %}
-                            <h5 class="text-standard">${{ item.item.price_range }} price range</h5>
-                            {% endif %}
-                            <div class="del-button d-flex">
-                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            {% else %}
-                <li id="serv {{ forloop.counter0 }}" class="card account-list">
-                    <div class="row">
-                        <div class="col">
-                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
-                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
-                            {% endthumbnail %}
-                            <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
-                        </div>
-                        <div class="col">
-                            {% for field, value in item.items %}
-                                {% if field in item_fields %}
-                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
-                                {% endif %}
-                            {% endfor %}
-                            {% if item.item.commission_fee %}
-                            <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
-                            {% endif %}
-                            {% if item.item.price_range %}
-                            <h5 class="text-standard">${{ item.item.price_range }} price range</h5>
-                            {% endif %}
-                            <div class="del-button d-flex">
-                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            {% endif %}
-        {% endfor %}
-        </ul>
-        {% endif %}
     {% else %}
     <h5 class="w-100 text-standard">Your cart is empty.</h5>
     <div class="placeholder"></div>
@@ -152,18 +86,42 @@
     </div>
     <div class="w-100">
         <h3 id="total" class="text-right text-standard">Total:
-            {% if account.cart_total %}
-                {% if account.cart_total.endswith == 0 %}
-                    ${{ account.cart_total }}0
+            {% if total %}
+                {% if total.endswith == 0 %}
+                    ${{ total }}0
                 {% else %}
-                    ${{ account.cart_total }}
+                    ${{ total }}
                 {% endif %}
             {% else %}
             $0
             {% endif %}
         </h3>
     </div>
-    {% if account.cart_total or serv_address %}
+    {% if not code %}
+    <div class="w-100">
+        <h4 class="text-standard text-left">Discount Code:</h4>
+    </div>
+    <div id="discount-parent" class="w-100 d-flex">
+        <input type="text" name="code">
+        <input id="discount" class="btn btn-secondary text-standard ml-auto" type="submit" name="apply_code" value="Apply Code">
+    </div>
+    {% else %}
+    <div class="w-100">
+        <h4 class="text-standard text-left">Discount Code:</h4>
+    </div>
+    <div id="discount-parent" class="row">
+        <div class="col">
+            <p class="text-standard text-left">Active code: {{ code.0 }}</p>
+            <p class="text-standard text-left">Code Effect: {{ code.1 }} discount</p>
+        </div>
+        <div class="col align-self-end">
+            <div class="d-flex">
+                <a id="remove" class="btn btn-danger text-standard ml-auto" href="#">Remove</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if account.cart_total %}
     <div id="shipping">
     <img class="dividor" src="{% static 'arrow-divider.png' %}">
     <div class="row acc-row">
@@ -245,6 +203,41 @@
 {% block js %}
 
 <script src="{% static 'js/update_cart.js' %}"></script>
+<script type="text/javascript">
+$('#discount').click(function (event) {
+  event.preventDefault();
+  var code = event.target.form[3].value;
+  $.get('/shop/cart/apply-discount/', {code: code},
+    function(data) {
+      if (data.includes('Not')) {
+        if ($('#discount-parent')[0].nextSibling.id !== 'message') {
+          $(data).insertAfter($('#discount-parent'));
+        } else {
+          $('#message').html(data);
+        }
+      }
+      else {
+        if ($('#discount-parent')[0].nextSibling.id === 'message') {
+          $('#message').html('');
+        }
+        $('#discount-parent').html(data);
+        setTimeout(location.reload.bind(location), 4000);
+      }
+    }
+  );
+});
+</script>
+<script type="text/javascript">
+$('#remove').click(function (event) {
+  event.preventDefault();
+  $.get('/shop/cart/remove-discount/',
+    function(data) {
+      $('#discount-parent').html(data);
+      setTimeout(location.reload.bind(location), 4000);
+    }
+  );
+});
+</script>
 
 {% endblock %}
 {% endif %}

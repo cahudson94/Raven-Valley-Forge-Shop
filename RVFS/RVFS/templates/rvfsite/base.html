@@ -46,6 +46,7 @@
                 <li class="nav-item text-standard {% if nbar == 'add_serv' %}active{% endif %}"><a class="nav-link staff-nav" href="{% url 'add_serv' %}">Add Service</a></li>
                 <li class="nav-item text-standard"><a class="nav-link staff-nav" href="{% url 'update-slides' %}">Update Slides</a></li>
                 <li id="mailing-parent" class="nav-item text-standard"><a id="mailing" class="nav-link staff-nav" href="#">Update Mailing List</a></li>
+                <li class="nav-item text-standard {% if nbar == 'discount' %}active{% endif %}"><a class="nav-link staff-nav" href="{% url 'discounts' %}">Manage Discounts</a></li>
               </ul>
               {% else %}
               <ul class="info banner-text">
@@ -201,7 +202,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
   <script src="{% static 'js/dates.js' %}"></script>
-  <script src="https://www.paypalobjects.com/api/checkout.js"></script>
   <script src="{% static 'js/add_swap.js' %}"></script>
   <script type="text/javascript">
 $('#newsletter').submit(function (event) {

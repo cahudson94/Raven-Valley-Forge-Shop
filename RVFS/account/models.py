@@ -30,6 +30,7 @@ class Account(models.Model):
     mailing_list = models.TextField(default='', blank=True)
     home_number = models.CharField(max_length=14, default='(000)-000-0000')
     cell_number = models.CharField(max_length=14, blank=True)
+    active_code = models.CharField(max_length=60, blank=True)
 
     def __str__(self):
         """Print for admin."""

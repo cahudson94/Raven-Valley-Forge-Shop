@@ -261,8 +261,9 @@ class CreateProductView(UserPassesTestMixin, CreateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CreateView, self).get_context_data(**kwargs)
-        context['form'].fields['Creator'].queryset = User.objects.filter(is_staff=True)
-        context['form'].fields['Creator'].initial = User.objects.get(username='m.ravenmoore')
+        creator = context['form'].fields['Creator']
+        creator.queryset = User.objects.filter(is_staff=True)
+        creator.initial = User.objects.get(username='m.ravenmoore')
         set_basic_context(context, 'add_prod')
         return context
 
@@ -396,19 +397,69 @@ class QuoteView(FormView):
         """Send email with conact info."""
         form = QuoteForm(request.POST)
         if form.is_valid():
-            subject = form.cleaned_data['subject']
-            from_email = form.cleaned_data['from_email']
-            message = form.cleaned_data['message']
-            contact = EmailMessage(subject, message, from_email,
-                                   ['rvfmsite@gmail.com'])
-            # if files:
-            #     for serv in servs:
-            #         for file in serv['files'].split(', '):
-            #             image = UserImage.objects.get(id=file.split(' ')[1])
-            #             img_path = os.path.join(settings.BASE_DIR, 'media',
-            #                                     image.image.name)
-            #             owner_email.attach_file(img_path)
-            contact.send(fail_silently=True)
+            subject = 'Service Request: ' + form.cleaned_data['service']
+            body = '''
+{} {} is interested in requesting the service for {}.
+Their contact info includes:
+
+    Home Phone: {}
+'''.format(
+                form.cleaned_data['first_name'],
+                form.cleaned_data['last_name'],
+                form.cleaned_data['service'],
+                form.cleaned_data['home_phone'],
+            )
+            if form.cleaned_data['cell_phone']:
+                body += '''
+    Cell Phone: {}
+'''.format(
+                    form.cleaned_data['cell_phone']
+                )
+            body += '''
+    Email: {}
+'''.format(
+                form.cleaned_data['email'],
+            )
+            if form.cleaned_data['address']:
+                body += '''
+    Address: {}
+'''.format(
+                    form.cleaned_data['address']
+                )
+            if form.cleaned_data['city']:
+                body += '''
+    City: {}
+'''.format(
+                    form.cleaned_data['city']
+                )
+            if form.cleaned_data['state']:
+                body += '''
+    State: {}
+'''.format(
+                    form.cleaned_data['state']
+                )
+            body += '''
+    Zip Code: {}
+'''.format(
+                form.cleaned_data['zip_code']
+            )
+            if form.cleaned_data['description']:
+                body += '''
+They have included the following description:
+
+{}
+'''.format(
+                    form.cleaned_data['description']
+                )
+            if request.FILES:
+                body += '''
+and the attached images.'''
+            quote = EmailMessage(subject, body, 'rvfmsite@gmail.com',
+                                 ['Muninn@ravenvfm.com'])
+            if request.FILES:
+                for image in request.FILES.values():
+                    quote.attach(image.name, image.read(), image.content_type)
+            quote.send(fail_silently=True)
             return HttpResponseRedirect(self.success_url)
 
 
@@ -426,6 +477,15 @@ class CartView(TemplateView):
         if self.request.user.is_authenticated:
             account = self.request.user.account
             context['account'] = account
+            total = account.cart_total
+            if account.active_code:
+                codes = User.objects.get(username='Guest').account.comments
+                codes = json.loads(codes)
+                amount = codes[account.active_code][0]
+                if '%' not in amount:
+                    amount = '$' + amount
+                session['code'] = account.active_code + ', ' + amount
+                session.save()
         if 'shipping_data' in self.request.session.keys():
             context['shipping'] = session['shipping_data']['shipping']
             context['info'] = session['shipping_data']['info']
@@ -443,6 +503,7 @@ class CartView(TemplateView):
                 session['account'] = {'cart': '', 'cart_total': 0.0}
             cart = session['account']['cart']
             context['account'] = session['account']
+            total = session['account']['cart_total']
         else:
             cart = context['account'].cart
             if len(context['account'].shippinginfo_set.values()) > 1:
@@ -455,6 +516,15 @@ class CartView(TemplateView):
                 item['count'] = 'prod ' + str(len(context['prods']))
                 context['prods'].append(item)
         context['item_fields'] = ['color', 'length', 'diameter', 'extras']
+        context['total'] = total
+        if 'code' in session.keys():
+            context['code'] = session['code'].split(', ')
+            amount = context['code'][1]
+            if '$' in amount:
+                context['total'] = total - Decimal(amount[1:])
+            else:
+                percent = Decimal(float(total)) * Decimal('.' + amount[:-1])
+                context['total'] = total - percent
         set_basic_context(context, 'cart')
         return context
 
@@ -517,6 +587,12 @@ def update_cart(request):
         cart_total += Decimal(price * difference)
         prods[int(cart_item[1])]['quantity'] = request.GET['quantity']
     cart_repack(prods, request, cart_total)
+    if 'code' in request.session.keys():
+            amount = request.session['code'].split(', ')[1]
+            if '$' in amount:
+                cart_total -= Decimal(amount[1:])
+            else:
+                cart_total -= Decimal(float(cart_total)) * Decimal('.' + amount[:-1])
     return HttpResponse(cart_total)
 
 
@@ -543,80 +619,51 @@ def delete_item(request):
             request.session['account']['cart'] = ''
             request.session.save()
         return HttpResponse('empty')
-    cart_total -= Decimal(prods[int(cart_item[1])]['item'].price *
-                          int(prods[int(cart_item[1])]['quantity']))
+    price = prods[int(cart_item[1])]['item'].price
+    if 'extras' in prods[int(cart_item[1])].keys():
+        price += Decimal(prods[int(cart_item[1])]['extras'].split(' $')[1])
+    cart_total -= Decimal(price * int(prods[int(cart_item[1])]['quantity']))
     prods.pop(int(cart_item[1]))
     cart_repack(prods, request, cart_total)
+    if 'code' in request.session.keys():
+            amount = request.session['code'].split(', ')[1]
+            if '$' in amount:
+                cart_total -= Decimal(amount[1:])
+            if '$' not in amount:
+                cart_total -= Decimal(float(cart_total)) * Decimal('.' + amount[:-1])
     return HttpResponse(cart_total)
 
 
-class CheckoutView(TemplateView):
-    """Format order info to send to paypal."""
+def apply_discount(request):
+    """Apply a discount code to current order."""
+    code = request.GET['code']
+    codes = User.objects.get(username='Guest').account.comments
+    codes = json.loads(codes)
+    if code in codes:
+        if 'code' not in request.session.keys():
+            amount = codes[code][0]
+            if '%' not in amount:
+                amount = '$' + amount
+            request.session['code'] = code + ', ' + amount
+            request.session.save()
+            if request.user.is_authenticated:
+                request.user.account.active_code = code
+                request.user.account.save()
+        return HttpResponse("<p class='text-standard'>Discount \
+code activated!</p>")
+    return HttpResponse("<div id='message' class='w-100'><p class='text-standard'>\
+Not a valid discount code.</p></div>")
 
-    template_name = 'checkout.html'
 
-    def get(self, request, *args, **kwargs):
-        """Check for shipping data."""
-        keys = request.session.keys()
-        if 'shipping_data' not in keys:
-            return HttpResponseRedirect(reverse_lazy('cart'))
-        return super(CheckoutView, self).get(self, request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        """Add context for active page."""
-        shipping_data = ''
-        address = ''
-        acc_obj = Account.objects
-        context = super(CheckoutView, self).get_context_data(**kwargs)
-        if self.request.user.is_authenticated:
-            user = self.request.user
-            account = self.request.user.account
-            cart = account.cart
-            cart_total = account.cart_total
-        else:
-            user = User.objects.get(username='Guest')
-            account = Account.objects.get(user=user)
-            cart = self.request.session['account']['cart']
-            cart_total = self.request.session['account']['cart_total']
-        shipping_data = self.request.session['shipping_data']
-        if 'exists' in shipping_data.keys():
-            address = ShippingInfo.objects.get(id=shipping_data['exists'])
-        else:
-            address = ShippingInfo(
-                address1=shipping_data['shipping']['address1'],
-                address2=shipping_data['shipping']['address2'],
-                zip_code=shipping_data['shipping']['zip_code'],
-                city=shipping_data['shipping']['city'],
-                state=shipping_data['shipping']['state'])
-            address.save()
-            address.resident = acc_obj.get(user=user)
-            address.save()
-        email = shipping_data['info']['email']
-        name = (shipping_data['info']['first'] +
-                ', ' + shipping_data['info']['last'])
-        order = Order(
-            buyer=account,
-            order_content=cart,
-            recipient_email=email,
-            recipient=name,
-        )
-        order.save()
-        order.ship_to = address
-        order.save()
-        self.request.session['order_num'] = order.id
-        self.request.session['payment_id'] = self.request.GET['paymentId']
-        self.request.session['payer_id'] = self.request.GET['PayerID']
-        self.request.session.save()
-        if shipping_data:
-            context['shipping'] = address
-            context['info'] = shipping_data['info']
-        context['total'] = cart_total
-        context['prods'] = []
-        for item in unpack(cart):
-            if item['type'] == 'prod':
-                context['prods'].append(item)
-        set_basic_context(context, 'cart')
-        return context
+def remove_discount(request):
+    """Remove currently active discount code."""
+    request.session.pop('code', None)
+    request.session.save()
+    if request.user.is_authenticated:
+        request.user.account.active_code = ''
+        request.user.account.save()
+    return HttpResponse("<div class='col'><p class='text-standard'>\
+Discount code removed refresh the page to add a new code.</p></div>")
 
 
 def create_payment(request):
@@ -741,8 +788,8 @@ when your order ships. Your purchases:\n\n'
             client_body += '\n'
         owner_email = EmailMessage(subject,
                                    owner_body,
-                                   'rvfmsite@gmail.com',
-                                   [email])
+                                   email,
+                                   ['Muninn@ravenvfm.com'])
         client_email = EmailMessage(subject,
                                     client_body,
                                     email,

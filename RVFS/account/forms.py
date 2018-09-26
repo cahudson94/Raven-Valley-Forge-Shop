@@ -86,10 +86,13 @@ class InfoRegForm(forms.ModelForm):
                                     label='Name for this Address')
     street = forms.CharField(max_length=90, label='Address Line 1')
     adr_extra = forms.CharField(required=False, max_length=90,
-                                label='Address Line 2')
+                                label='Address Line 2 (not required)')
     zip_code = forms.CharField(max_length=10, label='Zip Code')
     city = forms.CharField(max_length=25, label='City')
     state = forms.ChoiceField(required=True, choices=STATES, label='State')
+    home_phone = forms.CharField(required=True, label="Home phone")
+    cell_phone = forms.CharField(required=False,
+                                 label="Cell phone (not required)")
 
     class Meta():
         """."""
