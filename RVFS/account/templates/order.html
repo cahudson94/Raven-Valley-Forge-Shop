@@ -15,8 +15,8 @@
             <ul class="row acc-list-row">
                 <li class="card account-list">
                     <div class="row">
-                        <div class="col text-center">
-                            {% thumbnail item.item.image "150x150" crop="center" as pic %}
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
                             <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                             {% endthumbnail %}
                             <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
@@ -34,8 +34,8 @@
             {% else %}
                 <li class="card account-list">
                     <div class="row">
-                        <div class="col text-center">
-                            {% thumbnail item.item.image "150x150" crop="center" as pic %}
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
                                 <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                             {% endthumbnail %}
                             <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
@@ -47,6 +47,75 @@
                                 {% endif %}
                             {% endfor %}
                             <h5 class="text-standard">${{ item.item.price }} per unit</h5>
+                        </div>
+                    </div>
+                </li>
+            {% endif %}
+        {% endfor %}
+        {% for item in servs %}
+            {% if forloop.counter0|mod:4 == 0 and forloop.counter0 > 0 %}
+            </ul>
+            <ul class="row acc-list-row">
+                <li class="card account-list">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                            <a class="acc-item-link" href="{% url 'serv' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field in item_fields %}
+                                    {% if field == 'files' %}
+                                    <h5 class="text-standard">{{ field }}:<ul>
+                                        {% for file in value %}
+                                        <li class="footer-info"><a class="image-links" href="{{ file.image.url }}">image {{ forloop.counter }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                    </h5>
+                                    {% else %}
+                                    <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if item.item.price_range %}
+                                <h5 class="text-standard">${{ item.item.price_range }} range</h5>
+                            {% else %}
+                                <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
+                            {% endif %}
+                        </div>
+                    </div>
+                </li>
+            {% else %}
+                <li class="card account-list">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                            <a class="acc-item-link" href="{% url 'serv' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field in item_fields %}
+                                    {% if field == 'files' %}
+                                    <h5 class="text-standard">{{ field }}:<ul>
+                                        {% for file in value %}
+                                        <li class="footer-info"><a class="image-links" href="{{ file.image.url }}">image {{ forloop.counter }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                    </h5>
+                                    {% else %}
+                                    <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if item.item.price_range %}
+                                <h5 class="text-standard">${{ item.item.price_range }} range</h5>
+                            {% else %}
+                                <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
+                            {% endif %}
                         </div>
                     </div>
                 </li>
@@ -77,15 +146,35 @@
                     </li>
                 </ul>
                 {% endif %}
+                {% if serv %}
+                <h2>Address for services:</h2>
+                <ul>
+                    <li class="footer-info">
+                        <h4>{{ serv.address1 }}</h4>
+                    {% if serv.address2 %}
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ serv.address2 }}</h4>
+                    {% endif %}
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ serv.city }}</h4>
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ serv.state }}</h4>
+                    </li>
+                    <li class="footer-info">
+                        <h4>{{ serv.zip_code }}</h4>
+                    </li>
+                </ul>
+                {% endif %}
             </div>
             <div class="col">
             {{ form.as_p }}
             </div>
-        {% if staff %}
         </div>
-        <div class="d-flex update-order">
+        <div class="d-flex">
             <input class="btn btn-secondary text-standard ml-auto" type="submit" value="Update">
         </div>
-        {% endif %}
     </form>
 {% endblock %}

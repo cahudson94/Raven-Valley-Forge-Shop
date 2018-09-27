@@ -80,19 +80,13 @@ YEARS = YEARS[::-1]
 class InfoRegForm(forms.ModelForm):
     """Extra registration info form."""
 
-    birth_date = forms.CharField(widget=forms.SelectDateWidget(years=YEARS,
-                                                               months=MONTHS))
-    location_name = forms.CharField(max_length=35,
-                                    label='Name for this Address')
+    birth_date = forms.CharField(widget=forms.SelectDateWidget(years=YEARS, months=MONTHS))
+    location_name = forms.CharField(max_length=35, label='Name for this Address')
     street = forms.CharField(max_length=90, label='Address Line 1')
-    adr_extra = forms.CharField(required=False, max_length=90,
-                                label='Address Line 2 (not required)')
+    adr_extra = forms.CharField(required=False, max_length=90, label='Address Line 2')
     zip_code = forms.CharField(max_length=10, label='Zip Code')
     city = forms.CharField(max_length=25, label='City')
     state = forms.ChoiceField(required=True, choices=STATES, label='State')
-    home_phone = forms.CharField(required=True, label="Home phone")
-    cell_phone = forms.CharField(required=False,
-                                 label="Cell phone (not required)")
 
     class Meta():
         """."""
@@ -105,8 +99,7 @@ class AddAddressForm(forms.ModelForm):
     """Add extra addresses form."""
 
     state = forms.ChoiceField(required=True, choices=STATES, label='State')
-    address2 = forms.CharField(required=False, max_length=90,
-                               label='Address Line 2')
+    address2 = forms.CharField(required=False, max_length=90, label='Address Line 2')
 
     class Meta():
         """."""
@@ -131,10 +124,16 @@ class OrderUpdateForm(forms.ModelForm):
 class ContactForm(forms.Form):
     """Form to contact shop."""
 
-    subject = forms.CharField(required=True, label="Your name:")
-    from_email = forms.EmailField(required=True, label="Your email:")
+    subject = forms.CharField(required=True)
+    from_email = forms.EmailField(required=True)
     message = forms.CharField(
         required=True,
-        widget=forms.Textarea,
-        label="What can we help you with?"
+        widget=forms.Textarea
     )
+
+    def __init__(self, *args, **kwargs):
+        """."""
+        super(ContactForm, self).__init__(*args, **kwargs)
+        self.fields['subject'].label = "Your name:"
+        self.fields['from_email'].label = "Your email:"
+        self.fields['message'].label = "What can we help you with?"

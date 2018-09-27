@@ -12,13 +12,10 @@
             <div class="col">
             <h4 class="text-standard">{{ field.label }}:</h4>
             <p class="textarea-form">{{ field }}</p>
-            {% elif forloop.counter == 10 %}
+            {% elif forloop.counter == 9 %}
             </div>
             <div class="col">
             <h4 class="text-standard">{{ field.label }}:</h4>
-            <p class="textarea-form">{{ field }}</p>
-            {% elif field.label == 'Tags' %}
-            <h4 class="text-standard">Catagories:</h4>
             <p class="textarea-form">{{ field }}</p>
             {% else %}
             <h4 class="text-standard">{{ field.label }}:</h4>
@@ -27,6 +24,6 @@
         {% endfor %}
         </div>
         </div>
-        <input class="btn btn-secondary text-standard" type="submit" value="Create">
+        <input class="button text-standard" type="submit" value="Create">
     </form>
 {% endblock %}

@@ -11,6 +11,7 @@
     <h2 class="text-standard">Cart</h2>
     <div id='cart' class="row acc-row">
     {% if cart %}
+        {% if prods %}
         <h3 class="section-head text-standard">Products:</h3>
         <ul class="row acc-list-row">
         {% for item in prods %}
@@ -19,7 +20,7 @@
             <ul class="row acc-list-row">
                 <li id="prod {{ forloop.counter0 }}" class="card account-list">
                         <div class="row">
-                            <div class="col text-center">
+                            <div class="col">
                                 {% thumbnail item.item.image "100x100" crop="center" as pic %}
                                 <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                                 {% endthumbnail %}
@@ -49,7 +50,7 @@
             {% else %}
                 <li id="prod {{ forloop.counter0 }}" class="card account-list">
                     <div class="row">
-                        <div class="col text-center">
+                        <div class="col">
                             {% thumbnail item.item.image "100x100" crop="center" as pic %}
                                 <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                             {% endthumbnail %}
@@ -71,7 +72,7 @@
                             {% endfor %}
                             <h5 class="text-standard">${{ item.item.price }} per unit</h5>
                             <div class="del-button d-flex">
-                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">Remove</button>
+                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
                             </div>
                         </div>
                     </div>
@@ -79,6 +80,71 @@
             {% endif %}
         {% endfor %}
         </ul>
+        {% endif %}
+        {% if servs %}
+        <h3 class="section-head text-standard">Services:</h3>
+        <ul class="row acc-list-row">
+        {% for item in servs %}
+            {% if forloop.counter0|mod:4 == 0 %}
+            </ul>
+            <ul class="row acc-list-row">
+                <li id="serv {{ forloop.counter0 }}" class="card account-list">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                            <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                            <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                {% endif %}
+                            {% endfor %}
+                            {% if item.item.commission_fee %}
+                            <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
+                            {% endif %}
+                            {% if item.item.price_range %}
+                            <h5 class="text-standard">${{ item.item.price_range }} price range</h5>
+                            {% endif %}
+                            <div class="del-button d-flex">
+                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            {% else %}
+                <li id="serv {{ forloop.counter0 }}" class="card account-list">
+                    <div class="row">
+                        <div class="col">
+                            {% thumbnail item.item.image "100x100" crop="center" as pic %}
+                                <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
+                            {% endthumbnail %}
+                            <a class="acc-item-link" href="{% url 'prod' item.item_id %}"><h4 class="text-standard">{{ item.item.name }}</h4></a>
+                        </div>
+                        <div class="col">
+                            {% for field, value in item.items %}
+                                {% if field in item_fields %}
+                                <h5 class="text-standard">{{ field }}: {{ value }}</h5>
+                                {% endif %}
+                            {% endfor %}
+                            {% if item.item.commission_fee %}
+                            <h5 class="text-standard">${{ item.item.commission_fee }} fee</h5>
+                            {% endif %}
+                            {% if item.item.price_range %}
+                            <h5 class="text-standard">${{ item.item.price_range }} price range</h5>
+                            {% endif %}
+                            <div class="del-button d-flex">
+                                <button class="delete btn btn-danger ml-auto" data-item="{{ item.count }}" type="button">remove</button>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+        {% endif %}
     {% else %}
     <h5 class="w-100 text-standard">Your cart is empty.</h5>
     <div class="placeholder"></div>
@@ -86,108 +152,145 @@
     </div>
     <div class="w-100">
         <h3 id="total" class="text-right text-standard">Total:
-            {% if total %}
-                {% if total.endswith == 0 %}
-                    ${{ total }}0
+            {% if account.cart_total %}
+                {% if account.cart_total.endswith == 0 %}
+                    ${{ account.cart_total }}0
                 {% else %}
-                    ${{ total }}
+                    ${{ account.cart_total }}
                 {% endif %}
             {% else %}
             $0
             {% endif %}
         </h3>
     </div>
-    {% if not code %}
-    <div class="w-100">
-        <h4 class="text-standard text-left">Discount Code:</h4>
-    </div>
-    <div id="discount-parent" class="w-100 d-flex">
-        <input type="text" name="code">
-        <input id="discount" class="btn btn-secondary text-standard ml-auto" type="submit" name="apply_code" value="Apply Code">
-    </div>
-    {% else %}
-    <div class="w-100">
-        <h4 class="text-standard text-left">Discount Code:</h4>
-    </div>
-    <div id="discount-parent" class="row">
-        <div class="col">
-            <p class="text-standard text-left">Active code: {{ code.0 }}</p>
-            <p class="text-standard text-left">Code Effect: {{ code.1 }} discount</p>
-        </div>
-        <div class="col align-self-end">
-            <div class="d-flex">
-                <a id="remove" class="btn btn-danger text-standard ml-auto" href="#">Remove</a>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    {% if account.cart_total %}
+    {% if account.cart_total or serv_address %}
     <div id="shipping">
     <img class="dividor" src="{% static 'arrow-divider.png' %}">
     <div class="row acc-row">
         {% if account.cart_total %}
         <ul class="col">
-            <h2 class="text-standard">Shipping Info:</h2>
-            {% if user.is_authenticated %}
-                {% if alt_add %}
-                <li class="account-list">
-                <label class="text-standard">Address:</label>
-                <select id="ship_address_name" name="ship_address_name">
-                    {% for add in alt_add %}
-                        {% if not ship_exists and add.main %}
-                        <option value="{{ add }}" selected="selected">{{ add.name }}</option>
-                        {% elif ship_exists and add.id == ship_exists %}
-                        <option value="{{ add }}" selected="selected">{{ add.name }}</option>
-                        {% else %}
-                        <option value="{{ add }}">{{ add.name }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-                </li>
-                {% endif %}
+        <h2 class="text-standard">Shipping Info:</h2>
+        {% if user.is_authenticated %}
+            {% if alt_add %}
+            <li class="account-list">
+            <label class="text-standard">Address:</label>
+            <select id="ship_address_name" name="ship_address_name">
+                {% for add in alt_add %}
+                    {% if not ship_exists and add.main %}
+                    <option value="{{ add }}" selected="selected">{{ add.name }}</option>
+                    {% elif ship_exists and add.id == ship_exists %}
+                    <option value="{{ add }}" selected="selected">{{ add.name }}</option>
+                    {% else %}
+                    <option value="{{ add }}">{{ add.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            </li>
             {% endif %}
-            <li class="account-list">
-            <label class="text-standard">First Name:</label>
-            <br>
-            <input id="first_name" type="text" name="ship_first_name" value="{% if info %}{{ info.first }}{% endif %}">
-            </li>
-            <li class="account-list">
-            <label class="text-standard">Address Line 1:</label>
-            <br>
-            <input id="ship_add_1" type="text" name="ship_add_1" value="{% if shipping %}{{ shipping.address1 }}{% endif %}">
-            <li class="account-list">
-            <label class="text-standard">City:</label>
-            <br>
-            <input id="ship_city" type="text" name="ship_city" value="{% if shipping %}{{ shipping.city }}{% endif %}">
-            </li>
-            <li class="account-list">
-            <label class="text-standard">Zip Code:</label>
-            <br>
-            <input id="ship_zip" type="text" name="ship_zip" value="{% if shipping %}{{ shipping.zip_code }}{% endif %}">
-            </li>
+        {% endif %}
+        <li class="account-list">
+        <label class="text-standard">First Name:</label>
+        <br>
+        <input id="first_name" type="text" name="ship_first_name" value="{% if info %}{{ info.first }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Last Name:</label>
+        <br>
+        <input id="last_name" type="text" name="ship_last_name" value="{% if info %}{{ info.last }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Email:</label>
+        <br>
+        <input id="email" type="text" name="ship_email" value="{% if info %}{{ info.email }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Address Line 1:</label>
+        <br>
+        <input id="ship_add_1" type="text" name="ship_add_1" value="{% if shipping %}{{ shipping.address1 }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Address Line 2:</label>
+        <br>
+        <input id="ship_add_2" type="text" name="ship_add_2" value="{% if shipping %}{{ shipping.address2 }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">City:</label>
+        <br>
+        <input id="ship_city" type="text" name="ship_city" value="{% if shipping %}{{ shipping.city }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">State:</label>
+        <br>
+        <input id="ship_state" type="text" name="ship_state" value="{% if shipping %}{{ shipping.state }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Zip Code:</label>
+        <br>
+        <input id="ship_zip" type="text" name="ship_zip" value="{% if shipping %}{{ shipping.zip_code }}{% endif %}">
+        </li>
         </ul>
-        <ul class="col cart-form">
+        {% endif %}
+        {% if serv_address %}
+        <ul class="col">
+        <h2 class="text-standard">Service Address:</h2>
+        {% if user.is_authenticated %}
+            {% if alt_add %}
             <li class="account-list">
-            <label class="text-standard">Last Name:</label>
-            <br>
-            <input id="last_name" type="text" name="ship_last_name" value="{% if info %}{{ info.last }}{% endif %}">
+            <label class="text-standard">Address:</label>
+            <select id="serv_address_name" name="serv_address_name">
+                {% for add in alt_add %}
+                    {% if not serv_exists and add.main %}
+                    <option value="{{ add }}" selected="selected">{{ add.name }}</option>
+                    {% elif serv_exists and add.id == serv_exists %}
+                    <option value="{{ add }}" selected="selected">{{ add.name }}</option>
+                    {% else %}
+                    <option value="{{ add }}">{{ add.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
             </li>
-            </li>
-            <li class="account-list">
-            <label class="text-standard">Address Line 2:</label>
-            <br>
-            <input id="ship_add_2" type="text" name="ship_add_2" value="{% if shipping %}{{ shipping.address2 }}{% endif %}">
-            </li>
-            <li class="account-list">
-            <label class="text-standard">State:</label>
-            <br>
-            <input id="ship_state" type="text" name="ship_state" value="{% if shipping %}{{ shipping.state }}{% endif %}">
-            </li>
-            <li class="account-list">
-            <label class="text-standard">Email:</label>
-            <br>
-            <input id="email" type="text" name="ship_email" value="{% if info %}{{ info.email }}{% endif %}">
-            </li>
+            {% endif %}
+        {% endif %}
+        <li class="account-list">
+        <label class="text-standard">First Name:</label>
+        <br>
+        <input id="first_name" type="text" name="serv_first_name" value="{% if serv_info %}{{ serv_info.first }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Last Name:</label>
+        <br>
+        <input id="last_name" type="text" name="serv_last_name" value="{% if serv_info %}{{ serv_info.last }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Email:</label>
+        <br>
+        <input id="email" type="text" name="serv_email" value="{% if serv_info %}{{ serv_info.email }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Address Line 1:</label>
+        <br>
+        <input id="serv_add_1" type="text" name="serv_add_1" value="{% if serv_add %}{{ serv_add.address1 }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Address Line 2:</label>
+        <br>
+        <input id="serv_add_2" type="text" name="serv_add_2" value="{% if serv_add %}{{ serv_add.address2 }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">City:</label>
+        <br>
+        <input id="serv_city" type="text" name="serv_city" value="{% if serv_add %}{{ serv_add.city }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">State:</label>
+        <br>
+        <input id="serv_state" type="text" name="serv_state" value="{% if serv_add %}{{ serv_add.state }}{% endif %}">
+        </li>
+        <li class="account-list">
+        <label class="text-standard">Zip Code:</label>
+        <br>
+        <input id="serv_zip" type="text" name="serv_zip" value="{% if serv_add %}{{ serv_add.zip_code }}{% endif %}">
+        </li>
         </ul>
         {% endif %}
     </div>
@@ -203,41 +306,6 @@
 {% block js %}
 
 <script src="{% static 'js/update_cart.js' %}"></script>
-<script type="text/javascript">
-$('#discount').click(function (event) {
-  event.preventDefault();
-  var code = event.target.form[3].value;
-  $.get('/shop/cart/apply-discount/', {code: code},
-    function(data) {
-      if (data.includes('Not')) {
-        if ($('#discount-parent')[0].nextSibling.id !== 'message') {
-          $(data).insertAfter($('#discount-parent'));
-        } else {
-          $('#message').html(data);
-        }
-      }
-      else {
-        if ($('#discount-parent')[0].nextSibling.id === 'message') {
-          $('#message').html('');
-        }
-        $('#discount-parent').html(data);
-        setTimeout(location.reload.bind(location), 4000);
-      }
-    }
-  );
-});
-</script>
-<script type="text/javascript">
-$('#remove').click(function (event) {
-  event.preventDefault();
-  $.get('/shop/cart/remove-discount/',
-    function(data) {
-      $('#discount-parent').html(data);
-      setTimeout(location.reload.bind(location), 4000);
-    }
-  );
-});
-</script>
 
 {% endblock %}
 {% endif %}

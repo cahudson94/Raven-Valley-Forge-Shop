@@ -15,7 +15,11 @@ Services
 {% block body %}
 <div class="row">
     <div class="col-1 side-bar">
-        <h5 class="text-standard">Market Place
+        <h5 class="text-standard">{% if nbar == 'prods' %}
+        Product
+        {% else %}
+        Service
+        {% endif %}
         {% if slug %}
          - {{ slug }}
         {% else %}
@@ -25,7 +29,11 @@ Services
         <ul class="side-bar-items">
         {% for tag in all_tags %}
             {% if forloop.counter < 10 %}
-            <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories text-standard">{{ tag }}</li></a>
+                {% if nbar == 'prods' %}
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories text-standard">{{ tag }}</li></a>
+                {% else %}
+                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories text-standard">{{ tag }}</li></a>
+                {% endif %}
             {% endif %}
             {% if forloop.counter == 10 %}
                 <button class="side-bar-more" type="button" data-toggle="collapse" data-target=".more-catagories" aria-controls=".more-catagories" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +41,11 @@ Services
                 </button>
             {% endif %}
             {% if forloop.counter > 10 %}
-            <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories more-catagories collapse text-standard">{{ tag }}</li></a>
+                {% if nbar == 'prods' %}
+                <a href="{% url 'tagged_products' slug=tag %}"><li class="side-bar-catagories more-catagories collapse text-standard">{{ tag }}</li></a>
+                {% else %}
+                <a href="{% url 'tagged_services' slug=tag %}"><li class="side-bar-catagories more-catagories collapse text-standard">{{ tag }}</li></a>
+                {% endif %}
             {% endif %}
         {% endfor %}
         </ul>
@@ -79,20 +91,32 @@ Services
     {% if slug %}
         <a class="catagory-a" href="{% url 'tagged_products' slug=slug %}">
             <h2 class="catalog-catagories text-standard">
-                Market Place
+                {% if nbar == 'prods' %}
+                Products
+                {% else %}
+                Services
+                {% endif %}
                  - {{ slug }}
             </h2>
         </a>
         <div class="row card-row">
             {% for item in items %}
                 {% if forloop.counter < 5 %}
+                    {% if nbar == 'prods' %}
                     <a href="{% url 'prod' pk=item.id %}">
+                    {% else %}
+                    <a href="{% url 'serv' pk=item.id %}">
+                    {% endif %}
                         <div class="card">
                         {% thumbnail item.image "180x180" crop="center" as pic %}
                         <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                         {% endthumbnail %}
                         <h5 class="card-title text-standard">{{ item.name }}</h5>
-                        <p class="card-text text-standard">${{ item.price }}</p>
+                        {% if nbar == 'prods' %}
+                            <p class="card-text text-standard">${{ item.price }}</p>
+                        {% else %}
+                            <p class="card-text text-standard">${{ item.price_range }}</p>
+                        {% endif %}
                     </div></a>
                 {% endif %}
             {% endfor %}
@@ -105,15 +129,22 @@ Services
                 {% if tag == key_tag %}
                     {% for item in prod_or_serv %}
                         {% if forloop.counter < 5 %}
+                            {% if nbar == 'prods' %}
                             <a href="{% url 'prod' pk=item.id %}">
+                            {% else %}
+                            <a href="{% url 'serv' pk=item.id %}">
+                            {% endif %}
                                 <div class="card">
                                 {% thumbnail item.image "180x180" crop="center" as pic %}
                                 <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                                 {% endthumbnail %}
                                 <h5 class="card-title text-standard">{{ item.name }}</h5>
-                                <p class="card-text text-standard">${{ item.price }}</p>
-                                </div>
-                            </a>
+                                {% if nbar == 'prods' %}
+                                    <p class="card-text text-standard">${{ item.price }}</p>
+                                {% else %}
+                                    <p class="card-text text-standard">${{ item.price_range }}</p>
+                                {% endif %}
+                            </div></a>
                         {% endif %}
                     {% endfor %}
                 {% endif %}
