@@ -1,0 +1,29 @@
+{% extends 'rvfsite/base.html' %}
+{% block title %}Quote{% endblock %}
+
+{% block body %}
+<form enctype="multipart/form-data" class="contact-form" method="post">
+    {% csrf_token %}
+    <h1 class="text-standard">Request a Service</h1>
+    <div class="row">
+        <div class="col">
+            {% for field in form %}
+            {% if forloop.counter == 7 %}
+            </div>
+            <div class="col">
+            <h4 class="text-standard">{{ field.label }}:</h4>
+            <p class="text-standard">{{ field }}</p>
+            {% else %}
+            <h4 class="text-standard">{{ field.label }}:</h4>
+            <p class="text-standard">{{ field }}</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="w-100">
+        <button class="d-flex ml-auto btn btn-secondary text-standard" type="submit">Submit Request</button>
+        <br>
+        <p class="text-standard">*By submitting this form you are consenting to be contacted by Ravenmoore Valley Forge for the ppurposes of establishing a baseline and confirming the details around the requested service. This is in no way a gaurentee that services will be rendered and the company withholds the right to terminate service at any point.</p>
+    </div>
+</form>
+{% endblock %}
