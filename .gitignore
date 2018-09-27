@@ -105,5 +105,5 @@ __pycache__
 RVFS/media/*
 !RVFS/media/.gitkeep
 
-credentials.json
-token.json
+client_secret.json
+new_secret_file.txt
