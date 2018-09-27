@@ -261,7 +261,7 @@ class CreateProductView(UserPassesTestMixin, CreateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CreateView, self).get_context_data(**kwargs)
-        creator = context['form'].fields['Creator']
+        creator = context['form'].fields['creator']
         creator.queryset = User.objects.filter(is_staff=True)
         creator.initial = User.objects.get(username='m.ravenmoore')
         set_basic_context(context, 'add_prod')
@@ -290,6 +290,8 @@ class EditProductView(UserPassesTestMixin, UpdateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(EditProductView, self).get_context_data(**kwargs)
+        staff = User.objects.filter(is_staff=True)
+        context['form'].fields['creator'].queryset = staff
         set_basic_context(context, 'prods')
         return context
 
@@ -455,7 +457,7 @@ They have included the following description:
                 body += '''
 and the attached images.'''
             quote = EmailMessage(subject, body, 'rvfmsite@gmail.com',
-                                 ['Muninn@ravenvfm.com'])
+                                 ['Creations@ravenvfm.com'])
             if request.FILES:
                 for image in request.FILES.values():
                     quote.attach(image.name, image.read(), image.content_type)
@@ -789,7 +791,7 @@ when your order ships. Your purchases:\n\n'
         owner_email = EmailMessage(subject,
                                    owner_body,
                                    email,
-                                   ['Muninn@ravenvfm.com'])
+                                   ['Creations@ravenvfm.com'])
         client_email = EmailMessage(subject,
                                     client_body,
                                     email,

@@ -59,7 +59,7 @@ class Product(models.Model):
         default='',
         blank=True)
     is_knife = models.BooleanField(default=False)
-    Creator = models.ForeignKey(User,
+    creator = models.ForeignKey(User,
                                 on_delete=models.CASCADE,
                                 default=User.objects.get(
                                     username='m.ravenmoore'

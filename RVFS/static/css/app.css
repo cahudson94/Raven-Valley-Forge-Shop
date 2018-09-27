@@ -25,6 +25,7 @@ NAV
 .nav-link {
     font-weight: bold;
     font-size: 18px;
+    margin-bottom: 0;
 }
 
 .nav-social {
@@ -58,8 +59,8 @@ NAV
 }
 
 .header-main {
-    font-family: 'Niconne', serif;
-    font-size: 40px;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 29px;
     font-weight: bold;
 }
 
@@ -155,7 +156,7 @@ MAIN SECTION
 }
 
 .section-heads {
-    font-family: 'Niconne', serif;
+    font-family: 'Cinzel Decorative', serif;
     padding: 10px 0px;
 }
 
@@ -164,12 +165,12 @@ MAIN SECTION
 }
 
 .names {
-    font-family: 'Niconne', serif;
+    font-family: 'Cinzel Decorative', serif;
     text-align: center;
 }
 
 .next-link {
-    font-family: 'Niconne', serif;
+    font-family: 'Cinzel Decorative', serif;
     text-align: center;
     text-decoration: underline;
     color: rgb(122, 0, 0);
@@ -233,7 +234,7 @@ MAIN SECTION
 
 .galleries-row {
     border: .1rem solid black;
-    border-radius: 5%;
+    border-radius: 10%;
     padding: 25px 15px;
     margin: 25px 15px;
 }

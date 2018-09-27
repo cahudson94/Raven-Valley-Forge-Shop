@@ -89,12 +89,12 @@ def update_mailing_list(mailing_list):
     http = creds.authorize(Http())
 
     service = build('admin', 'directory_v1', http=http)
-    copy_list = mailing_list[:]
+    mailing_list = set(mailing_list)
     old_members = (service.members().list(groupKey='01gf8i831vs9b7q')
                           .execute())
     if 'members' in old_members.keys():
         for member in old_members['members']:
-            if member['email'] not in copy_list:
+            if member['email'] not in mailing_list:
                 service.members().delete(groupKey='01gf8i831vs9b7q',
                                          memberKey=member['id']).execute()
             else:

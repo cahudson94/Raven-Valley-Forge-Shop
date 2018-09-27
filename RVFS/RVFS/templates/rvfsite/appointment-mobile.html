@@ -10,6 +10,36 @@ Make an Appointment
 <h1 class="text-standard text-center">Make an appointment!</h1>
 <p class="text-center text-standard">Follow the bellow link to make an appointment for a 1 hour free consultation:</p>
 <div class="text-center">
-<a target="_blank" href="https://calendar.google.com/calendar/selfsched?sstoken=UURFQ1RrcFdxUFpnfGRlZmF1bHR8NGI4NTlkMThiZDg3ZTAwNTEzZjEwZGYxZGI1NTcxM2I"><img border="0" src="https://www.google.com/calendar/images/ext/gc_button1_en.gif"></a>
+<a id="calendar" href="#"><img border="0" src="https://www.google.com/calendar/images/ext/gc_button1_en.gif"></a>
 </div>
+
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+$('#calendar').click(function (event) {
+  event.preventDefault();
+  var url = String('https://calendar.google.com/calendar/selfsched?sstoken=UURFQ1RrcFdxUFpnfGRlZmF1bHR8NGI4NTlkMThiZDg3ZTAwNTEzZjEwZGYxZGI1NTcxM2I');
+  var active = window.open(url, '_blank');
+  var clickTime = ( new Date() ).getTime();
+  var timer = setInterval(function() { polling(active, timer, url, clickTime, event); },500);
+
+  function polling(win, timer, url, clickTime, event){
+    if (win && win.closed) {
+      setTimeout(location.reload.bind(location), 5000);
+      var parent = event.target.parentElement.parentElement;
+      console.log(parent);
+      var thankYou = document.createElement('p');
+      thankYou.innerHTML = 'Thank you for schedualing!';
+      thankYou.className = 'text-standard';
+      parent.replaceChild(thankYou, event.target.parentElement);
+      clearInterval(timer);
+      var wnd = window.open('https://accounts.google.com/Logout');
+      setTimeout(function() {
+        wnd.close();
+      }, 100);
+    }
+  }
+});
+</script>
 {% endblock %}

@@ -15,7 +15,7 @@ Services
 {% block body %}
 <div class="row">
     <div class="col-1 side-bar">
-        <h5 class="text-standard">Product
+        <h5 class="text-standard">Market Place
         {% if slug %}
          - {{ slug }}
         {% else %}
@@ -79,7 +79,7 @@ Services
     {% if slug %}
         <a class="catagory-a" href="{% url 'tagged_products' slug=slug %}">
             <h2 class="catalog-catagories text-standard">
-                Products
+                Market Place
                  - {{ slug }}
             </h2>
         </a>
@@ -92,11 +92,7 @@ Services
                         <img src="{{ pic.url }}" width="{{ pic.width }}" height="{{ pic.height }}">
                         {% endthumbnail %}
                         <h5 class="card-title text-standard">{{ item.name }}</h5>
-                        {% if nbar == 'prods' %}
-                            <p class="card-text text-standard">${{ item.price }}</p>
-                        {% else %}
-                            <p class="card-text text-standard">${{ item.price_range }}</p>
-                        {% endif %}
+                        <p class="card-text text-standard">${{ item.price }}</p>
                     </div></a>
                 {% endif %}
             {% endfor %}
