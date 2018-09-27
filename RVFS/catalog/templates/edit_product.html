@@ -13,7 +13,7 @@
             <h4 class="text-standard">{{ field.label }}:</h4>
             <img class="form-image" src="{{ field.value.url }}">
             <p class="textarea-form">{{ field }}</p>
-            {% elif forloop.counter == 8 %}
+            {% elif forloop.counter == 9 %}
             </div>
             <div class="col">
             <h4 class="text-standard">{{ field.label }}:</h4>
@@ -25,12 +25,6 @@
         {% endfor %}
         </div>
         </div>
-        <div class="d-flex w-100">
-            <input class="btn btn-secondary text-standard" type="submit" value="Update">
-            <div class="ml-auto">
-                <a class="btn btn-secondary text-standard" href="{% url 'copy_prod' pk=object.id %}">Copy</a>
-                <a class="btn btn-danger text-standard" href="{% url 'del_prod' pk=object.id %}">Delete</a>
-            </div>
-        </div>
+        <input class="button text-standard" type="submit" value="Update">
     </form>
 {% endblock %}

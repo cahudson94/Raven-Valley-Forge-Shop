@@ -1,20 +1,21 @@
 """Various views for the catalog and cart."""
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.conf import settings
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import redirect
-from django.views.generic import ListView, DetailView, TemplateView, FormView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, TemplateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.urls import reverse_lazy
 from account.models import Account, ShippingInfo, Order
-from account.views import unpack, split_cart, set_basic_context, valid_staff
-from catalog.forms import ProductForm, ServiceForm, QuoteForm
-from catalog.models import Product, Service
+from account.views import unpack, split_cart, set_basic_context
+from catalog.forms import ProductForm, ServiceForm
+from catalog.models import Product, Service, UserServiceImage as UserImage
 from datetime import datetime
 from decimal import Decimal
+from RVFS.google_calendar import check_time_slot, set_appointment
 import paypalrestsdk
 import json
 import os
@@ -55,7 +56,7 @@ class AllItemsView(UserPassesTestMixin, ListView):
 
 
 class CatalogueView(ListView):
-    """Catalogue view for the shop of all products."""
+    """Catalogue view for the shop of all products and services."""
 
     template_name = 'catalog.html'
     model = Product
@@ -63,16 +64,19 @@ class CatalogueView(ListView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(ListView, self).get_context_data(**kwargs)
+        view_type = 'prods'
         slug = self.kwargs.get('slug')
+        if 'product' not in self.request.get_full_path():
+            self.model = Service
+            view_type = 'servs'
         all_items = self.model.objects.filter(published='PB')
         context['all_tags'] = sorted(set([tag for item in
                                           all_items for tag in
-                                          item.catagories.names()]))
+                                          item.tags.names()]))
         if slug:
             context['slug'] = slug
             items = (self.model.objects.filter(published='PB')
-                                       .filter(catagories__name__in=[slug])
-                                       .all()
+                                       .filter(tags__name__in=[slug]).all()
                                        .order_by('id'))
             page_content = items
         else:
@@ -90,13 +94,13 @@ class CatalogueView(ListView):
         except EmptyPage:
             context['page'] = paginator.page(paginator.num_pages)
         if slug:
-            context['items'] = set([item for item in items])
+            context['items'] = sorted(set([item for item in items]))
         else:
             context['items'] = {tag: [item for item in
                                 all_items if tag in
-                                item.catagories.names()] for tag in
+                                item.tags.names()] for tag in
                                 context['page']}
-        set_basic_context(context, 'prods')
+        set_basic_context(context, view_type)
         return context
 
 
@@ -172,31 +176,6 @@ class SingleProductView(DetailView):
         return HttpResponseRedirect(self.success_url)
 
 
-class DeleteProductView(DeleteView, UserPassesTestMixin):
-    """Remove an existing product."""
-
-    model = Product
-    success_url = reverse_lazy('prods')
-    template_name = 'delete_product.html'
-
-    def test_func(self):
-        """Validate access."""
-        return self.request.user.is_staff
-
-
-@login_required
-@user_passes_test(valid_staff)
-def copy_prod(request, pk):
-    """Copy a product."""
-    prod = Product.objects.get(pk=pk)
-    new_pk = Product.objects.last().pk + 1
-    prod.pk = new_pk
-    prod.name += ' Copy'
-    prod.published = 'PV'
-    prod.save()
-    return HttpResponseRedirect(reverse_lazy('prod', kwargs={'pk': new_pk}))
-
-
 class SingleServiceView(DetailView):
     """Detail view for a service."""
 
@@ -231,19 +210,79 @@ class SingleServiceView(DetailView):
         return HttpResponseRedirect(success_url)
 
 
-class ServicesView(ListView):
+class ServiceInfoView(DetailView):
     """View for entering details to purchase a service."""
 
-    template_name = 'services.html'
+    template_name = 'service_info.html'
     model = Service
     success_url = reverse_lazy('servs')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
-        context = super(ServicesView, self).get_context_data(**kwargs)
-        context['servs'] = self.model.objects.filter(published='PB')
+        context = super(ServiceInfoView, self).get_context_data(**kwargs)
+        if context['object'].extras:
+            context['object'].extras = context['object'].extras.split(', ')
         set_basic_context(context, 'servs')
         return context
+
+    def post(self, request, *args, **kwargs):
+        """Add item to appropriate list."""
+        data = request.POST, request.FILES
+        extra_cost = ''
+        price = ''
+        if 'add' in data[0].keys():
+            fields = []
+            for field in data[0]:
+                if field != 'csrfmiddlewaretoken' and field != 'add':
+                    fields.append(field)
+            cart_item = {'item_id': self.get_object().id, 'type': 'serv',
+                         'description': self.get_object().description}
+            for field in fields:
+                if data[0][field]:
+                    cart_item[field] = data[0][field]
+                if data[0][field] != '----' and field == 'extras':
+                    extra_cost = Decimal(data[0][field].split(': ')[1][1:])
+            if data[1]:
+                cart_item['files'] = ''
+                for file in data[1]:
+                    if data[1][file]:
+                        image = UserImage(image=data[1][file])
+                        image.save()
+                        if cart_item['files']:
+                            cart_item['files'] += ', ' + file
+                            cart_item['files'] += ' ' + str(image.id)
+                        else:
+                            cart_item['files'] += file + ' ' + str(image.id)
+            cart_item = json.dumps(cart_item)
+            if self.get_object().commission_fee:
+                price = self.get_object().commission_fee
+                if extra_cost:
+                    price += extra_cost
+            if self.request.user.is_anonymous:
+                session = self.request.session
+                if not session.get_expire_at_browser_close():
+                    session.set_expiry(0)
+                if 'account' not in self.request.session.keys():
+                    session['account'] = {'cart': '', 'cart_total': 0.0}
+                account = session['account']
+                if account['cart']:
+                    account['cart'] += '|' + cart_item
+                else:
+                    account['cart'] += cart_item
+                if price:
+                    account['cart_total'] = str(Decimal(price) +
+                                                Decimal(account['cart_total']))
+                session.save()
+            else:
+                account = Account.objects.get(user=request.user)
+                if account.cart:
+                    account.cart += '|' + cart_item
+                else:
+                    account.cart += cart_item
+                if price:
+                    account.cart_total += Decimal(price)
+                account.save()
+        return HttpResponseRedirect(self.success_url)
 
 
 class CreateProductView(UserPassesTestMixin, CreateView):
@@ -261,9 +300,6 @@ class CreateProductView(UserPassesTestMixin, CreateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(CreateView, self).get_context_data(**kwargs)
-        creator = context['form'].fields['creator']
-        creator.queryset = User.objects.filter(is_staff=True)
-        creator.initial = User.objects.get(username='m.ravenmoore')
         set_basic_context(context, 'add_prod')
         return context
 
@@ -290,8 +326,6 @@ class EditProductView(UserPassesTestMixin, UpdateView):
     def get_context_data(self, **kwargs):
         """Add context for active page."""
         context = super(EditProductView, self).get_context_data(**kwargs)
-        staff = User.objects.filter(is_staff=True)
-        context['form'].fields['creator'].queryset = staff
         set_basic_context(context, 'prods')
         return context
 
@@ -301,31 +335,6 @@ class EditProductView(UserPassesTestMixin, UpdateView):
             if form.instance.published == 'PB':
                 form.instance.date_published = datetime.now()
         return super(EditProductView, self).form_valid(form)
-
-
-class DeleteServiceView(DeleteView, UserPassesTestMixin):
-    """Remove an existing product."""
-
-    model = Service
-    success_url = reverse_lazy('servs')
-    template_name = 'delete_service.html'
-
-    def test_func(self):
-        """Validate access."""
-        return self.request.user.is_staff
-
-
-@login_required
-@user_passes_test(valid_staff)
-def copy_serv(request, pk):
-    """Copy a service."""
-    serv = Service.objects.get(pk=pk)
-    new_pk = Service.objects.last().pk + 1
-    serv.pk = new_pk
-    serv.name += ' Copy'
-    serv.published = 'PV'
-    serv.save()
-    return HttpResponseRedirect(reverse_lazy('serv', kwargs={'pk': new_pk}))
 
 
 class CreateServiceView(UserPassesTestMixin, CreateView):
@@ -381,90 +390,6 @@ class EditServiceView(UserPassesTestMixin, UpdateView):
         return super(EditServiceView, self).form_valid(form)
 
 
-class QuoteView(FormView):
-    """Form to contact the shop."""
-
-    template_name = 'quote.html'
-    form_class = QuoteForm
-    success_url = reverse_lazy('home')
-
-    def get_context_data(self, **kwargs):
-        """Add context for active page."""
-        context = super(QuoteView, self).get_context_data(**kwargs)
-        context['api'] = os.environ.get('GOOGLE_API_KEY')
-        set_basic_context(context, 'quote')
-        return context
-
-    def post(self, request, *args, **kwargs):
-        """Send email with conact info."""
-        form = QuoteForm(request.POST)
-        if form.is_valid():
-            subject = 'Service Request: ' + form.cleaned_data['service']
-            body = '''
-{} {} is interested in requesting the service for {}.
-Their contact info includes:
-
-    Home Phone: {}
-'''.format(
-                form.cleaned_data['first_name'],
-                form.cleaned_data['last_name'],
-                form.cleaned_data['service'],
-                form.cleaned_data['home_phone'],
-            )
-            if form.cleaned_data['cell_phone']:
-                body += '''
-    Cell Phone: {}
-'''.format(
-                    form.cleaned_data['cell_phone']
-                )
-            body += '''
-    Email: {}
-'''.format(
-                form.cleaned_data['email'],
-            )
-            if form.cleaned_data['address']:
-                body += '''
-    Address: {}
-'''.format(
-                    form.cleaned_data['address']
-                )
-            if form.cleaned_data['city']:
-                body += '''
-    City: {}
-'''.format(
-                    form.cleaned_data['city']
-                )
-            if form.cleaned_data['state']:
-                body += '''
-    State: {}
-'''.format(
-                    form.cleaned_data['state']
-                )
-            body += '''
-    Zip Code: {}
-'''.format(
-                form.cleaned_data['zip_code']
-            )
-            if form.cleaned_data['description']:
-                body += '''
-They have included the following description:
-
-{}
-'''.format(
-                    form.cleaned_data['description']
-                )
-            if request.FILES:
-                body += '''
-and the attached images.'''
-            quote = EmailMessage(subject, body, 'rvfmsite@gmail.com',
-                                 ['Creations@ravenvfm.com'])
-            if request.FILES:
-                for image in request.FILES.values():
-                    quote.attach(image.name, image.read(), image.content_type)
-            quote.send(fail_silently=True)
-            return HttpResponseRedirect(self.success_url)
-
-
 class CartView(TemplateView):
     """Cart and checkout page."""
 
@@ -479,15 +404,6 @@ class CartView(TemplateView):
         if self.request.user.is_authenticated:
             account = self.request.user.account
             context['account'] = account
-            total = account.cart_total
-            if account.active_code:
-                codes = User.objects.get(username='Guest').account.comments
-                codes = json.loads(codes)
-                amount = codes[account.active_code][0]
-                if '%' not in amount:
-                    amount = '$' + amount
-                session['code'] = account.active_code + ', ' + amount
-                session.save()
         if 'shipping_data' in self.request.session.keys():
             context['shipping'] = session['shipping_data']['shipping']
             context['info'] = session['shipping_data']['info']
@@ -498,6 +414,16 @@ class CartView(TemplateView):
             context['info'] = {'first': account.first_name,
                                'last': account.last_name,
                                'email': self.request.user.email}
+        if 'service_data' in session.keys():
+            context['serv_add'] = session['service_data']['shipping']
+            context['serv_info'] = session['service_data']['info']
+            if 'exists' in session['service_data'].keys():
+                context['serv_exists'] = session['service_data']['exists']
+        elif self.request.user.is_authenticated:
+            context['serv_add'] = info.get(pk=account.main_address)
+            context['serv_info'] = {'first': account.first_name,
+                                    'last': account.last_name,
+                                    'email': self.request.user.email}
         if self.request.user.is_anonymous:
             if not session.get_expire_at_browser_close():
                 session.set_expiry(0)
@@ -505,7 +431,6 @@ class CartView(TemplateView):
                 session['account'] = {'cart': '', 'cart_total': 0.0}
             cart = session['account']['cart']
             context['account'] = session['account']
-            total = session['account']['cart_total']
         else:
             cart = context['account'].cart
             if len(context['account'].shippinginfo_set.values()) > 1:
@@ -514,19 +439,18 @@ class CartView(TemplateView):
         if cart:
             context['cart'] = unpack(cart)
             context['prods'] = []
+            context['servs'] = []
+            context['serv_address'] = False
             for item in context['cart']:
-                item['count'] = 'prod ' + str(len(context['prods']))
-                context['prods'].append(item)
+                if item['type'] == 'prod':
+                    item['count'] = 'prod ' + str(len(context['prods']))
+                    context['prods'].append(item)
+                else:
+                    if item['item'].requires_address:
+                        context['serv_address'] = True
+                    item['count'] = 'serv ' + str(len(context['servs']))
+                    context['servs'].append(item)
         context['item_fields'] = ['color', 'length', 'diameter', 'extras']
-        context['total'] = total
-        if 'code' in session.keys():
-            context['code'] = session['code'].split(', ')
-            amount = context['code'][1]
-            if '$' in amount:
-                context['total'] = total - Decimal(amount[1:])
-            else:
-                percent = Decimal(float(total)) * Decimal('.' + amount[:-1])
-                context['total'] = total - percent
         set_basic_context(context, 'cart')
         return context
 
@@ -534,13 +458,16 @@ class CartView(TemplateView):
         """Apply shipping info for guest user."""
         data = request.POST
         exists = False
+        exists_serv = False
         field_count = 0
         ship_fields = ['ship_first_name', 'ship_last_name', 'ship_email',
                        'ship_add_1', 'ship_city', 'ship_state', 'ship_zip']
+        serv_fields = ['serv_first_name', 'serv_last_name', 'serv_email',
+                       'serv_add_1', 'serv_city', 'serv_state', 'serv_zip']
         if 'ship_first_name' in data.keys():
             if request.user.is_authenticated:
                 account = Account.objects.get(user=request.user)
-                exists = check_address(data, account)
+                exists = check_address(data, account, 0)
             for i in ship_fields:
                 if data[i]:
                     field_count += 1
@@ -561,8 +488,35 @@ class CartView(TemplateView):
                 }
                 request.session['shipping_data'] = shipping_data
                 request.session.save()
+        if 'serv_first_name' in data.keys():
+            if request.user.is_authenticated:
+                account = Account.objects.get(user=request.user)
+                exists_serv = check_address(data, account, 1)
+            field_count = 0
+            for i in serv_fields:
+                if data[i]:
+                    field_count += 1
+            if field_count == 7:
+                serv_data = {
+                    'info': {
+                        'first': data['serv_first_name'],
+                        'last': data['serv_last_name'],
+                        'email': data['serv_email'],
+                    },
+                    'shipping': {
+                        'address1': data['serv_add_1'],
+                        'address2': data['serv_add_2'],
+                        'city': data['serv_city'],
+                        'state': data['serv_state'],
+                        'zip_code': data['serv_zip'],
+                    }
+                }
+                request.session['service_data'] = serv_data
+                request.session.save()
         if exists:
             shipping_data['exists'] = exists
+        if exists_serv:
+            serv_data['exists'] = exists_serv
         if field_count == 7:
             return HttpResponseRedirect(self.success_url)
         return HttpResponseRedirect(reverse_lazy('cart'))
@@ -578,8 +532,12 @@ def update_cart(request):
         cart = unpack(request.session['account']['cart'])
         cart_total = Decimal(request.session['account']['cart_total'])
     prods = []
+    servs = []
     for item in cart:
-        prods.append(item)
+        if item['type'] == 'prod':
+            prods.append(item)
+        else:
+            servs.append(item)
     if cart_item[0] == 'prod':
         difference = (int(request.GET['quantity']) -
                       int(prods[int(cart_item[1])]['quantity']))
@@ -588,13 +546,7 @@ def update_cart(request):
             price += Decimal(prods[int(cart_item[1])]['extras'].split(' $')[1])
         cart_total += Decimal(price * difference)
         prods[int(cart_item[1])]['quantity'] = request.GET['quantity']
-    cart_repack(prods, request, cart_total)
-    if 'code' in request.session.keys():
-            amount = request.session['code'].split(', ')[1]
-            if '$' in amount:
-                cart_total -= Decimal(amount[1:])
-            else:
-                cart_total -= Decimal(float(cart_total)) * Decimal('.' + amount[:-1])
+    cart_repack(prods, servs, request, cart_total)
     return HttpResponse(cart_total)
 
 
@@ -608,9 +560,13 @@ def delete_item(request):
         cart = unpack(request.session['account']['cart'])
         cart_total = request.session['account']['cart_total']
     prods = []
+    servs = []
     for item in cart:
-        prods.append(item)
-    if len(prods) == 1:
+        if item['type'] == 'prod':
+            prods.append(item)
+        else:
+            servs.append(item)
+    if len(prods) + len(servs) == 1:
         cart_total = Decimal(0.0)
         if request.user.is_authenticated:
             request.user.account.cart_total = cart_total
@@ -621,51 +577,127 @@ def delete_item(request):
             request.session['account']['cart'] = ''
             request.session.save()
         return HttpResponse('empty')
-    price = prods[int(cart_item[1])]['item'].price
-    if 'extras' in prods[int(cart_item[1])].keys():
-        price += Decimal(prods[int(cart_item[1])]['extras'].split(' $')[1])
-    cart_total -= Decimal(price * int(prods[int(cart_item[1])]['quantity']))
-    prods.pop(int(cart_item[1]))
-    cart_repack(prods, request, cart_total)
-    if 'code' in request.session.keys():
-            amount = request.session['code'].split(', ')[1]
-            if '$' in amount:
-                cart_total -= Decimal(amount[1:])
-            if '$' not in amount:
-                cart_total -= Decimal(float(cart_total)) * Decimal('.' + amount[:-1])
+    if cart_item[0] == 'prod':
+        cart_total -= Decimal(prods[int(cart_item[1])]['item'].price *
+                              int(prods[int(cart_item[1])]['quantity']))
+        prods.pop(int(cart_item[1]))
+    else:
+        fee = servs[int(cart_item[1])]['item'].commission_fee
+        if fee:
+            cart_total -= Decimal(fee)
+        servs.pop(int(cart_item[1]))
+    cart_repack(prods, servs, request, cart_total)
     return HttpResponse(cart_total)
 
 
-def apply_discount(request):
-    """Apply a discount code to current order."""
-    code = request.GET['code']
-    codes = User.objects.get(username='Guest').account.comments
-    codes = json.loads(codes)
-    if code in codes:
-        if 'code' not in request.session.keys():
-            amount = codes[code][0]
-            if '%' not in amount:
-                amount = '$' + amount
-            request.session['code'] = code + ', ' + amount
-            request.session.save()
-            if request.user.is_authenticated:
-                request.user.account.active_code = code
-                request.user.account.save()
-        return HttpResponse("<p class='text-standard'>Discount \
-code activated!</p>")
-    return HttpResponse("<div id='message' class='w-100'><p class='text-standard'>\
-Not a valid discount code.</p></div>")
+class CheckoutView(TemplateView):
+    """Format order info to send to paypal."""
 
+    template_name = 'checkout.html'
 
-def remove_discount(request):
-    """Remove currently active discount code."""
-    request.session.pop('code', None)
-    request.session.save()
-    if request.user.is_authenticated:
-        request.user.account.active_code = ''
-        request.user.account.save()
-    return HttpResponse("<div class='col'><p class='text-standard'>\
-Discount code removed refresh the page to add a new code.</p></div>")
+    def get(self, request, *args, **kwargs):
+        """Check for shipping data."""
+        keys = request.session.keys()
+        if 'shipping_data' not in keys and 'service_data' not in keys:
+            return HttpResponseRedirect(reverse_lazy('cart'))
+        return super(CheckoutView, self).get(self, request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        shipping_data = ''
+        service_data = ''
+        serv_address = ''
+        address = ''
+        acc_obj = Account.objects
+        context = super(CheckoutView, self).get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            user = self.request.user
+            account = self.request.user.account
+            cart = account.cart
+            cart_total = account.cart_total
+        else:
+            user = User.objects.get(username='Guest')
+            account = Account.objects.get(user=user)
+            cart = self.request.session['account']['cart']
+            cart_total = self.request.session['account']['cart_total']
+        if 'shipping_data' in self.request.session.keys():
+            shipping_data = self.request.session['shipping_data']
+            if 'exists' in shipping_data.keys():
+                address = ShippingInfo.objects.get(id=shipping_data['exists'])
+            else:
+                address = ShippingInfo(
+                    address1=shipping_data['shipping']['address1'],
+                    address2=shipping_data['shipping']['address2'],
+                    zip_code=shipping_data['shipping']['zip_code'],
+                    city=shipping_data['shipping']['city'],
+                    state=shipping_data['shipping']['state'])
+                address.save()
+                address.resident = acc_obj.get(user=user)
+                address.save()
+            email = shipping_data['info']['email']
+            name = (shipping_data['info']['first'] +
+                    ', ' + shipping_data['info']['last'])
+        if 'service_data' in self.request.session.keys():
+            service_data = self.request.session['service_data']
+            if 'exists' in service_data.keys():
+                ship_obj = ShippingInfo.objects
+                if address:
+                    serv_address = ship_obj.get(id=service_data['exists'])
+                else:
+                    address = ship_obj.get(id=service_data['exists'])
+            else:
+                if address:
+                    serv_address = ShippingInfo(
+                        address1=service_data['shipping']['address1'],
+                        address2=service_data['shipping']['address2'],
+                        zip_code=service_data['shipping']['zip_code'],
+                        city=service_data['shipping']['city'],
+                        state=service_data['shipping']['state'])
+                    serv_address.save()
+                    serv_address.resident = acc_obj.get(user=user)
+                    serv_address.save()
+                else:
+                    address = ShippingInfo(
+                        address1=service_data['shipping']['address1'],
+                        address2=service_data['shipping']['address2'],
+                        zip_code=service_data['shipping']['zip_code'],
+                        city=service_data['shipping']['city'],
+                        state=service_data['shipping']['state'])
+                    address.save()
+                    address.resident = Account.objects.get(user=user)
+                    address.save()
+        order = Order(
+            buyer=account,
+            order_content=cart,
+            recipient_email=email,
+            recipient=name,
+        )
+        order.save()
+        if serv_address and address:
+            order.ship_to = address
+            order.serv_address = serv_address
+            order.save()
+        elif shipping_data:
+            order.ship_to = address
+            order.save()
+        else:
+            order.serv_address = address
+            order.save()
+        self.request.session['order_num'] = order.id
+        self.request.session['payment_id'] = self.request.GET['paymentId']
+        self.request.session['payer_id'] = self.request.GET['PayerID']
+        self.request.session.save()
+        if shipping_data:
+            context['shipping'] = address
+            context['info'] = shipping_data['info']
+            if service_data:
+                context['serv'] = serv_address
+        elif service_data:
+            context['serv'] = address
+            context['info'] = service_data['info']
+        context['total'] = cart_total
+        set_basic_context(context, 'cart')
+        return context
 
 
 def create_payment(request):
@@ -718,6 +750,7 @@ def create_payment(request):
  Valley Forge and Metalworks."}]})
 
     if payment.create():
+        print("Payment created successfully")
         for link in payment.links:
             if link.rel == "approval_url":
                 approval_url = str(link.href)
@@ -736,7 +769,7 @@ class CheckoutCompleteView(TemplateView):
         """Check for shipping data."""
         keys = request.session.keys()
         view = CheckoutCompleteView
-        if 'shipping_data' not in keys:
+        if 'shipping_data' not in keys and 'service_data' not in keys:
             return HttpResponseRedirect(reverse_lazy('cart'))
         payment_id = request.session['payment_id']
         payment = paypalrestsdk.Payment.find(payment_id)
@@ -757,45 +790,151 @@ class CheckoutCompleteView(TemplateView):
         context = super(CheckoutCompleteView, self).get_context_data(**kwargs)
         session = self.request.session
         context['order'] = session['order_num']
+        files = False
+        reschedule = []
+        serv_names = []
+        serv_times = []
+        schedualed = []
+        not_schedualed = []
         if self.request.user.is_authenticated:
             account = self.request.user.account
             cart = split_cart(account.cart)
+            if 'prods' in cart.keys():
+                if account.purchase_history:
+                    account.purchase_history += '|' + cart['prods']
+                else:
+                    account.purchase_history += cart['prods']
+            if 'servs' in cart.keys():
+                if account.service_history:
+                    account.service_history += '|' + cart['servs']
+                else:
+                    account.service_history += cart['servs']
         else:
             cart = split_cart(session['account']['cart'])
-        email = 'rvfmsite@gmail.com'
+        if 'servs' in cart.keys():
+            servs = unpack(cart['servs'])
+            for serv in servs:
+                serv_names.append(serv['item'].name)
+                if 'files' in serv.keys():
+                    files = True
+                    for file in serv['files'].split(', '):
+                        image = UserImage.objects.get(id=file.split(' ')[1])
+                        image.used = True
+                        image.save()
+                if 'day' in serv.keys():
+                    reschedule.append(attempt_appointment(serv, session))
+                    time = (serv['month'] + ' ' +
+                            serv['day'] + ', ' +
+                            serv['year'] + ' at ' + serv['hour'])
+                    serv_times.append(time)
+                else:
+                    serv_times.append(None)
+        for idx, i in enumerate(reschedule):
+            if i:
+                not_schedualed.append([serv_names[idx], serv_times[idx]])
+            else:
+                schedualed.append([serv_names[idx], serv_times[idx]])
+        email = 'ravenmoorevalleyforge@gmail.com'
         subject = 'Order #{} Confirmation'.format(context['order'])
-        info = session['shipping_data']['info']
-        # Add in shipping info if matt wants that in the email.
+        if 'shipping_data' in session.keys():
+            info = session['shipping_data']['info']
+        else:
+            info = session['service_data']['info']
         name = info['first'] + ', ' + info['last']
-        owner_body = 'Purchased items:\n'
-        client_body = 'You will recieve an email with tracking info \
+        if True in reschedule:
+            owner_body = '{} tried to schedual '.format(name)
+            owner_body += serv_names[0]
+            if len(serv_names) > 1:
+                for i in serv_names[1:-1]:
+                    owner_body += ', ' + i
+                owner_body += ', and ' + serv_names[-1]
+            owner_body += ' service(s) for '
+            owner_body += serv_times[0]
+            if len(serv_times) > 1:
+                for i in serv_times[1:-1]:
+                    owner_body += ', ' + i
+                owner_body += ', and ' + serv_times[-1]
+            owner_body += ' time(s). \nYou have one or more \
+schedual conflicts with '
+            owner_body += not_schedualed[0][0]
+            if len(not_schedualed) > 1:
+                for i in not_schedualed[1:-1]:
+                    owner_body += ', ' + i[0]
+                owner_body += ', and ' + not_schedualed[-1][0]
+            owner_body += ' service(s) at '
+            owner_body += not_schedualed[0][1]
+            if len(not_schedualed) > 1:
+                for i in not_schedualed[1:-1]:
+                    owner_body += ', ' + i[1]
+                owner_body += ', and ' + not_schedualed[-1][1]
+            owner_body += ' times(s), please contact \
+them at {} to set a new time.'.format(info['email'])
+            if 'prods' in cart.keys():
+                client_body = 'All ordered products are confirmed, however one or \
+more of the times you tried to book are not available. You will be contacted \
+to reschedule these appointments:\n\n'
+            else:
+                client_body = 'One or more of the times you tried to book \
+are not available. You will be contacted to reschedule these appointments:\n\n'
+            for i in not_schedualed:
+                client_body += i[0] + ' at ' + i[1] + '\n'
+        else:
+            if schedualed:
+                owner_body = '{} is schedualed for:'.format(name)
+                owner_body += schedualed[0][0] + ' at ' + schedualed[0][1]
+                for i in schedualed:
+                    owner_body += i[0] + ' at ' + i[1] + '\n'
+                if 'prods' in cart.keys():
+                    client_body = 'All of your products and services \
+are confirmed.\n'
+                else:
+                    client_body = 'All of your services are confirmed.\n'
+        if schedualed:
+            client_body += 'These services were schedualed successfully:\n'
+            for i in schedualed:
+                client_body += i[0] + ' at ' + i[1] + '\n'
+        if 'prods' in cart.keys():
+            if schedualed:
+                owner_body += ' They purchased:\n'
+                client_body += '\nYou will recieve an email with tracking info \
 when your order ships. Your purchases:\n\n'
-        prods = unpack(cart['prods'])
-        for prod in prods:
-            owner_body += prod['quantity'] + 'x ' + prod['item'].name
-            client_body += prod['quantity'] + 'x ' + prod['item'].name
-            if 'color' in prod.keys():
-                owner_body += ' color: ' + prod['color']
-                client_body += ' color: ' + prod['color']
-            if 'length' in prod.keys():
-                owner_body += ' length: ' + prod['length']
-                client_body += ' length: ' + prod['length']
-            if 'diameter' in prod.keys():
-                owner_body += ' diameter: ' + prod['diameter']
-                client_body += ' diameter: ' + prod['diameter']
-            if 'extras' in prod.keys():
-                owner_body += ' extras: ' + prod['extras'].split(': ')[0]
-                client_body += ' extras: ' + prod['extras'].split(': ')[0]
-            owner_body += '\n'
-            client_body += '\n'
+            else:
+                owner_body = 'They purchased:\n'
+                client_body = 'You will recieve an email with tracking info \
+when your order ships. Your purchases:\n\n'
+            prods = unpack(cart['prods'])
+            for prod in prods:
+                owner_body += prod['quantity'] + 'x ' + prod['item'].name
+                client_body += prod['quantity'] + 'x ' + prod['item'].name
+                if 'color' in prod.keys():
+                    owner_body += ' color: ' + prod['color']
+                    client_body += ' color: ' + prod['color']
+                if 'length' in prod.keys():
+                    owner_body += ' length: ' + prod['length']
+                    client_body += ' length: ' + prod['length']
+                if 'diameter' in prod.keys():
+                    owner_body += ' diameter: ' + prod['diameter']
+                    client_body += ' diameter: ' + prod['diameter']
+                if 'extras' in prod.keys():
+                    owner_body += ' extras: ' + prod['extras'].split(': ')[0]
+                    client_body += ' extras: ' + prod['extras'].split(': ')[0]
+                owner_body += '\n'
+                client_body += '\n'
         owner_email = EmailMessage(subject,
                                    owner_body,
-                                   email,
-                                   ['Creations@ravenvfm.com'])
+                                   'rvfmsite@gmail.com',
+                                   [email])
         client_email = EmailMessage(subject,
                                     client_body,
                                     email,
                                     [info['email']])
+        if files:
+            for serv in servs:
+                for file in serv['files'].split(', '):
+                    image = UserImage.objects.get(id=file.split(' ')[1])
+                    img_path = os.path.join(settings.BASE_DIR, 'media',
+                                            image.image.name)
+                    owner_email.attach_file(img_path)
         owner_email.send(fail_silently=True)
         client_email.send(fail_silently=True)
         if self.request.user.is_authenticated:
@@ -809,31 +948,40 @@ when your order ships. Your purchases:\n\n'
         return context
 
 
-def check_address(data, account):
+def check_address(data, account, version):
     """Check if user is using an existing address."""
+    types = ['ship_address_name', 'serv_address_name']
     types_data = {
         'ship_address_name': ['ship_add_1', 'ship_add_2',
                               'ship_city', 'ship_state', 'ship_zip'],
+        'serv_address_name': ['serv_add_1', 'serv_add_2',
+                              'serv_city', 'serv_state', 'serv_zip']
     }
-    if 'ship_address_name' in data.keys():
-        add_id = data['ship_address_name'].split(', ')[0].split(': ')[1]
+    if types[version] in data.keys():
+        add_id = data[types[version]].split(', ')[0].split(': ')[1]
         address = ShippingInfo.objects.get(id=add_id)
     else:
         address = ShippingInfo.objects.get(resident=account)
     types_data['address'] = [address.address1, address.address2,
                              address.city, address.state, address.zip_code]
     equal = 0
-    for idx, item in enumerate(types_data['ship_address_name']):
+    for idx, item in enumerate(types_data[types[version]]):
         if data[item] == types_data['address'][idx]:
             equal += 1
     if equal == 5:
         return address.id
 
 
-def cart_repack(prods, request, cart_total):
+def cart_repack(prods, servs, request, cart_total):
     """Repack items into the cart."""
     cart_repack = ''
     for i in prods:
+        i.pop('item')
+        if cart_repack:
+            cart_repack += '|' + json.dumps(i)
+        else:
+            cart_repack += json.dumps(i)
+    for i in servs:
         i.pop('item')
         if cart_repack:
             cart_repack += '|' + json.dumps(i)
@@ -847,3 +995,23 @@ def cart_repack(prods, request, cart_total):
         request.session['account']['cart'] = cart_repack
         request.session['account']['cart_total'] = str(cart_total)
         request.session.save()
+
+
+def attempt_appointment(servs, session):
+    """Set appointment or return reschedule."""
+    day = servs['day']
+    month = MONTHS[servs['month']]
+    year = servs['year']
+    if servs['hour'].split(' ')[1] == 'AM':
+        hour = servs['hour'].split(' ')[0]
+    else:
+        hour = servs['hour'].split(' ')[0]
+        hour = str(int(hour) + 12)
+    time = [year, month, day, int(hour)]
+    busy = check_time_slot(time)
+    if busy:
+        return True
+    else:
+        info = session['service_data']['info']
+        set_appointment(time, info)
+        return False

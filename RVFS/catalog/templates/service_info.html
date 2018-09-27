@@ -1,0 +1,155 @@
+{% extends 'rvfsite/base.html' %}
+{% load thumbnail %}
+
+{% block title %}{{ service.name }}{% endblock %}
+
+{% block body %}
+<form enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <h2 class="text-standard">{{ service.name }}</h2>
+    <div class="row service-image-banner">
+        <img class="service-image" src="{{ service.image.url }}">
+    </div>
+    <div class="row item-container">
+        <div class="col">
+            {% if service.commission_fee %}
+            <h4 class="text-standard">Commission Fee: ${{ service.commission_fee }} *</h4>
+            {% endif %}
+            {% if service.price_range %}
+            <h4 class="text-standard">Price Range: ${{ service.price_range }}</h4>
+            {% endif %}
+            <h4 class="text-standard">{% if service.stock %}stock: {{ service.stock }}{% elif service.stock == 0 %}Out of Stock{% else %}In Stock{% endif %}</h4>
+            <p class="text-standard serv-p-font">{{ service.description }}</p>
+            {% if service.extras %}
+            <p>
+                <label class="text-standard">extras:</label>
+                <select name="extras">
+                    <option value="----">----</option>
+                    {% for extra in service.extras %}
+                    <option value="{{ extra }}">{{ extra }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            {% endif %}
+            {% if service.requires_description %}
+            <p class="text-standard serv-section-font">Please provide a detailed description:</p>
+            <textarea name="description" rows="6" cols="40" required></textarea>
+            {% endif %}
+        </div>
+        <div class="col">
+            <div class="nativeDateTimePicker">
+                <label class="text-standard serv-section-font">Select a time for this service:</label>
+                <input type="datetime-local">
+                <span class="validity"></span>
+            </div>
+            <p class="fallbackLabel text-standard serv-section-font">Select a time for this service:</p>
+            <div class="fallbackDateTimePicker">
+                <div>
+                  <span>
+                    <label class="text-standard date-picker-font" for="day">Day:</label>
+                    <select id="day" name="day">
+                    </select>
+                  </span>
+                  <span>
+                    <label class="text-standard date-picker-font" for="month">Month:</label>
+                    <select id="month" name="month">
+                      <option selected>January</option>
+                      <option>February</option>
+                      <option>March</option>
+                      <option>April</option>
+                      <option>May</option>
+                      <option>June</option>
+                      <option>July</option>
+                      <option>August</option>
+                      <option>September</option>
+                      <option>October</option>
+                      <option>November</option>
+                      <option>December</option>
+                    </select>
+                  </span>
+                  <span>
+                    <label class="text-standard date-picker-font" for="year">Year:</label>
+                    <select id="year" name="year">
+                    </select>
+                  </span>
+                </div>
+                <div>
+                  <span>
+                    <label class="text-standard date-picker-font" for="hour">Hour:</label>
+                    <select id="hour" name="hour">
+                    </select>
+                  </span>
+                </div>
+            </div>
+            <p class="text-standard serv-p-font">See calendar for openings, you will recieve an email confirming this time or to adjust if the time you select is unavailable. *</p>
+            {% if service.requires_pictures %}
+            <input type="file" name="pic1" required>
+            <input type="file" name="pic2">
+            <input type="file" name="pic3">
+            <input type="file" name="pic4">
+            {% endif %}
+        </div>
+    </div>
+    <div class="d-flex w-100">
+        <button class="btn btn-secondary text-standard" type="button" data-toggle="modal" data-target="#calendar">View Shop Calendar</button>
+        <div class="ml-auto">
+        {% if service.stock != 0 %}
+            {% if service.is_knife %}
+                {% if user.is_authenticated %}
+                    <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to Cart">
+                {% else %}
+                    <a class="btn btn-secondary text-standard" href="{% url 'login' %}">Login</a>
+                {% endif %}
+            {% else %}
+                <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to Cart">
+            {% endif %}
+        {% elif service.stock == 0 %}
+            <input class="btn btn-secondary text-standard" type="submit" value="Out of Stock" disabled>
+        {% else %}
+            {% if service.is_knife %}
+                {% if user.is_authenticated %}
+                    <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to Cart">
+                {% else %}
+                    <a class="btn btn-secondary text-standard" href="{% url 'login' %}">Login</a>
+                {% endif %}
+            {% else %}
+                <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to Cart">
+            {% endif %}
+        {% endif %}
+        </div>
+    </div>
+    <div class="w-100">
+        {% if not user.is_authenticated %}
+            {% if service.is_knife %}
+                <p class="text-standard serv-p-font">* This item is a knife and requires you verify your age to purchase, please login or create an account.</p>
+            {% endif %}
+        {% endif %}
+        {% if service.warning %}
+        <p class="text-standard serv-p-font">* Warnings: {{ service.warning }}</p>
+        {% endif %}
+        {% if service.limitations %}
+        <p class="text-standard serv-p-font">* Limitations: {{ service.limitations }}</p>
+        {% endif %}
+        {% if service.requires_address %}
+        <p class="text-standard serv-p-font">* Services only available within 50 miles of shop.</p>
+        {% endif %}
+        {% if service.commission_fee %}
+        <p class="text-standard serv-p-font">* Commission fee is a one time appointment fee, for on site consultation.</p>
+        {% endif %}
+        {% if service.price_range %}
+        <p class="text-standard serv-p-font">* The price range of a service is an estimate of the final cost to be paid by or before the completion of the service, actual values vary.</p>
+        {% endif %}
+    </div>
+
+    <div class="col modal fade" id="calendar" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-body">
+            <iframe class="calendar" src="https://calendar.google.com/calendar/b/4/embed?showTitle=0&amp;showNav=0&amp;showPrint=0&amp;showCalendars=0&amp;height=600&amp;wkst=1&amp;bgcolor=%23ffffff&amp;src=rsbvvpdq2vkmefr4690mi11afo%40group.calendar.google.com&amp;color=%23333333&amp;ctz=America%2FLos_Angeles" frameborder="0" scrolling="no"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+</form>
+{% endblock %}

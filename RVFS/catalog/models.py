@@ -3,7 +3,7 @@ from django.db import models
 from sorl.thumbnail import ImageField
 from multiselectfield import MultiSelectField
 from taggit.managers import TaggableManager
-from django.contrib.auth.models import User
+
 
 PUB_STATUS = (
     ('PB', 'public'),
@@ -48,6 +48,7 @@ class Product(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(null=True, max_digits=6, decimal_places=2)
     stock = models.IntegerField(null=True, blank=True)
+    tags = TaggableManager()
     length = MultiSelectField(
         max_length=150,
         choices=LENGTHS,
@@ -59,11 +60,6 @@ class Product(models.Model):
         default='',
         blank=True)
     is_knife = models.BooleanField(default=False)
-    creator = models.ForeignKey(User,
-                                on_delete=models.CASCADE,
-                                default=User.objects.get(
-                                    username='m.ravenmoore'
-                                ).id)
     description = models.TextField(default='')
     color = models.TextField(
         max_length=500,
@@ -71,7 +67,6 @@ class Product(models.Model):
     extras = models.TextField(
         max_length=500,
         blank=True)
-    catagories = TaggableManager(blank=True)
 
     def __str__(self):
         """Print for admin."""
@@ -89,20 +84,23 @@ class Service(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_published = models.DateTimeField(blank=True, null=True)
     name = models.CharField(max_length=100)
-    blurb = models.TextField(default='')
-    description = models.TextField(default='')
+    description = models.TextField(max_length=500, default='')
+    is_knife = models.BooleanField(default=False)
+    requires_pictures = models.BooleanField(default=False)
+    requires_description = models.BooleanField(default=False)
+    requires_address = models.BooleanField(default=False)
     commission_fee = models.IntegerField(blank=True, default=0)
     price_range = models.CharField(
         max_length=15,
-        default='',
-        blank=True)
-    limitations = models.TextField(max_length=500, default='', blank=True)
+        default='')
+    limitations = models.TextField(max_length=500, default='')
     extras = models.TextField(
         max_length=500,
         blank=True)
     warning = models.TextField(
         max_length=500,
         blank=True)
+    tags = TaggableManager()
 
     def __str__(self):
         """Print for admin."""

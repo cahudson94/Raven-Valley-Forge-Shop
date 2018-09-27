@@ -4,64 +4,61 @@
 {% block title %}{{ service.name }}{% endblock %}
 
 {% block body %}
-{% csrf_token %}
-<h2 class="header-main item-header">{{ service.name }}</h2>
-<div class="row service-image-banner">
-    <img class="serv-image" src="{{ service.image.url }}">
-</div>
-<div class="row item-container">
-    <div class="col">
-        <p class="text-standard serv-p-font">{{ service.description }}</p>
+<form enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <h2 class="text-standard">{{ service.name }}</h2>
+    <div class="row service-image-banner">
+        <img class="service-image" src="{{ service.image.url }}">
     </div>
-    <div class="col item-details">
+    <div class="row item-container">
+        <div class="col">
+            <p class="text-standard serv-p-font">{{ service.description }}</p>
+            {% if service.commission_fee %}
+            <h4 class="text-standard">Commission Fee: ${{ service.commission_fee }} *</h4>
+            {% endif %}
+            {% if service.price_range %}
+            <h4 class="text-standard">Price Range: ${{ service.price_range }}</h4>
+            {% endif %}
+            <h4 class="text-standard">{% if service.stock %}stock: {{ service.stock }}{% elif service.stock == 0 %}Out of Stock{% else %}In Stock{% endif %}</h4>
+            {% if service.extras %}
+            <p>
+                <label class="text-standard">extras:</label>
+                <select name="extras">
+                    {% for extra in service.extras %}
+                    <option value="{{ extra }}">{{ extra }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="d-flex w-100">
+        {% if user.is_staff %}
+        <a class="btn btn-secondary text-standard" href="{% url 'edit_serv' service.id %}">Edit</a>
+        {% endif %}
+        <div class="ml-auto">
+        {% if user.is_authenticated %}
+        <input class="btn btn-secondary text-standard" type="submit" name="save" value="Save item for Later">
+        {% endif %}
+        {% if service.stock != 0 %}
+            <input class="btn btn-secondary text-standard" type="submit" name="add" value="Select Service">
+        {% elif service.stock == 0 %}
+            <input class="btn btn-secondary text-standard" type="submit" value="Out of Stock" disabled>
+        {% else %}
+            <input class="btn btn-secondary text-standard" type="submit" name="add" value="Select Service">
+        {% endif %}
+        </div>
+    </div>
+    <div class="w-100">
+        {% if service.warning %}
+        <p class="text-standard serv-p-font">* {{ service.warning }}</p>
+        {% endif %}
+        {% if service.limitations %}
+        <p class="text-standard serv-p-font">* Limitations: {{ service.limitations }}</p>
+        {% endif %}
         {% if service.commission_fee %}
-        <h4 class="text-standard">Commission Fee: ${{ service.commission_fee }} *</h4>
-        {% endif %}
-        {% if service.price_range %}
-        <h4 class="text-standard">Price Range: ${{ service.price_range }}</h4>
-        {% endif %}
-        <h4 class="text-standard">{% if service.stock %}stock: {{ service.stock }}{% elif service.stock == 0 %}Out of Stock{% else %}In Stock{% endif %}</h4>
-        {% if service.extras %}
-        <p>
-            <label class="text-standard">extras:</label>
-            <select name="extras">
-                <option value="----">----</option>
-                {% for extra in service.extras %}
-                <option value="{{ extra }}">{{ extra }}</option>
-                {% endfor %}
-            </select>
-        </p>
-        {% endif %}
-        {% if service.requires_description %}
-        <p class="text-standard serv-section-font">Please provide a detailed description:</p>
-        <textarea name="description" rows="6" cols="40" required></textarea>
+        <p class="text-standard serv-p-font">* One time appointment fee, for on site consultation.</p>
         {% endif %}
     </div>
-</div>
-<div class="d-flex w-100 update-order">
-    {% if user.is_staff %}
-    <a class="btn btn-secondary text-standard" href="{% url 'edit_serv' pk=service.id%}">Edit</a>
-    {% endif %}
-    <div class="ml-auto">
-    {% if service.stock != 0 %}
-        <a class="btn btn-secondary text-standard" href="{% url 'quote' %}">Get a Quote</a>
-    {% elif service.stock == 0 %}
-        <a class="btn btn-secondary text-standard" disabled>Out of Stock</a>
-    {% endif %}
-    </div>
-</div>
-<div class="w-100 update-order">
-    {% if service.warning %}
-    <p class="text-standard serv-p-font">* Warnings: {{ service.warning }}</p>
-    {% endif %}
-    {% if service.limitations %}
-    <p class="text-standard serv-p-font">* Limitations: {{ service.limitations }}</p>
-    {% endif %}
-    {% if service.commission_fee %}
-    <p class="text-standard serv-p-font">* Commission fee is a one time appointment fee, for on site consultation.</p>
-    {% endif %}
-    {% if service.price_range %}
-    <p class="text-standard serv-p-font">* The price range of a service is an estimate of the final cost to be paid by or before the completion of the service, actual values vary.</p>
-    {% endif %}
-</div>
+</form>
 {% endblock %}
