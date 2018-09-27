@@ -205,7 +205,7 @@ MAIN SECTION
 
 .carousel-link {
     background-color: rgba(0, 0, 0, 0.8);
-    width: 22%;
+    width: 27%;
     margin: auto;
     height: 5.8%;
     margin-bottom: 1.5rem;
@@ -221,7 +221,8 @@ MAIN SECTION
 }
 
 .slide-link {
-    font-size: 2rem;
+    font-size: 1.7rem;
+    margin-bottom: 0;
 }
 
 .gallery-title {
@@ -616,7 +617,7 @@ MEDIA QUERY
     width: 46%;
     }
     .slide-link {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
 }
 
@@ -632,7 +633,7 @@ MEDIA QUERY
         height: 200px;
     }
     .slide-link {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 }
 
@@ -654,7 +655,7 @@ MEDIA QUERY
     width: 100%;
     }
     .carousel-link {
-        width: 28%;
+        width: 35.5%;
     }
 }
 
@@ -687,7 +688,7 @@ MEDIA QUERY
     height: 175px;
     }
     .carousel-link {
-        width: 30%;
+        width: 35.5%;
     }
     .carousel-text {
         font-size: 28px;
@@ -696,7 +697,13 @@ MEDIA QUERY
 
 @media (max-width: 530px) {
     .carousel-link {
-        width: 32%;
+        width: 37%;
+    }
+}
+
+@media (max-width: 515px) {
+    .carousel-link {
+        width: 39%;
     }
 }
 
@@ -714,7 +721,7 @@ MEDIA QUERY
         padding-right: 0;
     }
     .carousel-link {
-        width: 34%;
+        width: 41%;
     }
 }
 
@@ -731,6 +738,9 @@ MEDIA QUERY
     margin-top: 0px;
     margin-left: 0px;
     margin-bottom: 10px;
+    }
+    .carousel-link {
+        width: 43%;
     }
 }
 
