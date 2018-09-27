@@ -392,6 +392,10 @@ class QuoteView(FormView):
         """Add context for active page."""
         context = super(QuoteView, self).get_context_data(**kwargs)
         context['api'] = os.environ.get('GOOGLE_API_KEY')
+        names = []
+        for serv in Service.objects.filter(published='PB'):
+            names.append((serv.name, serv.name))
+        context['form'].fields['service'].choices = names
         set_basic_context(context, 'quote')
         return context
 

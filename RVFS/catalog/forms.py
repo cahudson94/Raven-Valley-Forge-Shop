@@ -27,8 +27,6 @@ class QuoteForm(forms.Form):
     """Form to contact shop."""
 
     names = []
-    for serv in Service.objects.filter(published='PB'):
-        names.append((serv.name, serv.name))
     first_name = forms.CharField(required=True, label="* First name")
     last_name = forms.CharField(required=True, label="* Last name")
     home_phone = forms.CharField(required=True, label="* Home phone")
