@@ -89,8 +89,8 @@ class Service(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_published = models.DateTimeField(blank=True, null=True)
     name = models.CharField(max_length=100)
-    blurb = models.TextField(default='', blank=True)
-    description = models.TextField(default='', blank=True)
+    blurb = models.TextField(default='')
+    description = models.TextField(default='')
     commission_fee = models.IntegerField(blank=True, default=0)
     price_range = models.CharField(
         max_length=15,

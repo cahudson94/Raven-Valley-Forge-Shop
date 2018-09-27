@@ -8,7 +8,7 @@ from httplib2 import Http
 HOME = os.path.expanduser('~')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-ENV_CLIENT_SECRET = os.environ.get('GOOGLE_CREDS')
+ENV_CLIENT_SECRET = os.environ.get('NEW_GOOGLE_CREDS')
 SCOPES = ['https://www.googleapis.com/auth/calendar',
           'https://www.googleapis.com/auth/drive',
           'https://www.googleapis.com/auth/admin.directory.group',
