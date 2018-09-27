@@ -14,10 +14,32 @@ Users
   <li>
     <a class="text-standard link-font" href="{% url 'comment' account.id %}">{{ account }}</a>
   </li>
-  {% if forloop.counter < 4 and forloop.last %}
-  <div class="placeholder"></div>
-  {% endif %}
 {% endfor %}
 </ul>
+<h2 class="text-standard">Registered mailing list:</h2>
+{% if email_list %}
+<ul>
+{% for account in email_list %}
+  <li>
+    <p class="text-standard">{{ account.user.email }}, {{ account.first_name }} {{ account.last_name }}</p>
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+    <p class="text-standard">No registered emails yet.</p>
+{% endif %}
+<h2 class="text-standard">Unregistered mailing list:</h2>
+{% if unreg_email_list %}
+<ul>
+{% for email in unreg_email_list %}
+  <li>
+    <p class="text-standard">{{ email }}</p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+    <p class="text-standard">No unregistered emails yet.</p>
+{% endif %}
+
 
 {% endblock %}
