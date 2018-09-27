@@ -7,35 +7,50 @@
         {% csrf_token %}
         <div class="row acc-form">
             <div class="col">
-            <h2 class="text-standard">Shipping Info:</h2>
+            <h4 class="text-standard">First Name:</h4>
+            <input type="text" name="first_name" value="{{ account.first_name }}">
+            <h4 class="text-standard">Last Name:</h4>
+            <input type="text" name="last_name" value="{{ account.last_name }}">
+            <h4 class="text-standard">Birth Date:</h4>
+            <input type="text" name="birthday" value="{{ account.birth_day }}">
             <h4 class="text-standard">Address Line 1:</h4>
-            <input type="text" name="address1" value="{{ address.address1 }}"></input>
+            <input type="text" name="address1" value="{{ address.address1 }}">
             {% if address.address2 %}
             <h4 class="text-standard">Address Line 2:</h4>
-            <input type="text" name="address2" value="{{ address.address2 }}"></input>
+            <input type="text" name="address2" value="{{ address.address2 }}">
             {% endif %}
             <h4 class="text-standard">Zip Code:</h4>
-            <input type="text" name="zip_code" value="{{ address.zip_code }}"></input>
+            <input type="text" name="zip_code" value="{{ address.zip_code }}">
             <h4 class="text-standard">City:</h4>
-            <input type="text" name="city" value="{{ address.city }}"></input>
+            <input type="text" name="city" value="{{ address.city }}">
             <h4 class="text-standard">State:</h4>
-            <input type="text" name="state" value="{{ address.state }}"></input>
+            <input type="text" name="state" value="{{ address.state }}">
+            <h4 class="text-standard">Home Phone:</h4>
+            <input type="text" name="home_number" value="{{ account.home_number }}">
+            <h4 class="text-standard">Cell Phone:</h4>
+            <input type="text" name="cell_number" value="{{ account.cell_number }}">
             </div>
             <div class="col">
-            <h2 class="text-standard">Account Info:</h2>
             <h4 class="text-standard">Profile Picture:</h4>
             {% if account.pic %}
             <img src="{{ account.pic.url }}" width="35%">
             {% endif %}
-            <input type="file" name="pic" value="{{ account.pic }}"></input>
-            <h4 class="text-standard">First Name:</h4>
-            <input type="text" name="first_name" value="{{ account.first_name }}"></input>
-            <h4 class="text-standard">Last Name:</h4>
-            <input type="text" name="last_name" value="{{ account.last_name }}"></input>
-            <h4 class="text-standard">Birth Date:</h4>
-            <input type="text" name="birthday" value="{{ account.birth_day }}"></input>
+            <input type="file" name="pic" value="{{ account.pic }}">
+            <h4 class="text-standard">Newsletter signup:</h4>
+            <input type="checkbox" name="newsletter" {% if account.newsletter %}checked{% endif %}>
+            {% if account.user.is_staff %}
+            <h4 class="text-standard">About:</h4>
+            <textarea class="form-control" name="about" rows="8">{{ account.about }}</textarea>
+            <h4 class="text-standard">Staff Group:</h4>
+            <input type="text" name="group" value="{{ account.group }}">
+            {% endif %}
             </div>
         </div>
-    <input class="btn btn-secondary text-standard" type="submit" value="Update">
+    <div class="d-flex">
+        <input class="btn btn-secondary text-standard" type="submit" value="Update">
+        <div class="ml-auto">
+            <a class="btn btn-secondary mr-auto" href="{% url 'change_password' %}">Change Password</a>
+        </div>
+    </div>
     </form>
 {% endblock %}
