@@ -25,29 +25,9 @@ mailing_group = '01gf8i831vs9b7q'
 
 
 def get_creds():
-    """
-    Get valid user credentials from storage.
-
-    If nothing has been stored, or if the stored credentials are invalid,
-    the OAuth2 flow is completed to obtain the new credentials.
-
-    Returns:
-        Credentials, the obtained credential.
-    """
-    home_dir = HOME
-    credential_dir = os.path.join(home_dir, '.creds')
-    if not os.path.exists(credential_dir):
-        os.makedirs(credential_dir)
-    credential_path = os.path.join(credential_dir,
-                                   'token.json')
-
-    store = file.Storage(credential_path)
-    creds = store.get()
-    if not creds or creds.invalid:
-        with open('token.json', 'w+') as credentials:
-            credentials.write(ENV_CLIENT_SECRET)
-        secret_path = os.path.join(BASE_DIR, 'RVFS/token.json')
-        creds = file.Storage(secret_path).get()
+    """Open and return stored creds."""
+    secret_path = os.path.join(BASE_DIR, 'RVFS/token.json')
+    creds = file.Storage(secret_path).get()
     return creds
 
 
@@ -134,8 +114,12 @@ webContentLink, webViewLink, properties, description)").execute()
 
 
 def add_creds():
-    """Run to open oauth prompt for new creds."""
-    store = file.Storage('token.json')
+    """
+    Run to open oauth prompt for new creds.
+
+    Change out the build params to toy with different end points.
+    """
+    store = file.Storage('RVFS/token.json')
     creds = store.get()
     if not creds or creds.invalid:
         flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
@@ -166,4 +150,4 @@ def download(file_id):
     return file.name
 
 if __name__ == '__main__':
-    main(os.sys.argv[1])
+    add_creds()

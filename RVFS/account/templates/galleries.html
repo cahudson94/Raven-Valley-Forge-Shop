@@ -18,8 +18,15 @@ Galleries
     </div>
   </div>
   <div class="col">
-    <div class="row galleries-text-row justify-content-center">
-      <p class="text-standard galleries-text">{{ gallery.description }}</p>
+    <div class="row">
+      <div class="col">
+        <div class="row galleries-text-row justify-content-center">
+          <h3 class="text-standard galleries-text">{{ gallery.name }}</h3>
+        </div>
+        <div class="row galleries-text-row justify-content-center">
+          <p class="text-standard galleries-text">{{ gallery.description }}</p>
+        </div>
+      </div>
     </div>
     <div class="row galleries-text-row align-items-end justify-content-center">
       <a class="text-center text-standard btn btn-secondary" href="{% url 'gallery' slug=gallery.url %}">View the Gallery</a>
