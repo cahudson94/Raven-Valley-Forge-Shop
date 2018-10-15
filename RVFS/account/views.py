@@ -231,11 +231,18 @@ class DiscountsView(TemplateView):
         info = request.POST
         guest_acc = User.objects.get(username='Guest').account
         current_codes = guest_acc.comments
+        state = ''
+        if info['state'] == 'active':
+            state = 'active'
         if not current_codes:
-            current_codes = {info['code']: (info['amount'], info['description'])}
+            current_codes = {info['code']: (info['amount'],
+                                            info['description'],
+                                            state)}
         else:
             current_codes = json.loads(current_codes)
-            current_codes[info['code']] = (info['amount'], info['description'])
+            current_codes[info['code']] = (info['amount'],
+                                           info['description',
+                                           state])
         guest_acc.comments = json.dumps(current_codes)
         guest_acc.save()
         return HttpResponseRedirect(self.success_url)

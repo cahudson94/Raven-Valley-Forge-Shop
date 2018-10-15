@@ -119,7 +119,7 @@ def add_creds():
 
     Change out the build params to toy with different end points.
     """
-    store = file.Storage('token.json')
+    store = file.Storage('RVFS/token.json')
     creds = store.get()
     if not creds or creds.invalid:
         flow = client.flow_from_clientsecrets('credentials.json', SCOPES)

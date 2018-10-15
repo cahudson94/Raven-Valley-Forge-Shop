@@ -327,6 +327,15 @@ MAIN SECTION
     background-image: url('static/404-image.jpg');
 }
 
+.blank_cell {
+    height: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.discount-remove {
+    margin: 8px 0px;
+}
+
 /* ***************************************************************************
 CATALOG
 *************************************************************************** */

@@ -9,7 +9,7 @@ Discounts
 <h2 class="text-standard text-center">Discounts</h2>
 {% if codes %}
 <div class="row">
-    <div class="col">
+    <div class="col-3">
         <h4 class="text-standard">Code</h4>
         <ul class="list-group">
         {% for code, info in codes.items %}
@@ -17,7 +17,7 @@ Discounts
         {% endfor %}
         </ul>
     </div>
-    <div class="col">
+    <div class="col-2">
         <h4 class="text-standard">Amount</h4>
         <ul class="list-group">
         {% for code, info in codes.items %}
@@ -25,11 +25,27 @@ Discounts
         {% endfor %}
         </ul>
     </div>
-    <div class="col">
+    <div class="col-4">
         <h4 class="text-standard">Description</h4>
         <ul class="list-group">
         {% for code, info in codes.items %}
             <li class="list-group-item">{{ info.1 }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div class="col-1">
+        <h4 class="text-standard">State</h4>
+        <ul class="list-group">
+        {% for code, info in codes.items %}
+            <li class="list-group-item"><input type="checkbox" {% if info.2 %}checked{% endif %}></li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div class="col-2">
+        <div class="blank_cell"></div>
+        <ul class="list-group">
+        {% for code, info in codes.items %}
+            <a class="btn btn-danger discount-remove" href="">Remove</a>
         {% endfor %}
         </ul>
     </div>
@@ -41,20 +57,25 @@ Discounts
 <form enctype="multipart/form-data" method="post" href="{% url 'discounts' %}">
 {% csrf_token %}
 <div class="row">
-    <div class="col">
+    <div class="col-3">
         <p class="text-standard">Code: </p>
         <input type="text" name="code" required>
         <p class="text-standard">Note: The actual value for the code.</p>
     </div>
-    <div class="col">
+    <div class="col-3">
         <p class="text-standard">Amount: </p>
         <input type="text" name="amount" required>
         <p class="text-standard">Note: The numeric amount for the discount eg. 20 or 20%. The first example does 20 dollars the second does 20%.</p>
     </div>
-    <div class="col">
+    <div class="col-3">
         <p class="text-standard">Description: </p>
         <input type="text" name="description" required>
         <p class="text-standard">note: A brief description of what this code is up for.</p>
+    </div>
+    <div class="col-3">
+        <p class="text-standard">State: </p>
+        <input type="text" name="state" required>
+        <p class="text-standard">note: Weather the code should be active or inactive.</p>
     </div>
 </div>
 <div class="w-100">
