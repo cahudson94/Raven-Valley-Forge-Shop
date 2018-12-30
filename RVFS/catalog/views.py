@@ -10,15 +10,23 @@ from django.views.generic import ListView, DetailView, TemplateView, FormView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from account.models import Account, ShippingInfo, Order
-from account.views import unpack, split_cart, set_basic_context, valid_staff
+from account.views import (
+    unpack, split_cart, set_basic_context,
+    valid_staff, get_state
+)
 from catalog.forms import ProductForm, ServiceForm, QuoteForm
-from catalog.models import Product, Service
+from catalog.models import Product, Service, Discount
 from datetime import datetime
 from decimal import Decimal
-import paypalrestsdk
+import easypost
 import json
 import os
+import paypalrestsdk
+import taxjar
 
+
+easypost.api_key = os.environ.get('EASYPOST_API_KEY')
+taxjar_client = taxjar.Client(api_key=os.environ.get('TAXJAR_API_KEY'))
 
 MONTHS = {
     'January': '01',
@@ -472,7 +480,7 @@ class CartView(TemplateView):
     """Cart and checkout page."""
 
     template_name = 'cart.html'
-    success_url = reverse_lazy('create_payment')
+    success_url = reverse_lazy('checkout')
 
     def get_context_data(self, **kwargs):
         """Add context for active page."""
@@ -483,15 +491,7 @@ class CartView(TemplateView):
             account = self.request.user.account
             context['account'] = account
             total = account.cart_total
-            if account.active_code:
-                codes = User.objects.get(username='Guest').account.comments
-                codes = json.loads(codes)
-                amount = codes[account.active_code][0]
-                if '%' not in amount:
-                    amount = '$' + amount
-                session['code'] = account.active_code + ', ' + amount
-                session.save()
-        if 'shipping_data' in self.request.session.keys():
+        if 'shipping_data' in session.keys():
             context['shipping'] = session['shipping_data']['shipping']
             context['info'] = session['shipping_data']['info']
             if 'exists' in session['shipping_data'].keys():
@@ -516,20 +516,11 @@ class CartView(TemplateView):
                 context['alt_add'] = [address for address in addresses]
         if cart:
             context['cart'] = unpack(cart)
-            context['prods'] = []
-            for item in context['cart']:
-                item['count'] = 'prod ' + str(len(context['prods']))
-                context['prods'].append(item)
         context['item_fields'] = ['color', 'length', 'diameter', 'extras']
         context['total'] = total
-        if 'code' in session.keys():
-            context['code'] = session['code'].split(', ')
-            amount = context['code'][1]
-            if '$' in amount:
-                context['total'] = total - Decimal(amount[1:])
-            else:
-                percent = Decimal(float(total)) * Decimal('.' + amount[:-1])
-                context['total'] = total - percent
+        context['total'] = Decimal(str(float("%.2f" % (context['total']))))
+        if str(context['total'])[-2] == '.':
+            context['total'] = Decimal(str(context['total']) + '0')
         set_basic_context(context, 'cart')
         return context
 
@@ -565,7 +556,8 @@ class CartView(TemplateView):
                 request.session['shipping_data'] = shipping_data
                 request.session.save()
         if exists:
-            shipping_data['exists'] = exists
+            request.session['shipping_data']['exists'] = exists
+            request.session.save()
         if field_count == 7:
             return HttpResponseRedirect(self.success_url)
         return HttpResponseRedirect(reverse_lazy('cart'))
@@ -644,14 +636,13 @@ def delete_item(request):
 def apply_discount(request):
     """Apply a discount code to current order."""
     code = request.GET['code']
-    codes = User.objects.get(username='Guest').account.comments
-    codes = json.loads(codes)
+    discounts = Discount.objects.all()
+    codes = []
+    for discount in discounts:
+        codes.append(discount.code)
     if code in codes:
         if 'code' not in request.session.keys():
-            amount = codes[code][0]
-            if '%' not in amount:
-                amount = '$' + amount
-            request.session['code'] = code + ', ' + amount
+            request.session['code'] = code
             request.session.save()
             if request.user.is_authenticated:
                 request.user.account.active_code = code
@@ -681,55 +672,294 @@ def create_payment(request):
         "client_secret": os.environ.get('PAYPAL_CLIENT_SECRET')})
 
     base_url = request.get_raw_uri().split('create')[0]
-    cart = unpack(request.user.account.cart)
+    session = request.session
+    if request.user.is_authenticated:
+        cart = unpack(request.user.account.cart)
+    else:
+        cart = unpack(session['account']['cart'])
     items = []
-    total = 0
+    shipping_discount = 0
+    item_count = 0
     for item in cart:
-        if item['type'] == 'prod':
-            obj = Product.objects.get(id=item['item_id'])
-            price = obj.price
-            total += price * Decimal(item["quantity"])
-        else:
-            obj = Service.objects.get(id=item['item_id'])
-            if obj.commission_fee:
-                price = Decimal(obj.commission_fee)
+        item_count += int(item['quantity'])
+    for item in cart:
+        obj = Product.objects.get(id=item['item_id'])
+        price = obj.price
+        if 'code' in session.keys():
+            code = session['code'].split(', ')
+            amount = code[1]
+            if '$' in amount:
+                percent = Decimal(amount[1:]) / item_count
+                price -= percent
+            elif 'ship' in amount:
+                if 'free' in amount:
+                    shipping_discount = session['paypal']['shipping']
+                else:
+                    shipping_discount = Decimal(amount[5:])
             else:
-                price = Decimal(0)
-            total += price
-        prod_or_serv = {
+                percent = Decimal(float(price)) * Decimal('.' + amount[:-1])
+                price -= percent
+        prod = {
             "name": obj.name,
             "description": item["description"],
             "price": str(price),
             "currency": "USD",
             "quantity": item["quantity"]
         }
-        items.append(prod_or_serv)
-
+        items.append(prod)
+    if '.' not in str(shipping_discount):
+        shipping_discount = str(shipping_discount) + '.00'
+    elif str(shipping_discount)[-2] == '.':
+        shipping_discount = str(shipping_discount) + '0'
     payment = paypalrestsdk.Payment({
         "intent": "sale",
         "payer": {
             "payment_method": "paypal"},
         "redirect_urls": {
-            "return_url": base_url + "checkout/",
-            "cancel_url": base_url + "cart/"},
+            "return_url": base_url + "checkout-complete/",
+            "cancel_url": base_url + "checkout/"},
         "transactions": [{
             "item_list": {
                 "items": items
             },
             "amount": {
-                "total": str(total),
-                "currency": "USD"},
-            "description": "Payment for goods and or services to Ravenmoore\
- Valley Forge and Metalworks."}]})
-
+                "total": session['paypal']['total'],
+                "currency": "USD",
+                "details": {
+                    "subtotal": session['paypal']['subtotal'],
+                    "tax": session['paypal']['tax'],
+                    "shipping": session['paypal']['shipping'],
+                    "shipping_discount": str(shipping_discount),
+                }
+            },
+            "description": "Payment for goods to Ravenmoore Valley \
+ Forge and Metalworks."}]})
     if payment.create():
         for link in payment.links:
             if link.rel == "approval_url":
                 approval_url = str(link.href)
+                create_order(request)
                 return redirect(approval_url)
     else:
         print(payment.error)
         return redirect(base_url + "cart/")
+
+
+def create_order(request):
+    """Create an order during payment processing."""
+    shipping_data = ''
+    address = ''
+    if request.user.is_authenticated:
+        user = request.user
+        account = request.user.account
+        cart = account.cart
+    else:
+        user = User.objects.get(username='Guest')
+        account = Account.objects.get(user=user)
+        cart = request.session['account']['cart']
+    shipping_data = request.session['shipping_data']
+    if 'exists' in shipping_data.keys():
+        address = ShippingInfo.objects.get(id=shipping_data['exists'])
+    else:
+        address = ShippingInfo(
+            address1=shipping_data['shipping']['address1'],
+            address2=shipping_data['shipping']['address2'],
+            zip_code=shipping_data['shipping']['zip_code'],
+            city=shipping_data['shipping']['city'],
+            state=shipping_data['shipping']['state'])
+        address.save()
+        address.resident = Account.objects.get(user=user)
+        if request.user.is_authenticated:
+            address.name = 'Saved address ' + str(
+                len(ShippingInfo.objects.filter(resident=account)) + 1
+            )
+        address.save()
+    email = shipping_data['info']['email']
+    name = (shipping_data['info']['first'] +
+            ', ' + shipping_data['info']['last'])
+    order = Order(
+        buyer=account,
+        order_content=cart,
+        recipient_email=email,
+        recipient=name,
+        ship_to=address,
+    )
+    order.save()
+    request.session['order_num'] = order.id
+    request.session.save()
+
+
+class CheckoutView(TemplateView):
+    """Checkout page renders tax and shipping for order before payment."""
+
+    template_name = 'checkout.html'
+    success_url = reverse_lazy('create_payment')
+
+    def get(self, request, *args, **kwargs):
+        """Handle redirects when missing context."""
+        keys = request.session.keys()
+        view = CheckoutView
+        if 'shipping_data' not in keys:
+            return HttpResponseRedirect(reverse_lazy('cart'))
+        session = request.session
+        field_count = 0
+        ship_fields = ['address1', 'city', 'state', 'zip_code']
+        info_fields = ['first', 'last', 'email']
+        for i in ship_fields:
+            if session['shipping_data']['shipping'][i]:
+                field_count += 1
+        for i in info_fields:
+            if session['shipping_data']['info'][i]:
+                field_count += 1
+        if field_count < 7:
+            return HttpResponseRedirect(reverse_lazy('cart'))
+        return super(view, self).get(self, request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """Define context for checkout view."""
+        context = super(CheckoutView, self).get_context_data(**kwargs)
+        session = self.request.session
+        cart = None
+        context['shipping'] = session['shipping_data']['shipping']
+        context['info'] = session['shipping_data']['info']
+        if self.request.user.is_authenticated:
+            account = self.request.user.account
+            context['account'] = account
+            total = account.cart_total
+            cart = context['account'].cart
+            if len(context['account'].shippinginfo_set.values()) > 1:
+                addresses = context['account'].shippinginfo_set.values()
+                context['alt_add'] = [address for address in addresses]
+        else:
+            context['account'] = session['account']
+            cart = context['account']['cart']
+            total = context['account']['cart_total']
+            if not session.get_expire_at_browser_close():
+                session.set_expiry(0)
+        context['cart'] = unpack(cart)
+        zip_code = session['shipping_data']['shipping']['zip_code']
+        street = session['shipping_data']['shipping']['address1']
+        tax_rate = taxjar_client.rates_for_location(
+            zip_code,
+            {'street': street}
+        )['combined_rate']
+        context['tax_rate'] = float("%.2f" % (tax_rate * 100))
+        info = session['shipping_data']['info']
+        shipping = session['shipping_data']['shipping']
+        name = info['first'] + ' ' + info['last']
+        shipping_cost = 0
+        state = get_state(shipping['state'])
+        to_address = easypost.Address.create(
+            name=name,
+            street1=shipping['address1'],
+            street2=shipping['address2'],
+            city=shipping['city'],
+            state=state,
+            zip=shipping['zip_code'],
+            country='US',
+            email=info['email']
+        )
+        from_address = easypost.Address.create(
+            name='RVFM Shop',
+            street1='11639 13th Ave SW',
+            city='Burien',
+            state='WA',
+            zip='98146',
+            country='US',
+            phone='2063726501',
+            email='Creations@ravenvfm.com'
+        )
+        for item in context['cart']:
+            parcel = easypost.Parcel.create(
+                length=item['item'].shipping_length,
+                width=item['item'].shipping_width,
+                height=item['item'].shipping_height,
+                weight=item['item'].shipping_weight
+            )
+            shipment = easypost.Shipment.create(
+                to_address=to_address,
+                from_address=from_address,
+                parcel=parcel,
+            )
+            rate_price = shipment.lowest_rate()['rate']
+            shipping_cost += (
+                float(rate_price) * float(item['quantity'])
+            )
+        context['shipping_cost'] = float("%.2f" % (shipping_cost))
+        context['subtotal'] = total
+        if 'code' in session.keys():
+            discount = Discount.objects.get(code=session['code'])
+            amount = discount.value
+            if not discount.prod:
+                if '$' in amount:
+                    effect = amount
+                    context['subtotal'] = total - Decimal(amount[1:])
+                elif 'ship' in amount:
+                    if 'free' in amount:
+                        effect = 'Free Shipping'
+                        context['shipping_cost'] = 0
+                    else:
+                        value = amount[5:]
+                        effect = '${} off shipping'
+                        context['shipping_cost'] -= Decimal(value)
+                else:
+                    effect = discount.value + '%'
+                    percent = Decimal(float(total)) * Decimal('.' + amount)
+                    context['subtotal'] = total - percent
+            else:
+                effected_prod = Product.objects.get(id=discount.prod)
+                
+                if '$' in amount:
+                    effect = amount
+                    context['subtotal'] = total - Decimal(amount[1:])
+                elif 'ship' in amount:
+                    if 'free' in amount:
+                        effect = 'Free Shipping'
+                        context['shipping_cost'] = 0
+                    else:
+                        value = amount[5:]
+                        effect = '${} off shipping'
+                        context['shipping_cost'] -= Decimal(value)
+                else:
+                    effect = discount.value + '%'
+                    percent = Decimal(float(total)) * Decimal('.' + amount)
+                    context['subtotal'] = total - percent
+            context['code'] = [discount.code, effect]
+        context['total'] = (
+            context['subtotal'] + Decimal(str(context['shipping_cost']))
+        )
+        tax = Decimal(str(tax_rate)) * context['total']
+        context['tax'] = Decimal(str(float("%.2f" % (tax))))
+        context['total'] += context['tax']
+        fields = ['subtotal', 'shipping_cost', 'tax', 'total']
+        for field in fields:
+            if str(context[field])[-2] == '.':
+                context[field] = Decimal(str(context[field]) + '0')
+        set_basic_context(context, 'cart')
+        session['paypal'] = {
+            'subtotal': str(context['subtotal']),
+            'total': str(context['total']),
+            'tax': str(context['tax']),
+            'shipping': str(context['shipping_cost'])
+        }
+        session.save()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Apply shipping info for guest user."""
+        session = request.session
+        field_count = 0
+        ship_fields = ['address1', 'city', 'state', 'zip_code']
+        info_fields = ['first', 'last', 'email']
+        for i in ship_fields:
+            if session['shipping_data']['shipping'][i]:
+                field_count += 1
+        for i in info_fields:
+            if session['shipping_data']['info'][i]:
+                field_count += 1
+        if field_count == 7:
+            return HttpResponseRedirect(self.success_url)
+        return HttpResponseRedirect(reverse_lazy('cart'))
 
 
 class CheckoutCompleteView(TemplateView):
@@ -743,17 +973,21 @@ class CheckoutCompleteView(TemplateView):
         view = CheckoutCompleteView
         if 'shipping_data' not in keys:
             return HttpResponseRedirect(reverse_lazy('cart'))
-        payment_id = request.session['payment_id']
+        payment_id = request.GET['paymentId']
         payment = paypalrestsdk.Payment.find(payment_id)
-        payer_id = request.session['payer_id']
+        payer_id = request.GET['PayerID']
         if payment.execute({"payer_id": payer_id}):
-            print('there')
             verify_payment = paypalrestsdk.Payment.find(payment_id)
-            print(verify_payment)
             if verify_payment:
                 order = Order.objects.get(id=request.session['order_num'])
                 order.paid = True
                 order.save()
+                session_keys = [
+                    'account', 'shipping_data', 'code', 'paypal', 'order_num'
+                ]
+                for item in session_keys:
+                    del request.session[item]
+                request.session.save()
                 return super(view, self).get(self, request, *args, **kwargs)
         return HttpResponseRedirect(reverse_lazy('cart'))
 

@@ -16,13 +16,14 @@ from django.views.generic.edit import (UpdateView, CreateView,
 from account.forms import (InfoRegForm, AddAddressForm,
                            OrderUpdateForm, ContactForm)
 from account.models import Account, ShippingInfo, SlideShowImage, Order
-from catalog.models import Product, Service
+from catalog.models import Product, Service, Discount
 from registration.backends.hmac.views import RegistrationView
 from registration.forms import RegistrationForm
 from RVFS.google_api_access import (
     add_birthday, main as drive_files,
     download, update_mailing_list
 )
+import easypost
 import json
 import os
 import random
@@ -63,6 +64,60 @@ MONTHS = {
     'October': '10',
     'November': '11',
     'December': '12'
+}
+
+
+STATES = {
+    'Alabama': 'AL',
+    'Alaska': 'AK',
+    'Arizona': 'AZ',
+    'Arkansas': 'AR',
+    'California': 'CA',
+    'Colorado': 'CO',
+    'Connecticut': 'CT',
+    'Delaware': 'DE',
+    'Florida': 'FL',
+    'Georgia': 'GA',
+    'Hawaii': 'HI',
+    'Idaho': 'ID',
+    'Illinois': 'IL',
+    'Indiana': 'IN',
+    'Iowa': 'IA',
+    'Kansas': 'KS',
+    'Kentucky': 'KY',
+    'Louisiana': 'LA',
+    'Maine': 'ME',
+    'Maryland': 'MD',
+    'Massachusetts': 'MA',
+    'Michigan': 'MI',
+    'Minnesota': 'MN',
+    'Mississippi': 'MS',
+    'Missouri': 'MO',
+    'Montana': 'MT',
+    'Nebraska': 'NE',
+    'Nevada': 'NV',
+    'New Hampshire': 'NH',
+    'New Jersey': 'NJ',
+    'New Mexico': 'NM',
+    'New York': 'NY',
+    'North Carolina': 'NC',
+    'North Dakota': 'ND',
+    'Ohio': 'OH',
+    'Oklahoma': 'OK',
+    'Oregon': 'OR',
+    'Pennsylvania': 'PA',
+    'Rhode Island': 'RI',
+    'South Carolina': 'SC',
+    'South Dakota': 'SD',
+    'Tennessee': 'TN',
+    'Texas': 'TX',
+    'Utah': 'UT',
+    'Vermont': 'VT',
+    'Virginia': 'VA',
+    'Washington': 'WA',
+    'West Virginia': 'WV',
+    'Wisconsin': 'WI',
+    'Wyoming': 'WY',
 }
 
 
@@ -209,43 +264,71 @@ class NewsletterUnsubView(TemplateView):
         return context
 
 
-class DiscountsView(TemplateView):
+class DiscountsView(ListView, UserPassesTestMixin):
     """View for discount code management."""
 
     template_name = 'rvfsite/discounts.html'
+    model = Discount
     success_url = reverse_lazy('discounts')
+
+    def test_func(self):
+        """Validate access."""
+        return self.request.user.is_staff
 
     def get_context_data(self, **kwargs):
         """."""
-        context = super(TemplateView, self).get_context_data(**kwargs)
-        guest_account = User.objects.get(username='Guest').account
-        current_codes = ''
-        if guest_account.comments:
-            current_codes = json.loads(guest_account.comments)
-        context['codes'] = current_codes
+        context = super(DiscountsView, self).get_context_data(**kwargs)
+        context['prods'] = Product.objects.all()
         set_basic_context(context, 'discount')
         return context
 
     def post(self, request, *args, **kwargs):
         """Update the current discount codes."""
         info = request.POST
-        guest_acc = User.objects.get(username='Guest').account
-        current_codes = guest_acc.comments
-        state = ''
-        if info['state'] == 'active':
-            state = 'active'
-        if not current_codes:
-            current_codes = {info['code']: (info['amount'],
-                                            info['description'],
-                                            state)}
-        else:
-            current_codes = json.loads(current_codes)
-            current_codes[info['code']] = (info['amount'],
-                                           info['description',
-                                           state])
-        guest_acc.comments = json.dumps(current_codes)
-        guest_acc.save()
+        try:
+            Discount.objects.get(code=info['code'])
+        except:
+            discount = Discount(
+                code=info['code'],
+                code_type=info['type'],
+                value=info['amount'],
+                code_state=True,
+                description=info['description'],
+            )
+            discount.save()
+            if info['prod'] != '----':
+                discount.prod = info['prod']
+                discount.prod_name = Product.objects.get(id=info['prod']).name
+                discount.save()
         return HttpResponseRedirect(self.success_url)
+
+
+@user_passes_test(valid_staff)
+@login_required
+def update_discount(request):
+    """Remove or turn off/on a discount code."""
+    disc_code = request.GET['code']
+    code = Discount.objects.get(code=disc_code)
+    if 'state' in request.GET.keys():
+        state = request.GET['state']
+        if state == 'On':
+            toggle_to = False
+            data = {
+                'new_state': 'Off',
+                'new_class': 'btn btn-secondary {}'.format(disc_code)
+            }
+        else:
+            toggle_to = True
+            data = {
+                'new_state': 'On',
+                'new_class': 'btn btn-success {}'.format(disc_code)
+            }
+        code.code_state = toggle_to
+        code.save()
+        return HttpResponse(json.dumps(data))
+    else:
+        code.delete()
+        return HttpResponse()
 
 
 class AboutView(TemplateView):
@@ -392,7 +475,6 @@ class AddressListView(LoginRequiredMixin, ListView):
 class DeleteAddress(UserPassesTestMixin, DeleteView):
     """Delete an address."""
 
-    permission_required = ''
     model = ShippingInfo
     success_url = reverse_lazy('account')
     template_name = 'del_add.html'
@@ -606,9 +688,10 @@ class GalleryView(TemplateView):
         set_basic_context(context, 'gallery')
         context['tab'] = title
         context['gallery'] = title
-        for file in context['galleries']:
-            if file['name'].title() == title:
-                folder = file['id']
+        if context['galleries']:
+            for file in context['galleries']:
+                if file['name'].title() == title:
+                    folder = file['id']
         context['photos'] = drive_files(folder)
         for photo in context['photos']:
             photo['name'] = photo['name'].split('.')[0]
@@ -658,6 +741,60 @@ class OrdersView(ListView):
                                                       .order_by('id'))
         set_basic_context(context, 'order')
         return context
+
+
+def ship_order(order_id):
+    """
+    Buy shipping and return label links to be opened.
+
+    Log and email tracking numbers and move order to finished.
+    """
+    urls = []
+    tracking_numbers = []
+    order = Order.objects.get(id=order_id)
+    to_address = order.ship_to
+    from_address = easypost.Address.create(
+        name='RVFM Shop',
+        street1='11639 13th Ave SW',
+        city='Burien',
+        state='WA',
+        zip='98146',
+        country='US',
+        phone='2063726501',
+        email='Creations@ravenvfm.com'
+    )
+    to_address = easypost.Address.create(
+        name=order.recipient,
+        street1=to_address['address1'],
+        street2=to_address['address2'],
+        city=to_address['city'],
+        state=get_state(to_address['state']),
+        zip=to_address['zip_code'],
+        country='US',
+        email=order.recipient_email
+    )
+    items = unpack(order.order_content)
+    for item in items:
+        parcel = easypost.Parcel.create(
+            length=item['item'].shipping_length,
+            width=item['item'].shipping_width,
+            height=item['item'].shipping_height,
+            weight=item['item'].shipping_weight
+        )
+        shipment = easypost.Shipment.create(
+            to_address=to_address,
+            from_address=from_address,
+            parcel=parcel,
+        )
+        import pdb; pdb.set_trace()
+        rate_price = shipment.lowest_rate()
+        shipment.buy(rate=rate_price)
+        tracking_numbers.append(shipment.tracking_code)
+        urls.append(shipment.postage_label.label_url)
+    order.tracking = str(tracking_numbers)
+    order.save()
+    # email buyer with tracking numbers and shipment notice
+    return urls
 
 
 class CommentView(UpdateView):
@@ -833,5 +970,22 @@ def set_basic_context(context, page):
     """Helper function to set the basics per page."""
     context['cart_count'] = cart_count(context['view'].request)
     context['nbar'] = page
+    context['galleries'] = None
     context['galleries'] = get_galleries()
     return context
+
+
+def get_state(state):
+    """Given a an input state return the abreviation."""
+    if len(state) > 2:
+        state_name = state.split(' ')
+        for name in state_name:
+            name.title()
+        if len(state_name) == 2:
+            state_name = state_name[0] + ' ' + state_name[1]
+            state_abv = STATES[state_name]
+        else:
+            state_abv = STATES[state_name[0]]
+    else:
+        state_abv = state.upper()
+    return state_abv

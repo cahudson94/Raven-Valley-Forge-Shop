@@ -1,0 +1,125 @@
+{% extends 'rvfsite/base.html' %}
+{% load thumbnail %}
+{% load mathfilters %}
+{% load static %}
+
+{% block title %}Cart{% endblock %}
+
+{% block body %}
+<form enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <h2 class="text-standard">Checkout</h2>
+    <div class="row acc-row">
+        <div class="col">
+            <h2 class="text-standard">Shipping Info:</h2>
+            <h5 class="text-standard">{{ info.first }}, {{ info.last }}</h5>
+            <h5 class="text-standard">{{ info.email }}</h5>
+            <h5 class="text-standard">{{ shipping.address1 }}</h5>
+            {% if shipping.address2 %}
+            <h5 class="text-standard">{{ shipping.address2 }}</h5>
+            {% endif %}
+            <h5 class="text-standard">{{ shipping.city }}, {{ shipping.zip_code }}</h5>
+            <h5 class="text-standard">{{ shipping.state }}</h5>
+        </div>
+        <div class="col">
+            <h4 class="text-right text-standard">Subtotal:
+                {% if subtotal %}
+                    ${{ subtotal }}
+                {% else %}
+                    $0
+                {% endif %}
+            </h4>
+            <h4 class="text-right text-standard">Shipping:
+                {% if shipping_cost %}
+                    ${{ shipping_cost }}
+                {% else %}
+                    $0
+                {% endif %}
+            </h4>
+            <h4 class="text-right text-standard">Tax({{ tax_rate }}% rate for {{ shipping.zip_code }}):
+                {% if tax %}
+                    ${{ tax }}
+                {% else %}
+                    $0
+                {% endif %}
+            </h4>
+            <h4 class="text-right text-standard">Total:
+                {% if total %}
+                    ${{ total }}
+                {% else %}
+                    $0
+                {% endif %}
+            </h4>
+        </div>
+    </div>
+    {% if not code %}
+    <div class="w-100">
+        <h4 class="text-standard text-left">Discount Code:</h4>
+    </div>
+    <div id="discount-parent">
+        <div class="w-100 d-flex">
+            <input type="text" name="code">
+        </div>
+        <div class="w-100 d-flex">
+            <input id="discount" class="btn btn-secondary text-standard mr-auto" type="submit" name="apply_code" value="Apply Code">
+        </div>
+    </div>
+    {% else %}
+    <div class="w-100">
+        <h4 class="text-standard text-left">Discount Code:</h4>
+    </div>
+    <div id="discount-parent" class="row">
+        <div class="col">
+            <p class="text-standard text-left">Active code: {{ code.0 }}</p>
+            <p class="text-standard text-left">Code Effect: {{ code.1 }} discount</p>
+            <div class="d-flex">
+                <a id="remove" class="btn btn-danger text-standard mr-auto" href="#">Remove</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="w-100 d-flex">
+        <input class="btn btn-secondary text-standard ml-auto" type="submit" name="check" value="Continue Checkout with PayPal">
+    </div>
+</form>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+$('#discount').click(function (event) {
+  event.preventDefault();
+  console.log(event.target.form)
+  var code = event.target.form[1].value;
+  $.get('/shop/cart/apply-discount/', {code: code},
+    function(data) {
+      if (data.includes('Not')) {
+        if ($('#discount-parent')[0].nextSibling.id !== 'message') {
+          $(data).insertAfter($('#discount-parent'));
+        } else {
+          $('#message').html(data);
+        }
+      }
+      else {
+        if ($('#discount-parent')[0].nextSibling.id === 'message') {
+          $('#message').html('');
+        }
+        $('#discount-parent').html(data);
+        setTimeout(location.reload.bind(location), 4000);
+      }
+    }
+  );
+});
+</script>
+<script type="text/javascript">
+$('#remove').click(function (event) {
+  event.preventDefault();
+  $.get('/shop/cart/remove-discount/',
+    function(data) {
+      $('#discount-parent').html(data);
+      setTimeout(location.reload.bind(location), 4000);
+    }
+  );
+});
+</script>
+
+{% endblock %}

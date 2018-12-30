@@ -40,7 +40,8 @@ class Account(models.Model):
 class ShippingInfo(models.Model):
     """Address model for accounts."""
 
-    name = models.CharField("Location Name", max_length=50)
+    name = models.CharField("Location Name", max_length=50, blank=True,
+                            null=True)
     address1 = models.CharField("Address line 1", max_length=250)
     address2 = models.CharField("Address line 2", max_length=250, default='')
     zip_code = models.CharField("ZIP / Postal code", max_length=12)
