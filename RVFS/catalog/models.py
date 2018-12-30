@@ -61,9 +61,7 @@ class Product(models.Model):
     is_knife = models.BooleanField(default=False)
     creator = models.ForeignKey(User,
                                 on_delete=models.CASCADE,
-                                default=User.objects.get(
-                                    username='m.ravenmoore'
-                                ).id)
+                                )
     description = models.TextField(default='')
     color = models.TextField(
         max_length=500,
@@ -72,6 +70,14 @@ class Product(models.Model):
         max_length=500,
         blank=True)
     catagories = TaggableManager(blank=True)
+    shipping_length = models.DecimalField(null=True, max_digits=5,
+                                          decimal_places=2)
+    shipping_width = models.DecimalField(null=True, max_digits=5,
+                                         decimal_places=2)
+    shipping_height = models.DecimalField(null=True, max_digits=5,
+                                          decimal_places=2)
+    shipping_weight = models.DecimalField(null=True, max_digits=5,
+                                          decimal_places=2)
 
     def __str__(self):
         """Print for admin."""
@@ -107,6 +113,18 @@ class Service(models.Model):
     def __str__(self):
         """Print for admin."""
         return self.name
+
+
+class Discount(models.Model):
+    """Model for discount codes."""
+
+    code = models.CharField(max_length=30)
+    code_type = models.CharField(max_length=20)
+    value = models.CharField(max_length=10)
+    code_state = models.BooleanField(default=True)
+    description = models.CharField(max_length=250)
+    prod = models.IntegerField(null=True, blank=True)
+    prod_name = models.CharField(null=True, blank=True, max_length=30)
 
 
 class UserServiceImage(models.Model):

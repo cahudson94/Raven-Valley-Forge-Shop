@@ -1,18 +1,18 @@
 """."""
 import os
 import datetime
-from oauth2client import tools, file, client
+from oauth2client import tools
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from httplib2 import Http
 
 HOME = os.path.expanduser('~')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-ENV_CLIENT_SECRET = os.environ.get('GOOGLE_CREDS')
 SCOPES = ['https://www.googleapis.com/auth/calendar',
           'https://www.googleapis.com/auth/drive',
           'https://www.googleapis.com/auth/admin.directory.group',
           'https://www.googleapis.com/auth/admin.directory.group.member',
+          'https://www.googleapis.com/auth/admin.directory.user',
           ]
 
 try:
@@ -26,17 +26,19 @@ mailing_group = '01gf8i831vs9b7q'
 
 def get_creds():
     """Open and return stored creds."""
-    secret_path = os.path.join(BASE_DIR, 'RVFS/token.json')
-    creds = file.Storage(secret_path).get()
+    secret_path = os.path.join(BASE_DIR, 'RVFS/service_account.json')
+    creds = service_account.Credentials.from_service_account_file(
+        secret_path, scopes=SCOPES
+    )
+    creds.with_subject('muninn@ravenvfm.com')
     return creds
 
 
 def add_birthday(info):
     """Add a client birthday to calendar."""
     creds = get_creds()
-    http = creds.authorize(Http())
 
-    service = build('calendar', 'v3', http=http)
+    service = build('calendar', 'v3', credentials=creds)
     year = datetime.datetime.now().year
     event = {
         'summary': '{}\'s Birthday'.format(info['name']),
@@ -66,10 +68,10 @@ def add_birthday(info):
 def update_mailing_list(mailing_list):
     """Check and update mailing list."""
     creds = get_creds()
-    http = creds.authorize(Http())
 
-    service = build('admin', 'directory_v1', http=http)
+    service = build('admin', 'directory_v1', credentials=creds)
     mailing_list = set(mailing_list)
+    import pdb; pdb.set_trace()
     old_members = (service.members().list(groupKey='01gf8i831vs9b7q')
                           .execute())
     if 'members' in old_members.keys():
@@ -99,8 +101,7 @@ def main(drive_file):
     for up to 10 files.
     """
     creds = get_creds()
-    http = creds.authorize(Http())
-    service = build('drive', 'v3', http=http)
+    service = build('drive', 'v3', credentials=creds)
     results = service.files().list(
         q=("'%s' in parents" % drive_file),
         fields="nextPageToken, files(id, name, \
@@ -113,41 +114,17 @@ webContentLink, webViewLink, properties, description)").execute()
         return files
 
 
-def add_creds():
-    """
-    Run to open oauth prompt for new creds.
-
-    Change out the build params to toy with different end points.
-    """
-    store = file.Storage('RVFS/token.json')
-    creds = store.get()
-    if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
-        creds = tools.run_flow(flow, store)
-    service = build('admin', 'directory_v1', http=creds.authorize(Http()))
-    print('Getting the first 10 users in the domain')
-    results = service.groups().list(customer='my_customer', maxResults=10,
-                                    orderBy='email').execute()
-    users = results.get('groups', [])
-
-    if not users:
-        print('No users in the domain.')
-    else:
-        print('Users:')
-        for user in users:
-            print(u'{0} ({1})'.format(user['primaryEmail'],
-                                      user['name']['fullName']))
-
-
 def download(file_id):
     """Download specified file."""
     creds = get_creds()
-    http = creds.authorize(Http())
-    service = build('drive', 'v3', http=http)
+    service = build('drive', 'v3', credentials=creds)
     image = service.files().get_media(fileId=file_id).execute()
     with open(os.path.join(BASE_DIR, 'new_image.jpg'), 'wb+') as file:
         file.write(image)
     return file.name
 
 if __name__ == '__main__':
-    add_creds()
+    update_mailing_list(
+        [' rvfm-700@rvfm-1537319214218.iam.gserviceaccount.com ',
+         'Muninn@ravenvfm.com']
+    )

@@ -7,75 +7,80 @@ Discounts
 
 {% block body %}
 <h2 class="text-standard text-center">Discounts</h2>
-{% if codes %}
-<div class="row">
-    <div class="col-3">
-        <h4 class="text-standard">Code</h4>
-        <ul class="list-group">
-        {% for code, info in codes.items %}
-            <li class="list-group-item">{{ code }}</li>
+{% if discount_list %}
+<table class="table code-table">
+    <thead>
+        <tr>
+            <th scope="col">Code</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Description</th>
+            <th scope="col">Type</th>
+            <th scope="col">Product</th>
+            <th scope="col">State</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for code in discount_list %}
+        <tr>
+            <th class="align-middle" scope="row">{{ code.code }}</th>
+            <td class="align-middle">{{ code.value }}</td>
+            <td class="align-middle">{{ code.description }}</td>
+            <td class="align-middle">{{ code.code_type }}</td>
+            <td class="align-middle">{{ code.prod_name }}</td>
+            <td class="align-middle">
+                {% if code.code_state %}
+                <a class="btn btn-success {{ code.code }}" id="discount-toggle">
+                On
+                {% else %}
+                <a class="btn btn-secondary {{ code.code }}" id="discount-toggle">
+                Off
+                {% endif %}
+                </a>
+            </td>
+            <td class="align-middle"><a class="btn btn-danger discount-remove {{ code.code }}" id="discount-remove">Remove</a></td>
+        </tr>
         {% endfor %}
-        </ul>
-    </div>
-    <div class="col-2">
-        <h4 class="text-standard">Amount</h4>
-        <ul class="list-group">
-        {% for code, info in codes.items %}
-            <li class="list-group-item">{{ info.0 }}</li>
-        {% endfor %}
-        </ul>
-    </div>
-    <div class="col-4">
-        <h4 class="text-standard">Description</h4>
-        <ul class="list-group">
-        {% for code, info in codes.items %}
-            <li class="list-group-item">{{ info.1 }}</li>
-        {% endfor %}
-        </ul>
-    </div>
-    <div class="col-1">
-        <h4 class="text-standard">State</h4>
-        <ul class="list-group">
-        {% for code, info in codes.items %}
-            <li class="list-group-item"><input type="checkbox" {% if info.2 %}checked{% endif %}></li>
-        {% endfor %}
-        </ul>
-    </div>
-    <div class="col-2">
-        <div class="blank_cell"></div>
-        <ul class="list-group">
-        {% for code, info in codes.items %}
-            <a class="btn btn-danger discount-remove" href="">Remove</a>
-        {% endfor %}
-        </ul>
-    </div>
-</div>
+    </tbody>
+</table>
 {% else %}
-<h4 class="text-standard text-center">There are no currently active codes.</h4>
+<h4 class="text-standard text-center">There are currently no codes.</h4>
 {% endif %}
 <img class="dividor" src="{% static 'arrow-divider.png' %}">
 <form enctype="multipart/form-data" method="post" href="{% url 'discounts' %}">
 {% csrf_token %}
 <div class="row">
     <div class="col-3">
-        <p class="text-standard">Code: </p>
+        <p class="text-standard">Code*: </p>
         <input type="text" name="code" required>
         <p class="text-standard">Note: The actual value for the code.</p>
     </div>
     <div class="col-3">
-        <p class="text-standard">Amount: </p>
+        <p class="text-standard">Amount*: </p>
         <input type="text" name="amount" required>
         <p class="text-standard">Note: The numeric amount for the discount eg. 20 or 20%. The first example does 20 dollars the second does 20%.</p>
     </div>
     <div class="col-3">
-        <p class="text-standard">Description: </p>
+        <p class="text-standard">Description*: </p>
         <input type="text" name="description" required>
         <p class="text-standard">note: A brief description of what this code is up for.</p>
     </div>
+</div>
+<div class="row">
     <div class="col-3">
-        <p class="text-standard">State: </p>
-        <input type="text" name="state" required>
-        <p class="text-standard">note: Weather the code should be active or inactive.</p>
+        <p class="text-standard">Type*: </p>
+        <input type="text" name="type" required>
+        <p class="text-standard">note: What kind of code this will be (eg. shipping, product, order).</p>
+    </div>
+    <div class="col-3">
+        <p class="text-standard">Product: </p>
+        <select name="prod">
+            <option value="----">----</option>
+            {% for prod in prods %}
+            <option value="{{ prod.id }}">{{ prod.name }}</option>
+            {% endfor %}
+        </select>
+        <p class="text-standard">note: If this is product specifc pick a product.</p>
     </div>
 </div>
 <div class="w-100">
@@ -83,4 +88,29 @@ Discounts
 </div>
 </form>
 
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+$('#discount-toggle').click(function (event) {
+  classes = event.target.classList
+  last_class = classes.length - 1
+  $.get('{% url "update_discount" %}', {'state': event.target.innerText, 'code': classes[last_class]},
+    function(data) {
+      data = JSON.parse(data)
+      event.target.innerHTML = data.new_state;
+      event.target.className = data.new_class;
+    }
+  );
+});
+$('#discount-remove').click(function (event) {
+  classes = event.target.classList
+  last_class = classes.length - 1
+  $.get('{% url "update_discount" %}', {'code': classes[last_class]},
+    function() {
+      location.reload();
+    }
+  );
+});
+</script>
 {% endblock %}

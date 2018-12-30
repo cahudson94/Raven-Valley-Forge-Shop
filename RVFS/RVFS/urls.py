@@ -50,6 +50,7 @@ urlpatterns = [
     path('appointment-mobile/', AppointmentMobileView.as_view(),
          name='appointment-mobile'),
     path('discounts/', DiscountsView.as_view(), name='discounts'),
+    path('discounts/update/', views.update_discount, name='update_discount'),
     path('users/', UsersView.as_view(), name='users'),
     path('users/<int:pk>/comment/', CommentView.as_view(), name='comment'),
     path('orders/', OrdersView.as_view(), name='orders'),

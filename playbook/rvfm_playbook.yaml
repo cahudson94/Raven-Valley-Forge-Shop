@@ -65,13 +65,13 @@
         src: ~/CF/django-raven/vars
         dest: /home/ubuntu/Raven-Valley-Forge-Shop/RVFS/supersecret
 
-    - name: update token
+    - name: update service account
       copy:
-        src: ~/CF/django-raven/Raven-Valley-Forge-Shop/RVFS/RVFS/token.json
-        dest: /home/ubuntu/Raven-Valley-Forge-Shop/RVFS/RVFS/token.json
+        src: ~/CF/django-raven/Raven-Valley-Forge-Shop/RVFS/RVFS/service_account.json
+        dest: /home/ubuntu/Raven-Valley-Forge-Shop/RVFS/RVFS/service_account.json
 
-    - name: update token permissions
-      shell: chmod 777 /home/ubuntu/Raven-Valley-Forge-Shop/RVFS/RVFS/token.json
+    - name: update service account permissions
+      shell: chmod 777 /home/ubuntu/Raven-Valley-Forge-Shop/RVFS/RVFS/service_account.json
 
     - name: restart nginx
       service:
