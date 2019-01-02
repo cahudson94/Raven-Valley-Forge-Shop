@@ -1,8 +1,13 @@
-function updatecart(quantity, cart_data) {
-  $.get('/shop/cart/update_cart', {quantity, cart_data},
+function updatecart(quantity, item_id, type) {
+  $.get('/shop/cart/update_cart', {quantity, item_id, type},
     function(data) {
-      var money = 'Total: $' + data;
+      if (type === 'cart') {
+      var money = 'Subtotal: $' + data;
       $('#total').html(money);
+    } else {
+      var money = 'Pre-order Subtotal: $' + data;
+      $('#pre-total').html(money);
+    }
     }
   );
 }
@@ -12,21 +17,30 @@ $('.delete').click(function () {
   var element;
   $('#cart-count').attr('data-count', $('#cart-count').attr('data-count') - 1);
   element = $(this).parent().parent().parent().parent();
+  type = element.parent().parent()[0].previousSibling.previousSibling.innerHTML
   item = $(this).attr('data-item');
-  console.log(item);
-  $.get('/shop/cart/delete_item', {item},
+  var target;
+  var sectionText;
+  if (type === "Pre-orders") {
+    type = 'pre';
+    target = '#pre-total';
+    sectionText = 'Pre-order Subtotal: $'
+  } else {
+    type = 'cart';
+    target = '#total';
+    sectionText = 'Subtotal: $'
+  }
+  $.get('/shop/cart/delete_item', {item, type},
     function(data) {
-      console.log(data);
       if (data !== 'empty') {
-        var money = 'Total: $' + data;
-        $('#total').html(money);
+        $(target).html(sectionText + data);
         while (element.firstChild) {
           element.removeChild(element.firstChild);
         }
         $(element).remove();
       }
       else {
-        $('#total').html('Total: $0');
+        $(target).html(sectionText + '0');
         $('.section-head').remove();
         while (element.firstChild) {
           element.removeChild(element.firstChild);
@@ -39,15 +53,16 @@ $('.delete').click(function () {
           shipping.removeChild(shipping.firstChild);
         }
         $(shipping).remove();
-        var cart;
-        cart = $('#cart');
         var h5 = document.createElement('h5');
-        h5.textContent = 'Your cart is empty.';
-        h5.className = 'w-100 text-standard';
-        var div = document.createElement('div');
-        div.className = 'placeholder';
-        cart.append(h5);
-        cart.append(div);
+        if (type === "pre") {
+          h5.textContent = 'You are not pre-ordering any items.';
+          h5.className = 'w-100 text-standard';
+          $('#pre-order').append(h5);
+        } else {
+          h5.textContent = 'Your cart is empty.';
+          h5.className = 'w-100 text-standard';
+          $('#cart').append(h5);
+        }
       }
     }
   );

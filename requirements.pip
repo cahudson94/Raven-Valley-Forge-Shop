@@ -19,6 +19,7 @@ django-registration==2.3
 django-storages==1.6.5
 django-taggit==0.22.2
 docutils==0.14
+easypost==3.6.3
 factory-boy==2.10.0
 Faker==0.8.11
 flake8==3.5.0
@@ -54,6 +55,7 @@ rsa==3.4.2
 s3transfer==0.1.12
 six==1.11.0
 sorl-thumbnail==12.4.1
+taxjar==1.5.0
 text-unidecode==1.2
 uritemplate==3.0.0
 urllib3==1.22

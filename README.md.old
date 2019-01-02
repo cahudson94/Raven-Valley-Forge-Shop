@@ -1,12 +1,11 @@
 # Raven-Valley-Forge-Shop
+[![Build Status](https://travis-ci.org/cahudson94/Raven-Valley-Forge-Shop.svg?branch=master)](https://travis-ci.org/cahudson94/Raven-Valley-Forge-Shop) [![Coverage Status](https://coveralls.io/repos/github/cahudson94/Raven-Valley-Forge-Shop/badge.svg?branch=master)](https://coveralls.io/github/cahudson94/Raven-Valley-Forge-Shop?branch=master)
 ---
 ### Description
-[![Build Status](https://travis-ci.org/cahudson94/Raven-Valley-Forge-Shop.svg?branch=master)](https://travis-ci.org/cahudson94/Raven-Valley-Forge-Shop) [![Coverage Status](https://coveralls.io/repos/github/cahudson94/Raven-Valley-Forge-Shop/badge.svg)](https://coveralls.io/github/cahudson94/Raven-Valley-Forge-Shop)
-
-Version: 2.0.0
+Version: 1.0.1
 
 A Company and Store Site for Ravenmoore Valley Forge & Metalworks.
-Built on Amazon AWS using Django 2, with Paypal, Google, EasyPost, and TaxJar API integrations.
+Built on Amazon AWS using Django 2, with Paypal and Google API integration.
 
 ### Authors
 ---
@@ -14,31 +13,31 @@ Built on Amazon AWS using Django 2, with Paypal, Google, EasyPost, and TaxJar AP
 
 ### Dependencies
 ---
-* generic
-* discovery
-* oauth2
-* conf
-* taxjar
-* auth
-* oauth2client
-* paypalrestsdk
-* managers
-* paginator
 * contrib
-* http
-* mixins
-* uploadedfile
-* fields
-* django
-* mail
-* edit
-* db
+* file
 * s3boto3
+* oauth2client
+* apiclient
+* http
+* edit
+* generic
+* uploadedfile
+* exceptions
 * fields
-* deletion
+* conf
 * decorators
+* decorators
+* deletion
+* paginator
+* mail
+* mixins
+* httplib2
+* django
+* fields
+* managers
 * shortcuts
-* easypost
+* db
+* auth
 
 ### Getting Started
 ---
@@ -60,22 +59,26 @@ Now now that you have cloned your repo and changed directories into the project,
 
 `$ source ENV/bin/activate`
 
-`$ pip install -r requirements.pip`
+`$ pip install -r requirements.txt`
 
 ### Test Suite
 ---
 ##### *Running Tests*
-This is a Django application, and therefore to run tests, run the following command at the same level as `./manage.py`.
+This application uses [unittest](https://docs.python.org/3/library/unittest.html) as a testing suite. To run tests, run:
 
-`./manage.py test`
+``$ python3 -m unittest``
+
+To view test coverage, run:
+
+``$ coverage report -m``
 ##### *Test Files*
 The testing files for this project are:
 
 | File Name | Description |
 |:---:|:---:|
-| `./RVFS/account/tests.py` | Test file for account views, models, urls, and forms. |
+| `./RVFS/RVFS/tests.py` | None |
+| `./RVFS/account/tests.py` | None |
 | `./RVFS/catalog/tests.py` | None |
-| `./RVFS/RVFS/tests.py` | Test file for base html, main url/views, and google api calls. |
 
 ### Development Tools
 ---
@@ -84,6 +87,7 @@ The testing files for this project are:
 ### License
 ---
 This project is licensed under MIT License - see the LICENSE.md file for details.
-
+### Acknowledgements
+---
 
 *This README was generated using [writeme.](https://github.com/chelseadole/write-me)*

@@ -60,11 +60,19 @@
             <p>
                 <label class="text-standard">Quantity:</label>
                 <select name="quantity">
+                {% if product.stock < 6  and  product.stock != 0 %}
+                    {% with ''|center:product.stock as range %}
+                    {% for i in range %}
+                         <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
+                    {% endfor %}
+                    {% endwith %}
+                {% else %}
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
                     <option value="5">5</option>
+                {% endif %}
                 </select>
             </p>
         </div>
@@ -88,7 +96,7 @@
                 <input class="btn btn-secondary text-standard" type="submit" name="add" value="Add to cart">
             {% endif %}
         {% elif product.stock == 0 %}
-            <input class="btn btn-secondary text-standard" type="submit" value="Out of Stock" disabled>
+            <input class="btn btn-secondary text-standard" name="pre_order" type="submit" value="Pre Order">
         {% else %}
             {% if product.is_knife %}
                 {% if user.is_authenticated %}

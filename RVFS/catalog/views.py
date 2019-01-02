@@ -131,10 +131,15 @@ class SingleProductView(DetailView):
         extra_cost = ''
         if self.request.user.is_authenticated:
             account = Account.objects.get(user=request.user)
+        buy_type = ''
         if 'add' in data.keys():
+            buy_type = 'add'
+        elif 'pre_order' in data.keys():
+            buy_type = 'pre_order'
+        if buy_type:
             fields = []
             for field in data:
-                if field != 'csrfmiddlewaretoken' and field != 'add':
+                if field not in ['add', 'pre_order', 'csrfmiddlewaretoken']:
                     fields.append(field)
             cart_item = {'item_id': self.get_object().id, 'type': 'prod',
                          'description': self.get_object().description}
@@ -153,21 +158,38 @@ class SingleProductView(DetailView):
                     self.request.session.set_expiry(0)
                 if 'account' not in self.request.session.keys():
                     self.request.session['account'] = {'cart': '',
-                                                       'cart_total': 0.0}
+                                                       'cart_total': 0.0,
+                                                       'pre_order': '',
+                                                       'pre_order_total': 0.0}
                 account = self.request.session['account']
-                if account['cart']:
-                    account['cart'] += '|' + cart_item
+                if buy_type == 'pre_order':
+                    if account['pre_order']:
+                        account['pre_order'] += '|' + cart_item
+                    else:
+                        account['pre_order'] += cart_item
+                    account['pre_order_total'] = str(
+                        Decimal(account['pre_order_total']) + item_total)
                 else:
-                    account['cart'] += cart_item
-                account['cart_total'] = str(Decimal(account['cart_total']) +
-                                            item_total)
+                    if account['cart']:
+                        account['cart'] += '|' + cart_item
+                    else:
+                        account['cart'] += cart_item
+                    account['cart_total'] = str(
+                        Decimal(account['cart_total']) + item_total)
                 self.request.session.save()
             else:
-                if account.cart:
-                    account.cart += '|' + cart_item
+                if buy_type == 'pre_order':
+                    if account.pre_order:
+                        account.pre_order += '|' + cart_item
+                    else:
+                        account.pre_order += cart_item
+                    account.pre_order_total += Decimal(item_total)
                 else:
-                    account.cart += cart_item
-                account.cart_total += Decimal(item_total)
+                    if account.cart:
+                        account.cart += '|' + cart_item
+                    else:
+                        account.cart += cart_item
+                    account.cart_total += Decimal(item_total)
                 account.save()
         else:
             item = str(self.get_object().id)
@@ -491,11 +513,15 @@ class CartView(TemplateView):
             account = self.request.user.account
             context['account'] = account
             total = account.cart_total
+            pre_order_total = account.pre_order_total
         if 'shipping_data' in session.keys():
-            context['shipping'] = session['shipping_data']['shipping']
-            context['info'] = session['shipping_data']['info']
-            if 'exists' in session['shipping_data'].keys():
-                context['ship_exists'] = session['shipping_data']['exists']
+            if session['shipping_data'] == 'in_store':
+                context['in_store'] = True
+            else:
+                context['shipping'] = session['shipping_data']['shipping']
+                context['info'] = session['shipping_data']['info']
+                if 'exists' in session['shipping_data'].keys():
+                    context['ship_exists'] = session['shipping_data']['exists']
         elif self.request.user.is_authenticated:
             context['shipping'] = info.get(pk=account.main_address)
             context['info'] = {'first': account.first_name,
@@ -505,22 +531,38 @@ class CartView(TemplateView):
             if not session.get_expire_at_browser_close():
                 session.set_expiry(0)
             if 'account' not in session.keys():
-                session['account'] = {'cart': '', 'cart_total': 0.0}
+                session['account'] = {
+                    'cart': '',
+                    'cart_total': 0.0,
+                    'pre_order': '',
+                    'pre_order_total': 0.0,
+                }
             cart = session['account']['cart']
+            pre_order = session['account']['pre_order']
             context['account'] = session['account']
             total = session['account']['cart_total']
+            pre_order_total = session['account']['pre_order_total']
         else:
-            cart = context['account'].cart
+            cart = account.cart
+            pre_order = account.pre_order
             if len(context['account'].shippinginfo_set.values()) > 1:
                 addresses = context['account'].shippinginfo_set.values()
                 context['alt_add'] = [address for address in addresses]
         if cart:
             context['cart'] = unpack(cart)
+        if pre_order:
+            context['pre_order'] = unpack(pre_order)
         context['item_fields'] = ['color', 'length', 'diameter', 'extras']
-        context['total'] = total
-        context['total'] = Decimal(str(float("%.2f" % (context['total']))))
+        context['total'] = Decimal(str(float("%.2f" % (total))))
+        context['pre_order_total'] = Decimal(str(float("%.2f" % (pre_order_total))))
         if str(context['total'])[-2] == '.':
-            context['total'] = Decimal(str(context['total']) + '0')
+            context['total'] = Decimal(
+                str(context['total']) + '0'
+            )
+        if str(context['pre_order_total'])[-2] == '.':
+            context['pre_order_total'] = Decimal(
+                str(context['pre_order_total']) + '0'
+            )
         set_basic_context(context, 'cart')
         return context
 
@@ -529,6 +571,10 @@ class CartView(TemplateView):
         data = request.POST
         exists = False
         field_count = 0
+        if 'in_store' in data.keys():
+            request.session['shipping_data'] = 'in_store'
+            request.session.save()
+            return HttpResponseRedirect(self.success_url)
         ship_fields = ['ship_first_name', 'ship_last_name', 'ship_email',
                        'ship_add_1', 'ship_city', 'ship_state', 'ship_zip']
         if 'ship_first_name' in data.keys():
@@ -565,92 +611,113 @@ class CartView(TemplateView):
 
 def update_cart(request):
     """Change quantity of items in cart and update total."""
-    cart_item = request.GET['cart_data'].split(' ')
+    item_id = request.GET['item_id']
+    target_type = request.GET['type']
     if request.user.is_authenticated:
-        cart = unpack(request.user.account.cart)
-        cart_total = request.user.account.cart_total
+        if target_type != 'pre':
+            target = unpack(request.user.account.cart)
+            target_total = request.user.account.cart_total
+        else:
+            target = unpack(request.user.account.pre_order)
+            target_total = request.user.account.pre_order_total
     else:
-        cart = unpack(request.session['account']['cart'])
-        cart_total = Decimal(request.session['account']['cart_total'])
+        if target_type != 'pre':
+            target = unpack(request.session['account']['cart'])
+            target_total = Decimal(request.session['account']['cart_total'])
+        else:
+            target = unpack(request.session['account']['pre_order'])
+            target_total = request.session['account']['pre_order_total']
     prods = []
-    for item in cart:
+    prod_idx = None
+    for idx, item in enumerate(target):
         prods.append(item)
-    if cart_item[0] == 'prod':
-        difference = (int(request.GET['quantity']) -
-                      int(prods[int(cart_item[1])]['quantity']))
-        price = prods[int(cart_item[1])]['item'].price
-        if 'extras' in prods[int(cart_item[1])].keys():
-            price += Decimal(prods[int(cart_item[1])]['extras'].split(' $')[1])
-        cart_total += Decimal(price * difference)
-        prods[int(cart_item[1])]['quantity'] = request.GET['quantity']
-    cart_repack(prods, request, cart_total)
-    if 'code' in request.session.keys():
-            amount = request.session['code'].split(', ')[1]
-            if '$' in amount:
-                cart_total -= Decimal(amount[1:])
-            else:
-                cart_total -= (Decimal(float(cart_total)) *
-                               Decimal('.' + amount[:-1]))
-    return HttpResponse(cart_total)
+        if item['item_id'] == int(item_id):
+            prod_idx = idx
+    difference = (int(request.GET['quantity']) -
+                  int(prods[prod_idx]['quantity']))
+    price = prods[prod_idx]['item'].price
+    if 'extras' in prods[prod_idx].keys():
+        price += Decimal(prods[prod_idx]['extras'].split(' $')[1])
+    target_total += Decimal(price * difference)
+    prods[prod_idx]['quantity'] = request.GET['quantity']
+    cart_repack(prods, request, target_total, target_type)
+    return HttpResponse(target_total)
 
 
 def delete_item(request):
-    """Remove items from cart and update total."""
-    cart_item = request.GET['item'].split(' ')
+    """Remove items from cart or preorder and update total."""
+    item_id = request.GET['item']
+    del_type = request.GET['type']
     if request.user.is_authenticated:
-        cart = unpack(request.user.account.cart)
-        cart_total = request.user.account.cart_total
-    else:
-        cart = unpack(request.session['account']['cart'])
-        cart_total = request.session['account']['cart_total']
-    prods = []
-    for item in cart:
-        prods.append(item)
-    if len(prods) == 1:
-        cart_total = Decimal(0.0)
-        if request.user.is_authenticated:
-            request.user.account.cart_total = cart_total
-            request.user.account.cart = ''
-            request.user.account.save()
+        if del_type != 'pre':
+            target = unpack(request.user.account.cart)
+            target_total = request.user.account.cart_total
         else:
-            request.session['account']['cart_total'] = cart_total
-            request.session['account']['cart'] = ''
-            request.session.save()
-        return HttpResponse('empty')
-    price = prods[int(cart_item[1])]['item'].price
-    if 'extras' in prods[int(cart_item[1])].keys():
-        price += Decimal(prods[int(cart_item[1])]['extras'].split(' $')[1])
-    cart_total -= Decimal(price * int(prods[int(cart_item[1])]['quantity']))
-    prods.pop(int(cart_item[1]))
-    cart_repack(prods, request, cart_total)
-    if 'code' in request.session.keys():
-            amount = request.session['code'].split(', ')[1]
-            if '$' in amount:
-                cart_total -= Decimal(amount[1:])
-            if '$' not in amount:
-                cart_total -= (Decimal(float(cart_total)) *
-                               Decimal('.' + amount[:-1]))
-    return HttpResponse(cart_total)
+            target = unpack(request.user.account.pre_order)
+            target_total = request.user.account.pre_order_total
+    else:
+        if del_type == 'pre':
+            target = unpack(request.session['account']['pre_order'])
+            target_total = request.session['account']['pre_order_total']
+        else:
+            target = unpack(request.session['account']['cart'])
+            target_total = Decimal(request.session['account']['cart_total'])
+    prods = []
+    prod_idx = None
+    for idx, item in enumerate(target):
+        prods.append(item)
+        if item['item_id'] == int(item_id):
+            prod_idx = idx
+    if len(prods) == 1:
+        target_total = Decimal(0.0)
+        if del_type == 'pre':
+            if request.user.is_authenticated:
+                request.user.account.pre_order_total = target_total
+                request.user.account.pre_order = ''
+                request.user.account.save()
+            else:
+                request.session['account']['pre_order_total'] = target_total
+                request.session['account']['pre_order'] = ''
+                request.session.save()
+            return HttpResponse('empty')
+        else:
+            if request.user.is_authenticated:
+                request.user.account.cart_total = target_total
+                request.user.account.cart = ''
+                request.user.account.save()
+            else:
+                request.session['account']['cart_total'] = target_total
+                request.session['account']['cart'] = ''
+                request.session.save()
+            return HttpResponse('empty')
+    price = prods[prod_idx]['item'].price
+    if 'extras' in prods[prod_idx].keys():
+        price += Decimal(prods[prod_idx]['extras'].split(' $')[1])
+    target_total -= Decimal(price * int(prods[prod_idx]['quantity']))
+    prods.pop(prod_idx)
+    cart_repack(prods, request, target_total, del_type)
+    return HttpResponse(target_total)
 
 
 def apply_discount(request):
     """Apply a discount code to current order."""
     code = request.GET['code']
-    discounts = Discount.objects.all()
-    codes = []
-    for discount in discounts:
-        codes.append(discount.code)
-    if code in codes:
-        if 'code' not in request.session.keys():
-            request.session['code'] = code
-            request.session.save()
-            if request.user.is_authenticated:
-                request.user.account.active_code = code
-                request.user.account.save()
-        return HttpResponse("<p class='text-standard'>Discount \
+    try:
+        discount = Discount.objects.get(code=code)
+    except:
+        return HttpResponse("<div id='message' class='w-100'><p class='text-standard'>\
+    Not a valid discount code.</p></div>")
+    if not discount.code_state:
+        return HttpResponse("<div id='message' class='w-100'><p class='text-standard'>\
+    Not an active discount code.</p></div>")
+    if 'code' not in request.session.keys():
+        request.session['code'] = code
+        request.session.save()
+        if request.user.is_authenticated:
+            request.user.account.active_code = code
+            request.user.account.save()
+    return HttpResponse("<p class='text-standard'>Discount \
 code activated!</p>")
-    return HttpResponse("<div id='message' class='w-100'><p class='text-standard'>\
-Not a valid discount code.</p></div>")
 
 
 def remove_discount(request):
@@ -674,9 +741,15 @@ def create_payment(request):
     base_url = request.get_raw_uri().split('create')[0]
     session = request.session
     if request.user.is_authenticated:
-        cart = unpack(request.user.account.cart)
+        cart = request.user.account.cart
+        pre_order = request.user.account.pre_order
     else:
-        cart = unpack(session['account']['cart'])
+        cart = session['account']['cart']
+        pre_order = session['account']['pre_order']
+    if cart:
+        cart = unpack(cart)
+    if pre_order:
+        pre_order = unpack(pre_order)
     items = []
     shipping_discount = 0
     item_count = 0
@@ -686,8 +759,8 @@ def create_payment(request):
         obj = Product.objects.get(id=item['item_id'])
         price = obj.price
         if 'code' in session.keys():
-            code = session['code'].split(', ')
-            amount = code[1]
+            discount = Discount.objects.get(code=session['code'])
+            amount = discount.value
             if '$' in amount:
                 percent = Decimal(amount[1:]) / item_count
                 price -= percent
@@ -699,6 +772,8 @@ def create_payment(request):
             else:
                 percent = Decimal(float(price)) * Decimal('.' + amount[:-1])
                 price -= percent
+        if request.session['shipping_data'] == 'in_store':
+            price = Decimal(float(price)) / Decimal('10')
         prod = {
             "name": obj.name,
             "description": item["description"],
@@ -707,6 +782,42 @@ def create_payment(request):
             "quantity": item["quantity"]
         }
         items.append(prod)
+    for item in pre_order:
+        item_count += int(item['quantity'])
+    for item in pre_order:
+        obj = Product.objects.get(id=item['item_id'])
+        price = obj.price
+        if 'code' in session.keys():
+            discount = Discount.objects.get(code=session['code'])
+            amount = discount.value
+            if '$' in amount:
+                percent = Decimal(amount[1:]) / item_count
+                price -= percent
+            elif 'ship' in amount:
+                if 'free' in amount:
+                    shipping_discount = session['paypal']['shipping']
+                else:
+                    shipping_discount = Decimal(amount[5:])
+            else:
+                percent = Decimal(float(price)) * Decimal('.' + amount[:-1])
+                price -= percent
+        if request.session['shipping_data'] == 'in_store':
+            price = Decimal(float(price)) / Decimal('10')
+        prod = {
+            "name": obj.name,
+            "description": item["description"],
+            "price": str(price),
+            "currency": "USD",
+            "quantity": item["quantity"]
+        }
+        items.append(prod)
+    pay_pal_total = session['paypal']['total']
+    pay_pal_subtotal = session['paypal']['subtotal']
+    pay_pal_tax = session['paypal']['tax']
+    if request.session['shipping_data'] == 'in_store':
+        pay_pal_total = Decimal(float(pay_pal_total)) / Decimal('10')
+        pay_pal_subtotal = Decimal(float(pay_pal_subtotal)) / Decimal('10')
+        pay_pal_tax = Decimal(float(pay_pal_tax)) / Decimal('10')
     if '.' not in str(shipping_discount):
         shipping_discount = str(shipping_discount) + '.00'
     elif str(shipping_discount)[-2] == '.':
@@ -723,11 +834,11 @@ def create_payment(request):
                 "items": items
             },
             "amount": {
-                "total": session['paypal']['total'],
+                "total": str(pay_pal_total),
                 "currency": "USD",
                 "details": {
-                    "subtotal": session['paypal']['subtotal'],
-                    "tax": session['paypal']['tax'],
+                    "subtotal": str(pay_pal_subtotal),
+                    "tax": str(pay_pal_tax),
                     "shipping": session['paypal']['shipping'],
                     "shipping_discount": str(shipping_discount),
                 }
@@ -797,11 +908,13 @@ class CheckoutView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Handle redirects when missing context."""
-        keys = request.session.keys()
+        session = request.session
+        keys = session.keys()
         view = CheckoutView
         if 'shipping_data' not in keys:
             return HttpResponseRedirect(reverse_lazy('cart'))
-        session = request.session
+        if session['shipping_data'] == 'in_store':
+            return super(view, self).get(self, request, *args, **kwargs)
         field_count = 0
         ship_fields = ['address1', 'city', 'state', 'zip_code']
         info_fields = ['first', 'last', 'email']
@@ -820,134 +933,211 @@ class CheckoutView(TemplateView):
         context = super(CheckoutView, self).get_context_data(**kwargs)
         session = self.request.session
         cart = None
-        context['shipping'] = session['shipping_data']['shipping']
-        context['info'] = session['shipping_data']['info']
+        pre_order = None
+        in_store = False
+        if session['shipping_data'] != 'in_store':
+            context['shipping'] = session['shipping_data']['shipping']
+            context['info'] = session['shipping_data']['info']
+        else:
+            in_store = True
+            context['in_store'] = True
         if self.request.user.is_authenticated:
             account = self.request.user.account
+            if account.active_code:
+                self.request.session['code'] = account.active_code
+                context['code'] = account.active_code
             context['account'] = account
+            pre_order = account.pre_order
+            pre_order_total = account.pre_order_total
             total = account.cart_total
-            cart = context['account'].cart
-            if len(context['account'].shippinginfo_set.values()) > 1:
-                addresses = context['account'].shippinginfo_set.values()
+            cart = account.cart
+            if len(account.shippinginfo_set.values()) > 1:
+                addresses = account.shippinginfo_set.values()
                 context['alt_add'] = [address for address in addresses]
         else:
             context['account'] = session['account']
             cart = context['account']['cart']
             total = context['account']['cart_total']
+            pre_order = context['account'].pre_order
+            pre_order_total = context['account'].pre_order_total
             if not session.get_expire_at_browser_close():
                 session.set_expiry(0)
-        context['cart'] = unpack(cart)
-        zip_code = session['shipping_data']['shipping']['zip_code']
-        street = session['shipping_data']['shipping']['address1']
-        tax_rate = taxjar_client.rates_for_location(
-            zip_code,
-            {'street': street}
-        )['combined_rate']
-        context['tax_rate'] = float("%.2f" % (tax_rate * 100))
-        info = session['shipping_data']['info']
-        shipping = session['shipping_data']['shipping']
-        name = info['first'] + ' ' + info['last']
         shipping_cost = 0
-        state = get_state(shipping['state'])
-        to_address = easypost.Address.create(
-            name=name,
-            street1=shipping['address1'],
-            street2=shipping['address2'],
-            city=shipping['city'],
-            state=state,
-            zip=shipping['zip_code'],
-            country='US',
-            email=info['email']
-        )
-        from_address = easypost.Address.create(
-            name='RVFM Shop',
-            street1='11639 13th Ave SW',
-            city='Burien',
-            state='WA',
-            zip='98146',
-            country='US',
-            phone='2063726501',
-            email='Creations@ravenvfm.com'
-        )
-        for item in context['cart']:
-            parcel = easypost.Parcel.create(
-                length=item['item'].shipping_length,
-                width=item['item'].shipping_width,
-                height=item['item'].shipping_height,
-                weight=item['item'].shipping_weight
+        if not in_store:
+            zip_code = session['shipping_data']['shipping']['zip_code']
+            street = session['shipping_data']['shipping']['address1']
+            tax_rate = taxjar_client.rates_for_location(
+                zip_code,
+                {'street': street}
+            )['combined_rate']
+            info = session['shipping_data']['info']
+            shipping = session['shipping_data']['shipping']
+            name = info['first'] + ' ' + info['last']
+            state = get_state(shipping['state'])
+            to_address = easypost.Address.create(
+                name=name,
+                street1=shipping['address1'],
+                street2=shipping['address2'],
+                city=shipping['city'],
+                state=state,
+                zip=shipping['zip_code'],
+                country='US',
+                email=info['email']
             )
-            shipment = easypost.Shipment.create(
-                to_address=to_address,
-                from_address=from_address,
-                parcel=parcel,
+            from_address = easypost.Address.create(
+                name='RVFM Shop',
+                street1='11639 13th Ave SW',
+                city='Burien',
+                state='WA',
+                zip='98146',
+                country='US',
+                phone='2063726501',
+                email='Creations@ravenvfm.com'
             )
-            rate_price = shipment.lowest_rate()['rate']
-            shipping_cost += (
-                float(rate_price) * float(item['quantity'])
-            )
+            if cart:
+                context['cart'] = unpack(cart)
+                for item in context['cart']:
+                    parcel = easypost.Parcel.create(
+                        length=item['item'].shipping_length,
+                        width=item['item'].shipping_width,
+                        height=item['item'].shipping_height,
+                        weight=item['item'].shipping_weight
+                    )
+                    shipment = easypost.Shipment.create(
+                        to_address=to_address,
+                        from_address=from_address,
+                        parcel=parcel,
+                    )
+                    rate_price = shipment.lowest_rate()['rate']
+                    shipping_cost += (
+                        float(rate_price) * float(item['quantity'])
+                    )
+            if pre_order:
+                context['pre_order'] = unpack(pre_order)
+                for item in context['pre_order']:
+                    parcel = easypost.Parcel.create(
+                        length=item['item'].shipping_length,
+                        width=item['item'].shipping_width,
+                        height=item['item'].shipping_height,
+                        weight=item['item'].shipping_weight
+                    )
+                    shipment = easypost.Shipment.create(
+                        to_address=to_address,
+                        from_address=from_address,
+                        parcel=parcel,
+                    )
+                    rate_price = shipment.lowest_rate()['rate']
+                    shipping_cost += (
+                        float(rate_price) * float(item['quantity'])
+                    )
+        else:
+            tax_rate = taxjar_client.rates_for_location(
+                '98146',
+                {'street': '11639 13th Ave SW'}
+            )['combined_rate']
+        context['tax_rate'] = float("%.2f" % (tax_rate * 100))
         context['shipping_cost'] = float("%.2f" % (shipping_cost))
         context['subtotal'] = total
+        context['pre_subtotal'] = pre_order_total
         if 'code' in session.keys():
             discount = Discount.objects.get(code=session['code'])
-            amount = discount.value
-            if not discount.prod:
-                if '$' in amount:
-                    effect = amount
-                    context['subtotal'] = total - Decimal(amount[1:])
-                elif 'ship' in amount:
-                    if 'free' in amount:
-                        effect = 'Free Shipping'
-                        context['shipping_cost'] = 0
+            if discount.code_state:
+                amount = discount.value
+                if discount.prod:
+                    effected_prod = Product.objects.get(id=discount.prod)
+                    cart_effect = False
+                    pre_order_effect = False
+                    if cart:
+                        for item in unpack(cart):
+                            if item['item'] == effected_prod:
+                                cart_effect = True
+                                effected_quantity = item['quantity']
+                    if pre_order:
+                        for item in unpack(pre_order):
+                            if item['item'] == effected_prod:
+                                pre_order_effect = True
+                                effected_quantity = item['quantity']
+                    if not cart_effect and not pre_order_effect:
+                        effect = "You have no orders of {} in your cart, \
+no effect from".format(effected_prod.name)
                     else:
-                        value = amount[5:]
-                        effect = '${} off shipping'
-                        context['shipping_cost'] -= Decimal(value)
-                else:
-                    effect = discount.value + '%'
-                    percent = Decimal(float(total)) * Decimal('.' + amount)
-                    context['subtotal'] = total - percent
-            else:
-                effected_prod = Product.objects.get(id=discount.prod)
-                
-                if '$' in amount:
-                    effect = amount
-                    context['subtotal'] = total - Decimal(amount[1:])
-                elif 'ship' in amount:
-                    if 'free' in amount:
-                        effect = 'Free Shipping'
-                        context['shipping_cost'] = 0
-                    else:
-                        value = amount[5:]
-                        effect = '${} off shipping'
-                        context['shipping_cost'] -= Decimal(value)
-                else:
-                    effect = discount.value + '%'
-                    percent = Decimal(float(total)) * Decimal('.' + amount)
-                    context['subtotal'] = total - percent
-            context['code'] = [discount.code, effect]
+                        if '$' in amount:
+                            effect = amount
+                            context['discount'] = Decimal(amount[1:]) * effected_quantity
+                            if cart_effect:
+                                context['subtotal'] -= context['discount']
+                            else:
+                                context['pre_subtotal'] -= context['discount']
+                        elif 'ship' in amount:
+                            if 'free' in amount:
+                                effect = 'Free Shipping'
+                                context['shipping_cost'] = 0
+                            else:
+                                value = amount[5:]
+                                effect = '${} off shipping'
+                                context['shipping_cost'] -= Decimal(value)
+                        else:
+                            effect = discount.value + '%'
+                            percent = Decimal(float(effected_prod.price)) * Decimal('.' + amount)
+                            context['discount'] = percent * int(effected_quantity)
+                            if cart_effect:
+                                context['subtotal'] -= context['discount']
+                            else:
+                                context['pre_subtotal'] -= context['discount']
+                        effect += ' off {}x {}'.format(
+                            effected_quantity, effected_prod.name
+                        )
         context['total'] = (
-            context['subtotal'] + Decimal(str(context['shipping_cost']))
+            context['subtotal'] +
+            Decimal(str(context['shipping_cost'])) +
+            context['pre_subtotal']
         )
+        if 'code' in session.keys():
+            discount = Discount.objects.get(code=session['code'])
+            if discount.code_state:
+                amount = discount.value
+                if not discount.prod:
+                    if '$' in amount:
+                        effect = amount
+                        context['discount'] = Decimal(amount[1:])
+                        context['total'] -= context['discount']
+                    elif 'ship' in amount:
+                        if 'free' in amount:
+                            effect = 'Free Shipping'
+                            context['shipping_cost'] = 0
+                        else:
+                            value = amount[5:]
+                            effect = '${} off shipping'
+                            context['shipping_cost'] -= Decimal(value)
+                    else:
+                        effect = discount.value + '%'
+                        context['discount'] = Decimal(float(context['total'])) * Decimal('.' + amount)
+                        context['total'] -= context['discount']
+            context['code'] = [discount.code, effect]
         tax = Decimal(str(tax_rate)) * context['total']
         context['tax'] = Decimal(str(float("%.2f" % (tax))))
         context['total'] += context['tax']
-        fields = ['subtotal', 'shipping_cost', 'tax', 'total']
+        fields = ['subtotal', 'shipping_cost',
+                  'tax', 'total', 'pre_subtotal']
         for field in fields:
             if str(context[field])[-2] == '.':
                 context[field] = Decimal(str(context[field]) + '0')
         set_basic_context(context, 'cart')
         session['paypal'] = {
-            'subtotal': str(context['subtotal']),
+            'subtotal': str(context['subtotal'] + context['pre_subtotal']),
             'total': str(context['total']),
             'tax': str(context['tax']),
             'shipping': str(context['shipping_cost'])
         }
         session.save()
+        context['deposit'] = str(round(context['total'] / 10, 2))
         return context
 
     def post(self, request, *args, **kwargs):
         """Apply shipping info for guest user."""
         session = request.session
+        if session['shipping_data'] == 'in_store':
+            return HttpResponseRedirect(self.success_url)
         field_count = 0
         ship_fields = ['address1', 'city', 'state', 'zip_code']
         info_fields = ['first', 'last', 'email']
@@ -982,12 +1172,14 @@ class CheckoutCompleteView(TemplateView):
                 order = Order.objects.get(id=request.session['order_num'])
                 order.paid = True
                 order.save()
-                session_keys = [
-                    'account', 'shipping_data', 'code', 'paypal', 'order_num'
-                ]
-                for item in session_keys:
-                    del request.session[item]
-                request.session.save()
+                items = unpack(order.order_content)
+                for item in items:
+                    if item['item'].stock:
+                        item['item'].stock -= int(item['quantity'])
+                        if item['item'].stock == 0:
+                            # TO-DO: send matt an email for out of stock
+                            pass
+                    item['item'].save()
                 return super(view, self).get(self, request, *args, **kwargs)
         return HttpResponseRedirect(reverse_lazy('cart'))
 
@@ -1037,9 +1229,19 @@ when your order ships. Your purchases:\n\n'
                                     [info['email']])
         owner_email.send(fail_silently=True)
         client_email.send(fail_silently=True)
+        session_keys = [
+            'shipping_data', 'code', 'paypal', 'order_num'
+        ]
+        for item in session_keys:
+            try:
+                del session[item]
+            except KeyError:
+                pass
+        session.save()
         if self.request.user.is_authenticated:
             account.cart = ''
             account.cart_total = 0.0
+            account.active_code = ''
             account.save()
         else:
             session['account'] = {'cart': '', 'cart_total': 0.0}
@@ -1069,20 +1271,30 @@ def check_address(data, account):
         return address.id
 
 
-def cart_repack(prods, request, cart_total):
+def cart_repack(prods, request, total, pack_type):
     """Repack items into the cart."""
-    cart_repack = ''
+    repack = ''
     for i in prods:
         i.pop('item')
-        if cart_repack:
-            cart_repack += '|' + json.dumps(i)
+        if repack:
+            repack += '|' + json.dumps(i)
         else:
-            cart_repack += json.dumps(i)
-    if request.user.is_authenticated:
-        request.user.account.cart = cart_repack
-        request.user.account.cart_total = cart_total
-        request.user.account.save()
+            repack += json.dumps(i)
+    if pack_type == 'cart':
+        if request.user.is_authenticated:
+            request.user.account.cart = repack
+            request.user.account.cart_total = total
+            request.user.account.save()
+        else:
+            request.session['account']['cart'] = repack
+            request.session['account']['total'] = str(total)
+            request.session.save()
     else:
-        request.session['account']['cart'] = cart_repack
-        request.session['account']['cart_total'] = str(cart_total)
-        request.session.save()
+        if request.user.is_authenticated:
+            request.user.account.pre_order = repack
+            request.user.account.pre_order_total = total
+            request.user.account.save()
+        else:
+            request.session['account']['pre_order'] = repack
+            request.session['account']['pre_order_total'] = str(total)
+            request.session.save()

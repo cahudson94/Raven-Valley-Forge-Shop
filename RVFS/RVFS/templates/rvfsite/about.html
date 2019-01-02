@@ -16,10 +16,6 @@ Ravenmoore Valley Forge & Metalworks is crewed by a team of designers and artisa
 <p class="text-standard about-text">
 RVFM also stands for the other half of who we are; Ravenmoore Valley Forge & Marketplace. Many types of products can be found here made by the members of the shop and fellow artisans alike. Small hobby artists searching for a table or a market to sell their creations or even other artists to collaborate with join us in our ventures.
 </p>
-<h1 class="section-heads text-center">MARKETPLACE HEADER</h1>
-<p class="text-standard about-text">
-In the Marketplace you’ll find the ever-changing inventory including but not limited to; custom blades and wands, chainmail jewelry and sheet-goods, and wire-wrapped stones. Alongside the inventory, we also have our friends and artisans listed below with their information. We hope you enjoy the Marketplace and thank you for visiting.
-</p>
 <p class="text-standard about-text">
 Take a look in the shop Gallery for a glimpse at where the magic happens!
 </p>
@@ -34,7 +30,7 @@ Take a look in the shop Gallery for a glimpse at where the magic happens!
             {% if count|mod:2 == 1 %}
             <div class="row">
                 <div class="col">
-                    <img class="abt-pic d-block mx-auto" src="{{ member.account.pic.url }}">
+                    <img class="abt-pic d-block mx-auto" src="{% if member.account.pic %}{{ member.account.pic.url }}{% else %}{% static 'default_acc_pic.jpg' %}{% endif %}">
                     <h3 class="names">{{ member.account.first_name }} {{ member.account.last_name }}</h3>
                 </div>
 
@@ -53,7 +49,7 @@ Take a look in the shop Gallery for a glimpse at where the magic happens!
                 </div>
 
                 <div class="col">
-                    <img class="abt-pic d-block mx-auto" src="{{ member.account.pic.url }}">
+                    <img class="abt-pic d-block mx-auto" src="{% if member.account.pic %}{{ member.account.pic.url }}{% else %}{% static 'default_acc_pic.jpg' %}{% endif %}">
                     <h3 class="names">{{ member.account.first_name }} {{ member.account.last_name }}</h3>
                 </div>
             </div>

@@ -30,10 +30,10 @@ Discounts
             <td class="align-middle">{{ code.prod_name }}</td>
             <td class="align-middle">
                 {% if code.code_state %}
-                <a class="btn btn-success {{ code.code }}" id="discount-toggle">
+                <a class="discount-toggle btn btn-success {{ code.code }}">
                 On
                 {% else %}
-                <a class="btn btn-secondary {{ code.code }}" id="discount-toggle">
+                <a class="discount-toggle btn btn-secondary {{ code.code }}">
                 Off
                 {% endif %}
                 </a>
@@ -58,7 +58,7 @@ Discounts
     <div class="col-3">
         <p class="text-standard">Amount*: </p>
         <input type="text" name="amount" required>
-        <p class="text-standard">Note: The numeric amount for the discount eg. 20 or 20%. The first example does 20 dollars the second does 20%.</p>
+        <p class="text-standard">Note: The numeric amount for the discount eg. $20 or 20. The first example does 20 dollars the second does 20%.</p>
     </div>
     <div class="col-3">
         <p class="text-standard">Description*: </p>
@@ -92,7 +92,7 @@ Discounts
 
 {% block js %}
 <script type="text/javascript">
-$('#discount-toggle').click(function (event) {
+$('.discount-toggle').click(function (event) {
   classes = event.target.classList
   last_class = classes.length - 1
   $.get('{% url "update_discount" %}', {'state': event.target.innerText, 'code': classes[last_class]},

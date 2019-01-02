@@ -351,7 +351,6 @@ class AboutView(TemplateView):
                 counter += 1
         context['groups'] = groups
         context['count'] = counter
-        context['isis'] = os.path.join(settings.STATIC_URL, 'isis.jpg')
         set_basic_context(context, 'about')
         return context
 
@@ -891,16 +890,21 @@ def validate_bday(date):
 
 def cart_count(request):
     """Get current count of items in cart."""
-    if not request.user.is_anonymous:
-        cart = Account.objects.get(user=request.user).cart
-        if cart:
-            return len(cart.split('|'))
-        return 0
+    count = 0
+    if request.user.is_authenticated:
+        account = Account.objects.get(user=request.user)
+        if account.cart:
+            count += len(account.cart.split('|'))
+        if account.pre_order:
+            count += len(account.pre_order.split('|'))
     else:
         if 'account' in request.session.keys():
-            if request.session['account']['cart']:
-                return len(request.session['account']['cart'].split('|'))
-        return 0
+            account = request.session['account']
+            if account['cart']:
+                count += len(account['cart'].split('|'))
+            if account['pre_order']:
+                count += len(account['pre_order'].split('|'))
+    return count
 
 
 def unpack(packed_list, unpack_as=None):
