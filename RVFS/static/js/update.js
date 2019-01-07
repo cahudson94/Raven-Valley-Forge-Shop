@@ -12,6 +12,13 @@ function updatecart(quantity, item_id, type) {
   );
 }
 
+function updatestock(quantity, item_id, type) {
+  $.get('/shop/list/update_stock', {quantity, item_id},
+    function(data) {
+    }
+  );
+}
+
 $('.delete').click(function () {
   var item;
   var element;

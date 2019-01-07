@@ -70,7 +70,7 @@
                 {% endif %}
             </h4>
             {% if in_store %}
-            <p class="text-right text-standard">* You will be charged ${{ deposit }} upfront as a 10% deposit payment.</p>
+            <p class="text-right text-standard">* If you choos to pay in store you will be charged ${{ deposit }} upfront as a 10% deposit payment.</p>
             {% endif %}
         </div>
     </div>
@@ -101,8 +101,14 @@
     </div>
     {% endif %}
     <div class="w-100 d-flex">
-        <input class="btn btn-secondary text-standard ml-auto" type="submit" name="check" value="Continue Checkout with PayPal">
+        <input class="btn btn-secondary text-standard ml-auto" type="submit" name="check" value="Continue Checkout with PayPal ${{ total }}">
     </div>
+    {% if in_store %}
+    <br>
+    <div class="w-100 d-flex">
+        <input class="btn btn-secondary text-standard ml-auto" type="submit" name="check_in_store" value="In Store Payment with PayPal Deposit ${{ deposit }}">
+    </div>
+    {% endif %}
 </form>
 {% endblock %}
 

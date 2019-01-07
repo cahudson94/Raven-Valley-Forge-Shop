@@ -231,6 +231,8 @@
             </li>
         </ul>
         <ul class="col cart-form">
+            <br>
+            <br>
             <li class="account-list">
             <label class="text-standard">Last Name:</label>
             <br>
@@ -262,14 +264,14 @@
     </div>
     <div class="w-100 d-flex">
         <div class="col">
-            <label class="text-standard">Phone:</label>
+            <label class="text-standard">Phone (format: xxx-xxx-xxxx):</label>
             <br>
-            <input id="phone" type="text" name="ship_email" value="{% if info %}{{ info.email }}{% endif %}"{% if not in_store %} disabled {% endif %}>
+            <input id="phone" type="tel" name="phone" pattern="^\d{3}-\d{3}-\d{4}$" {% if not in_store %} disabled {% endif %}>
         </div>
         <div class="col">
             <label class="text-standard">Email:</label>
             <br>
-            <input id="in_store_email" type="text" name="ship_email" value="{% if info %}{{ info.email }}{% endif %}"{% if not in_store %} disabled {% endif %}>
+            <input id="in_store_email" type="text" name="in_store_email" value="{% if info %}{{ info.email }}{% endif %}"{% if not in_store %} disabled {% endif %}>
         </div>
     </div>
     <div class="w-100 d-flex">
@@ -289,7 +291,7 @@
 {% endblock %}
 
 {% block js %}
-<script src="{% static 'js/update_cart.js' %}"></script>
+<script src="{% static 'js/update.js' %}"></script>
 <script type="text/javascript">
     $('#in_store').change(function() {
          if($(this).is(":checked")) {

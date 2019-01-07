@@ -515,7 +515,7 @@ class CartView(TemplateView):
             total = account.cart_total
             pre_order_total = account.pre_order_total
         if 'shipping_data' in session.keys():
-            if session['shipping_data'] == 'in_store':
+            if 'type' in session['shipping_data'].keys():
                 context['in_store'] = True
             else:
                 context['shipping'] = session['shipping_data']['shipping']
@@ -537,6 +537,7 @@ class CartView(TemplateView):
                     'pre_order': '',
                     'pre_order_total': 0.0,
                 }
+                session.save()
             cart = session['account']['cart']
             pre_order = session['account']['pre_order']
             context['account'] = session['account']
@@ -553,16 +554,18 @@ class CartView(TemplateView):
         if pre_order:
             context['pre_order'] = unpack(pre_order)
         context['item_fields'] = ['color', 'length', 'diameter', 'extras']
-        context['total'] = Decimal(str(float("%.2f" % (total))))
-        context['pre_order_total'] = Decimal(str(float("%.2f" % (pre_order_total))))
-        if str(context['total'])[-2] == '.':
-            context['total'] = Decimal(
-                str(context['total']) + '0'
-            )
-        if str(context['pre_order_total'])[-2] == '.':
-            context['pre_order_total'] = Decimal(
-                str(context['pre_order_total']) + '0'
-            )
+        context['total'] = Decimal(total)
+        context['pre_order_total'] = Decimal(pre_order_total)
+        if context['total']:
+            if str(context['total'])[-2] == '.':
+                context['total'] = Decimal(
+                    str(context['total']) + '0'
+                )
+        if context['pre_order_total']:
+            if str(context['pre_order_total'])[-2] == '.':
+                context['pre_order_total'] = Decimal(
+                    str(context['pre_order_total']) + '0'
+                )
         set_basic_context(context, 'cart')
         return context
 
@@ -572,7 +575,14 @@ class CartView(TemplateView):
         exists = False
         field_count = 0
         if 'in_store' in data.keys():
-            request.session['shipping_data'] = 'in_store'
+            if 'phone' not in data.keys() and 'in_store_email' not in data.keys():
+                return HttpResponseRedirect(reverse_lazy('cart'))
+            if len(data['phone']) < 10 and '@' not in data['in_store_email']:
+                return HttpResponseRedirect(reverse_lazy('cart'))
+            request.session['shipping_data'] = {'type': 'in_store',
+                                                'phone': data['phone'],
+                                                'email': data['in_store_email']
+                                                }
             request.session.save()
             return HttpResponseRedirect(self.success_url)
         ship_fields = ['ship_first_name', 'ship_last_name', 'ship_email',
@@ -642,6 +652,43 @@ def update_cart(request):
     prods[prod_idx]['quantity'] = request.GET['quantity']
     cart_repack(prods, request, target_total, target_type)
     return HttpResponse(target_total)
+
+
+def update_stock(request):
+    """Update stock for a given item."""
+    item_id = request.GET['item_id']
+    prod = Product.objects.get(id=item_id)
+    prod.stock = request.GET['quantity']
+    prod.save()
+    return HttpResponse('')
+
+
+def update_item(request):
+    """Change visibility of an item."""
+    item_id = request.GET['item_id']
+    item_type = request.GET['item_type']
+    if item_type == 'prod':
+        item = Product.objects.get(id=item_id)
+    else:
+        item = Service.objects.get(id=item_id)
+    state = request.GET['state']
+    if state == 'Public':
+        visibility = 'PV'
+        data = {
+            'new_state': 'Private',
+            'new_class': 'item-toggle btn btn-secondary {} {}'.format(
+                item_type, item_id)
+        }
+    else:
+        visibility = 'PB'
+        data = {
+            'new_state': 'Public',
+            'new_class': 'item-toggle btn btn-success {} {}'.format(
+                item_type, item_id)
+        }
+    item.published = visibility
+    item.save()
+    return HttpResponse(json.dumps(data))
 
 
 def delete_item(request):
@@ -913,7 +960,7 @@ class CheckoutView(TemplateView):
         view = CheckoutView
         if 'shipping_data' not in keys:
             return HttpResponseRedirect(reverse_lazy('cart'))
-        if session['shipping_data'] == 'in_store':
+        if 'type' in session['shipping_data'].keys():
             return super(view, self).get(self, request, *args, **kwargs)
         field_count = 0
         ship_fields = ['address1', 'city', 'state', 'zip_code']
@@ -934,12 +981,11 @@ class CheckoutView(TemplateView):
         session = self.request.session
         cart = None
         pre_order = None
-        in_store = False
-        if session['shipping_data'] != 'in_store':
+        context['in_store'] = False
+        if 'type' not in session['shipping_data']:
             context['shipping'] = session['shipping_data']['shipping']
             context['info'] = session['shipping_data']['info']
         else:
-            in_store = True
             context['in_store'] = True
         if self.request.user.is_authenticated:
             account = self.request.user.account
@@ -958,12 +1004,12 @@ class CheckoutView(TemplateView):
             context['account'] = session['account']
             cart = context['account']['cart']
             total = context['account']['cart_total']
-            pre_order = context['account'].pre_order
-            pre_order_total = context['account'].pre_order_total
+            pre_order = context['account']['pre_order']
+            pre_order_total = context['account']['pre_order_total']
             if not session.get_expire_at_browser_close():
                 session.set_expiry(0)
         shipping_cost = 0
-        if not in_store:
+        if not context['in_store']:
             zip_code = session['shipping_data']['shipping']['zip_code']
             street = session['shipping_data']['shipping']['address1']
             tax_rate = taxjar_client.rates_for_location(
@@ -1088,9 +1134,9 @@ no effect from".format(effected_prod.name)
                             effected_quantity, effected_prod.name
                         )
         context['total'] = (
-            context['subtotal'] +
+            Decimal(context['subtotal']) +
             Decimal(str(context['shipping_cost'])) +
-            context['pre_subtotal']
+            Decimal(context['pre_subtotal'])
         )
         if 'code' in session.keys():
             discount = Discount.objects.get(code=session['code'])
@@ -1136,19 +1182,28 @@ no effect from".format(effected_prod.name)
     def post(self, request, *args, **kwargs):
         """Apply shipping info for guest user."""
         session = request.session
-        if session['shipping_data'] == 'in_store':
-            return HttpResponseRedirect(self.success_url)
-        field_count = 0
-        ship_fields = ['address1', 'city', 'state', 'zip_code']
-        info_fields = ['first', 'last', 'email']
-        for i in ship_fields:
-            if session['shipping_data']['shipping'][i]:
-                field_count += 1
-        for i in info_fields:
-            if session['shipping_data']['info'][i]:
-                field_count += 1
-        if field_count == 7:
-            return HttpResponseRedirect(self.success_url)
+        if 'type' in session['shipping_data'].keys():
+            count = 0
+            pick_up_fields = ['type', 'phone', 'in_store_email']
+            for field in pick_up_fields:
+                if field in session['shipping_data'].keys():
+                    count += 1
+                    if not session['shipping_data'][field]:
+                        count -= 1
+                if count >= 2:
+                    return HttpResponseRedirect(self.success_url)
+        else:
+            field_count = 0
+            ship_fields = ['address1', 'city', 'state', 'zip_code']
+            info_fields = ['first', 'last', 'email']
+            for i in ship_fields:
+                if session['shipping_data']['shipping'][i]:
+                    field_count += 1
+            for i in info_fields:
+                if session['shipping_data']['info'][i]:
+                    field_count += 1
+            if field_count == 7:
+                return HttpResponseRedirect(self.success_url)
         return HttpResponseRedirect(reverse_lazy('cart'))
 
 

@@ -315,13 +315,13 @@ def update_discount(request):
             toggle_to = False
             data = {
                 'new_state': 'Off',
-                'new_class': 'btn btn-secondary {}'.format(disc_code)
+                'new_class': 'discount-toggle btn btn-secondary {}'.format(disc_code)
             }
         else:
             toggle_to = True
             data = {
                 'new_state': 'On',
-                'new_class': 'btn btn-success {}'.format(disc_code)
+                'new_class': 'discount-toggle btn btn-success {}'.format(disc_code)
             }
         code.code_state = toggle_to
         code.save()
