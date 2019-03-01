@@ -31,6 +31,9 @@ class Account(models.Model):
     home_number = models.CharField(max_length=14, default='(000)-000-0000')
     cell_number = models.CharField(max_length=14, blank=True)
     active_code = models.CharField(max_length=60, blank=True)
+    pre_order = models.TextField(default='', blank=True)
+    pre_order_total = models.DecimalField(max_digits=15, decimal_places=2,
+                                          default=0.0)
 
     def __str__(self):
         """Print for admin."""
@@ -43,7 +46,8 @@ class ShippingInfo(models.Model):
     name = models.CharField("Location Name", max_length=50, blank=True,
                             null=True)
     address1 = models.CharField("Address line 1", max_length=250)
-    address2 = models.CharField("Address line 2", max_length=250, default='')
+    address2 = models.CharField("Address line 2", max_length=250,
+                                default='', blank=True)
     zip_code = models.CharField("ZIP / Postal code", max_length=12)
     city = models.CharField("City", max_length=25)
     state = models.CharField("State", max_length=25)
@@ -65,11 +69,15 @@ class Order(models.Model):
                                 blank=True, null=True)
     recipient = models.CharField(max_length=40, default='')
     recipient_email = models.CharField(max_length=40, default='')
+    recipient_phone = models.CharField(max_length=14, default='(000)-000-0000')
     tracking = models.CharField(max_length=35, default='')
     shipped = models.BooleanField(default=False)
     paid = models.BooleanField(default=False)
     order_content = models.TextField()
     complete = models.BooleanField(default=False)
+    amount_due = models.DecimalField(
+        max_digits=7, decimal_places=2, default=0.0
+    )
 
     def __str__(self):
         """Print for admin."""

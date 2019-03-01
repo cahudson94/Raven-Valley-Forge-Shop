@@ -1,18 +1,92 @@
 {% extends 'rvfsite/base.html' %}
+{% load static %}
 
 {% block title %}All Items List{% endblock %}
 
 {% block body %}
+{% if product_list %}
 <h1 class="text-standard">Products:</h1>
-<ul>
-{% for product in product_list %}
-    <li><a class="text-standard link-font" href="{% url 'prod' product.id %}">{{ product.name }}</a></li>
-{% endfor %}
-</ul>
+<table class="table code-table">
+    <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Stock</th>
+            <th scope="col">Price</th>
+            <th scope="col">Visibility</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in product_list %}
+        <tr>
+            <td class="align-middle">{{ product.name }}</td>
+            <td class="align-middle">
+            {% if product.stock == None %}
+                {{ product.stock }}
+            {% else %}
+                <input onchange="updatestock(this.value, this.name)" type="number" name="{{ product.id }}" value="{{ product.stock }}">
+            {% endif %}
+            </td>
+            <td class="align-middle">{{ product.price }}</td>
+            <td class="align-middle">
+                {% if product.published  == 'PB' %}
+                <a class="item-toggle btn btn-success prod {{ product.id }}">
+                Public
+                {% else %}
+                <a class="item-toggle btn btn-secondary prod {{ product.id }}">
+                Private
+                {% endif %}
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% if services %}
 <h1 class="text-standard">Services:</h1>
-<ul>
-{% for service in services %}
-    <li><a class="text-standard link-font" href="{% url 'serv' service.id %}">{{ service.name }}</a></li>
-{% endfor %}
-</ul>
+<table class="table code-table">
+    <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Visibility</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for service in services %}
+        <tr>
+            <td class="align-middle">{{ service.name }}</td>
+            <td class="align-middle">
+                {% if service.published  == 'PB' %}
+                <a class="item-toggle btn btn-success serv {{ service.id }}">
+                Public
+                {% else %}
+                <a class="item-toggle btn btn-secondary serv {{ service.id }}">
+                Private
+                {% endif %}
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/update.js' %}"></script>
+<script type="text/javascript">
+$('.item-toggle').click(function (event) {
+  classes = event.target.classList
+  item_id = classes.length - 1
+  item_type = classes.length - 2
+  console.log(item_id, item_type, classes);
+  $.get('{% url "update_item" %}', {'state': event.target.innerText, 'item_id': classes[item_id], 'item_type': classes[item_type]},
+    function(data) {
+      data = JSON.parse(data)
+      event.target.innerHTML = data.new_state;
+      event.target.className = data.new_class;
+    }
+  );
+});
+</script>
 {% endblock %}

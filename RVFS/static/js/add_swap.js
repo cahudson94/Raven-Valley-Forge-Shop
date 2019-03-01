@@ -1,22 +1,14 @@
-var addressSelect = document.querySelector('#ship_address_name');
-var servaddressSelect = document.querySelector('#serv_address_name');
+var addressSelect = document.querySelector('#address_name');
 
 function populateInfo(Address, type) {
   // delete the current set of <option> elements out of the
   // day <select>, ready for the next set to be injected
   if (type === 'ship') {
-    var address1Input = document.getElementById('ship_add_1');
-    var address2Input = document.getElementById('ship_add_2');
-    var cityInput = document.getElementById('ship_city');
-    var stateInput = document.getElementById('ship_state');
-    var zipcodeInput = document.getElementById('ship_zip');
-  }
-  else {
-    var address1Input = document.getElementById('serv_add_1');
-    var address2Input = document.getElementById('serv_add_2');
-    var cityInput = document.getElementById('serv_city');
-    var stateInput = document.getElementById('serv_state');
-    var zipcodeInput = document.getElementById('serv_zip');
+    var address1Input = document.getElementById('add_1');
+    var address2Input = document.getElementById('add_2');
+    var cityInput = document.getElementById('city');
+    var stateInput = document.getElementById('state');
+    var zipcodeInput = document.getElementById('zip');
   }
   var add = Address.slice(1, -1).split(', ');
   for (var i = 0; i<add.length; i++) {
@@ -49,11 +41,5 @@ function populateInfo(Address, type) {
 if (addressSelect) {
   addressSelect.onchange = function() {
     populateInfo(addressSelect.value, 'ship');
-  };
-}
-
-if (servaddressSelect) {
-  servaddressSelect.onchange = function() {
-    populateInfo(servaddressSelect.value, 'serv');
   };
 }

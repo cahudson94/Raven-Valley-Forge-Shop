@@ -17,8 +17,8 @@ from account.forms import (InfoRegForm, AddAddressForm,
                            OrderUpdateForm, ContactForm)
 from account.models import Account, ShippingInfo, SlideShowImage, Order
 from catalog.models import Product, Service, Discount
-from registration.backends.hmac.views import RegistrationView
-from registration.forms import RegistrationForm
+from django_registration.backends.activation.views import RegistrationView
+from django_registration.forms import RegistrationForm
 from RVFS.google_api_access import (
     add_birthday, main as drive_files,
     download, update_mailing_list
@@ -315,13 +315,13 @@ def update_discount(request):
             toggle_to = False
             data = {
                 'new_state': 'Off',
-                'new_class': 'btn btn-secondary {}'.format(disc_code)
+                'new_class': 'discount-toggle btn btn-secondary {}'.format(disc_code)
             }
         else:
             toggle_to = True
             data = {
                 'new_state': 'On',
-                'new_class': 'btn btn-success {}'.format(disc_code)
+                'new_class': 'discount-toggle btn btn-success {}'.format(disc_code)
             }
         code.code_state = toggle_to
         code.save()
@@ -351,7 +351,6 @@ class AboutView(TemplateView):
                 counter += 1
         context['groups'] = groups
         context['count'] = counter
-        context['isis'] = os.path.join(settings.STATIC_URL, 'isis.jpg')
         set_basic_context(context, 'about')
         return context
 
@@ -853,7 +852,7 @@ class ContactView(FormView):
             from_email = form.cleaned_data['from_email']
             message = form.cleaned_data['message']
             contact = EmailMessage(subject, message, from_email,
-                                   ['Contact@ravenvfm.com'])
+                                   ['contact@ravenvfm.com'])
             contact.send(fail_silently=True)
             return HttpResponseRedirect(self.success_url)
 
@@ -891,16 +890,21 @@ def validate_bday(date):
 
 def cart_count(request):
     """Get current count of items in cart."""
-    if not request.user.is_anonymous:
-        cart = Account.objects.get(user=request.user).cart
-        if cart:
-            return len(cart.split('|'))
-        return 0
+    count = 0
+    if request.user.is_authenticated:
+        account = Account.objects.get(user=request.user)
+        if account.cart:
+            count += len(account.cart.split('|'))
+        if account.pre_order:
+            count += len(account.pre_order.split('|'))
     else:
         if 'account' in request.session.keys():
-            if request.session['account']['cart']:
-                return len(request.session['account']['cart'].split('|'))
-        return 0
+            account = request.session['account']
+            if account['cart']:
+                count += len(account['cart'].split('|'))
+            if account['pre_order']:
+                count += len(account['pre_order'].split('|'))
+    return count
 
 
 def unpack(packed_list, unpack_as=None):

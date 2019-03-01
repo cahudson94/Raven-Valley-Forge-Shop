@@ -11,6 +11,7 @@
     <h2 class="text-standard">Checkout</h2>
     <div class="row acc-row">
         <div class="col">
+            {% if not in_store %}
             <h2 class="text-standard">Shipping Info:</h2>
             <h5 class="text-standard">{{ info.first }}, {{ info.last }}</h5>
             <h5 class="text-standard">{{ info.email }}</h5>
@@ -20,15 +21,33 @@
             {% endif %}
             <h5 class="text-standard">{{ shipping.city }}, {{ shipping.zip_code }}</h5>
             <h5 class="text-standard">{{ shipping.state }}</h5>
+            {% else %}
+            <h2 class="text-standard">In Store Pick Up:</h2>
+            <p class="text-standard">
+                You will be notified when your order is ready for pick up.
+            </p>
+            <h3 class="text-standard">Store Location:</h5>
+            <h5 class="text-standard">11639 13th Ave SW</h5>
+            <h5 class="text-standard">Burien, WA, 98146</h5>
+            <h5 class="text-standard">(206)-372-6501</h5>
+            {% endif %}
         </div>
         <div class="col">
+            {% if subtotal %}
             <h4 class="text-right text-standard">Subtotal:
-                {% if subtotal %}
-                    ${{ subtotal }}
-                {% else %}
-                    $0
-                {% endif %}
+                ${{ subtotal }}
             </h4>
+            {% endif %}
+            {% if pre_subtotal %}
+            <h4 class="text-right text-standard">Pre-order Subtotal:
+                ${{ pre_subtotal }}
+            </h4>
+            {% endif %}
+            {% if discount %}
+            <h4 class="text-right text-standard">Amount Discounted:
+                ${{ discount }}
+            </h4>
+            {% endif %}
             <h4 class="text-right text-standard">Shipping:
                 {% if shipping_cost %}
                     ${{ shipping_cost }}
@@ -50,6 +69,9 @@
                     $0
                 {% endif %}
             </h4>
+            {% if in_store %}
+            <p class="text-right text-standard">* If you choos to pay in store you will be charged ${{ deposit }} upfront as a 10% deposit payment.</p>
+            {% endif %}
         </div>
     </div>
     {% if not code %}
@@ -71,7 +93,7 @@
     <div id="discount-parent" class="row">
         <div class="col">
             <p class="text-standard text-left">Active code: {{ code.0 }}</p>
-            <p class="text-standard text-left">Code Effect: {{ code.1 }} discount</p>
+            <p class="text-standard text-left">Code Effect: {{ code.1 }} discount.</p>
             <div class="d-flex">
                 <a id="remove" class="btn btn-danger text-standard mr-auto" href="#">Remove</a>
             </div>
@@ -79,8 +101,14 @@
     </div>
     {% endif %}
     <div class="w-100 d-flex">
-        <input class="btn btn-secondary text-standard ml-auto" type="submit" name="check" value="Continue Checkout with PayPal">
+        <input class="btn btn-secondary text-standard ml-auto" type="submit" name="check" value="Continue Checkout with PayPal ${{ total }}">
     </div>
+    {% if in_store %}
+    <br>
+    <div class="w-100 d-flex">
+        <input class="btn btn-secondary text-standard ml-auto" type="submit" name="check_in_store" value="In Store Payment with PayPal Deposit ${{ deposit }}">
+    </div>
+    {% endif %}
 </form>
 {% endblock %}
 
@@ -88,7 +116,6 @@
 <script type="text/javascript">
 $('#discount').click(function (event) {
   event.preventDefault();
-  console.log(event.target.form)
   var code = event.target.form[1].value;
   $.get('/shop/cart/apply-discount/', {code: code},
     function(data) {
@@ -104,7 +131,7 @@ $('#discount').click(function (event) {
           $('#message').html('');
         }
         $('#discount-parent').html(data);
-        setTimeout(location.reload.bind(location), 4000);
+        setTimeout(location.reload.bind(location), 2000);
       }
     }
   );
@@ -116,7 +143,7 @@ $('#remove').click(function (event) {
   $.get('/shop/cart/remove-discount/',
     function(data) {
       $('#discount-parent').html(data);
-      setTimeout(location.reload.bind(location), 4000);
+      setTimeout(location.reload.bind(location), 2000);
     }
   );
 });

@@ -55,12 +55,12 @@ NAV
 
 .header-sub {
     font-family: 'Tangerine', serif;
-    font-size: 2.2rem;
+    font-size: 2.1rem;
 }
 
 .header-main {
     font-family: 'Cinzel Decorative', serif;
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     font-weight: bold;
 }
 
@@ -104,6 +104,11 @@ NAV
 .dropdown-item.active {
     background-color: transparent;
     color: rgb(122, 0, 0);
+}
+
+.pick-up {
+    padding-top: .5rem;
+    padding-left: .2rem;
 }
 
 /* ***************************************************************************
@@ -477,10 +482,6 @@ CATALOG
 
 .textarea-form > textarea, input {
     max-width: 95%;
-}
-
-.cart-form {
-    padding-top: 80px;
 }
 
 .placeholder {

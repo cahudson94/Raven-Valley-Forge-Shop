@@ -1,6 +1,6 @@
 Welcome to Ravenmoore Valley Forge & Metalworks!
 
-Pleas activate your account with the link below:
+Please activate your account with the link below:
 
 {{ site }}/accounts/activate/{{ activation_key }}
 
