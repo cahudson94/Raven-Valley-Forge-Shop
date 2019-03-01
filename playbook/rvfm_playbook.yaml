@@ -57,6 +57,7 @@
 
     - name: install required packages
       pip:
+        extra_args: --upgrade
         requirements: /home/ubuntu/Raven-Valley-Forge-Shop/requirements.pip
         virtualenv: /home/ubuntu/ENV
 

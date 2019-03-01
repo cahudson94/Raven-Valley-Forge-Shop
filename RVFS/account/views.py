@@ -17,8 +17,8 @@ from account.forms import (InfoRegForm, AddAddressForm,
                            OrderUpdateForm, ContactForm)
 from account.models import Account, ShippingInfo, SlideShowImage, Order
 from catalog.models import Product, Service, Discount
-from registration.backends.hmac.views import RegistrationView
-from registration.forms import RegistrationForm
+from django_registration.backends.activation.views import RegistrationView
+from django_registration.forms import RegistrationForm
 from RVFS.google_api_access import (
     add_birthday, main as drive_files,
     download, update_mailing_list
@@ -852,7 +852,7 @@ class ContactView(FormView):
             from_email = form.cleaned_data['from_email']
             message = form.cleaned_data['message']
             contact = EmailMessage(subject, message, from_email,
-                                   ['Contact@ravenvfm.com'])
+                                   ['contact@ravenvfm.com'])
             contact.send(fail_silently=True)
             return HttpResponseRedirect(self.success_url)
 

@@ -196,7 +196,7 @@
                 {% if alt_add %}
                 <li class="account-list">
                 <label class="text-standard">Address:</label>
-                <select id="ship_address_name" name="ship_address_name"{% if in_store %} disabled {% endif %}>
+                <select id="address_name" name="address_name"{% if in_store %} disabled {% endif %}>
                     {% for add in alt_add %}
                         {% if not ship_exists and add.main %}
                         <option value="{{ add }}" selected="selected">{{ add.name }}</option>
@@ -211,48 +211,38 @@
                 {% endif %}
             {% endif %}
             <li class="account-list">
-            <label class="text-standard">First Name:</label>
-            <br>
-            <input id="first_name" type="text" name="ship_first_name" value="{% if info %}{{ info.first }}{% endif %}"{% if in_store %} disabled {% endif %}>
-            </li>
-            <li class="account-list">
             <label class="text-standard">Address Line 1:</label>
             <br>
-            <input id="ship_add_1" type="text" name="ship_add_1" value="{% if shipping %}{{ shipping.address1 }}{% endif %}"{% if in_store %} disabled {% endif %}>
+            <input id="add_1" type="text" name="add_1" value="{% if shipping %}{{ shipping.address1 }}{% endif %}"{% if in_store %} disabled {% endif %}>
             <li class="account-list">
             <label class="text-standard">City:</label>
             <br>
-            <input id="ship_city" type="text" name="ship_city" value="{% if shipping %}{{ shipping.city }}{% endif %}"{% if in_store %} disabled {% endif %}>
+            <input id="city" type="text" name="city" value="{% if shipping %}{{ shipping.city }}{% endif %}"{% if in_store %} disabled {% endif %}>
             </li>
             <li class="account-list">
             <label class="text-standard">Zip Code:</label>
             <br>
-            <input id="ship_zip" type="text" name="ship_zip" value="{% if shipping %}{{ shipping.zip_code }}{% endif %}"{% if in_store %} disabled {% endif %}>
+            <input id="zip" type="text" name="zip" value="{% if shipping %}{{ shipping.zip_code }}{% endif %}"{% if in_store %} disabled {% endif %}>
             </li>
         </ul>
         <ul class="col cart-form">
             <br>
             <br>
-            <li class="account-list">
-            <label class="text-standard">Last Name:</label>
-            <br>
-            <input id="last_name" type="text" name="ship_last_name" value="{% if info %}{{ info.last }}{% endif %}"{% if in_store %} disabled {% endif %}>
-            </li>
             </li>
             <li class="account-list">
             <label class="text-standard">Address Line 2:</label>
             <br>
-            <input id="ship_add_2" type="text" name="ship_add_2" value="{% if shipping %}{{ shipping.address2 }}{% endif %}"{% if in_store %} disabled {% endif %}>
+            <input id="add_2" type="text" name="add_2" value="{% if shipping %}{{ shipping.address2 }}{% endif %}"{% if in_store %} disabled {% endif %}>
             </li>
             <li class="account-list">
             <label class="text-standard">State:</label>
             <br>
-            <input id="ship_state" type="text" name="ship_state" value="{% if shipping %}{{ shipping.state }}{% endif %}"{% if in_store %} disabled {% endif %}>
+            <input id="state" type="text" name="state" value="{% if shipping %}{{ shipping.state }}{% endif %}"{% if in_store %} disabled {% endif %}>
             </li>
             <li class="account-list">
             <label class="text-standard">Email:</label>
             <br>
-            <input id="email" type="text" name="ship_email" value="{% if info %}{{ info.email }}{% endif %}"{% if in_store %} disabled {% endif %}>
+            <input id="ship_email" type="text" name="ship_email" value="{% if info %}{{ info.email }}{% endif %}"{% if in_store %} disabled {% endif %}>
             </li>
         </ul>
     </div>
@@ -282,6 +272,18 @@
         </div>
     </div>
     <div class="w-100 d-flex">
+        <div class="col">
+            <label class="text-standard">First Name:</label>
+            <br>
+            <input id="first_name" type="text" name="first_name" value="{% if info %}{{ info.first }}{% endif %}" required>
+        </div>
+        <div class="col">
+            <label class="text-standard">Last Name:</label>
+            <br>
+            <input id="last_name" type="text" name="last_name" value="{% if info %}{{ info.last }}{% endif %}" required>
+        </div>
+    </div>
+    <div class="w-100 d-flex">
         <input class="btn btn-secondary text-standard ml-auto" type="submit" name="check" value="Continue to Checkout">
     </div>
     </div>
@@ -295,27 +297,23 @@
 <script type="text/javascript">
     $('#in_store').change(function() {
          if($(this).is(":checked")) {
-            $("#ship_address_name").prop( "disabled", true );
-            $("#first_name").prop( "disabled", true );
-            $("#ship_city").prop( "disabled", true );
-            $("#ship_zip").prop( "disabled", true );
-            $("#last_name").prop( "disabled", true );
-            $("#ship_add_1").prop( "disabled", true );
-            $("#ship_add_2").prop( "disabled", true );
-            $("#ship_state").prop( "disabled", true );
-            $("#email").prop( "disabled", true );
+            $("#address_name").prop( "disabled", true );
+            $("#city").prop( "disabled", true );
+            $("#zip").prop( "disabled", true );
+            $("#add_1").prop( "disabled", true );
+            $("#add_2").prop( "disabled", true );
+            $("#state").prop( "disabled", true );
+            $("#ship_email").prop( "disabled", true );
             $("#in_store_email").prop( "disabled", false );
             $("#phone").prop( "disabled", false );
         } else {
-            $("#ship_address_name").prop( "disabled", false );
-            $("#first_name").prop( "disabled", false );
-            $("#ship_city").prop( "disabled", false );
-            $("#ship_zip").prop( "disabled", false );
-            $("#last_name").prop( "disabled", false );
-            $("#ship_add_1").prop( "disabled", false );
-            $("#ship_add_2").prop( "disabled", false );
-            $("#ship_state").prop( "disabled", false );
-            $("#email").prop( "disabled", false );
+            $("#address_name").prop( "disabled", false );
+            $("#city").prop( "disabled", false );
+            $("#zip").prop( "disabled", false );
+            $("#add_1").prop( "disabled", false );
+            $("#add_2").prop( "disabled", false );
+            $("#state").prop( "disabled", false );
+            $("#ship_email").prop( "disabled", false );
             $("#in_store_email").prop( "disabled", true );
             $("#phone").prop( "disabled", true );
         }

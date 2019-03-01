@@ -76,6 +76,9 @@ class CatalogueView(ListView):
         context['all_tags'] = sorted(set([tag for item in
                                           all_items for tag in
                                           item.catagories.names()]))
+        for idx, tag in enumerate(context['all_tags']):
+            if ' ' in tag and tag:
+                context['all_tags'][idx] = tag.replace(' ', '_')
         if slug:
             context['slug'] = slug
             items = (self.model.objects.filter(published='PB')
@@ -100,6 +103,15 @@ class CatalogueView(ListView):
         if slug:
             context['items'] = set([item for item in items])
         else:
+            context['items'] = {}
+            for tag in context['page']:
+                context['items'][tag] = []
+                for item in all_items:
+                    if '_' in tag:
+                        if tag.replace('_', ' ') in item.catagories.names():
+                            context['items'][tag].append(item)
+                    if tag in item.catagories.names():
+                        context['items'][tag].append(item)
             context['items'] = {tag: [item for item in
                                 all_items if tag in
                                 item.catagories.names()] for tag in
@@ -293,7 +305,7 @@ class CreateProductView(UserPassesTestMixin, CreateView):
         context = super(CreateView, self).get_context_data(**kwargs)
         creator = context['form'].fields['creator']
         creator.queryset = User.objects.filter(is_staff=True)
-        creator.initial = User.objects.get(username='m.ravenmoore')
+        creator.initial = User.objects.get(username='Muninn')
         set_basic_context(context, 'add_prod')
         return context
 
@@ -579,15 +591,18 @@ class CartView(TemplateView):
                 return HttpResponseRedirect(reverse_lazy('cart'))
             if len(data['phone']) < 10 and '@' not in data['in_store_email']:
                 return HttpResponseRedirect(reverse_lazy('cart'))
-            request.session['shipping_data'] = {'type': 'in_store',
-                                                'phone': data['phone'],
-                                                'email': data['in_store_email']
-                                                }
+            request.session['shipping_data'] = {
+                'type': 'in_store',
+                'phone': data['phone'],
+                'email': data['in_store_email'],
+                'first_name': data['first_name'],
+                'last_name': data['last_name']
+            }
             request.session.save()
             return HttpResponseRedirect(self.success_url)
-        ship_fields = ['ship_first_name', 'ship_last_name', 'ship_email',
-                       'ship_add_1', 'ship_city', 'ship_state', 'ship_zip']
-        if 'ship_first_name' in data.keys():
+        ship_fields = ['first_name', 'last_name', 'ship_email',
+                       'add_1', 'city', 'state', 'zip']
+        if 'first_name' in data.keys():
             if request.user.is_authenticated:
                 account = Account.objects.get(user=request.user)
                 exists = check_address(data, account)
@@ -597,16 +612,16 @@ class CartView(TemplateView):
             if field_count == 7:
                 shipping_data = {
                     'info': {
-                        'first': data['ship_first_name'],
-                        'last': data['ship_last_name'],
+                        'first': data['first_name'],
+                        'last': data['last_name'],
                         'email': data['ship_email'],
                     },
                     'shipping': {
-                        'address1': data['ship_add_1'],
-                        'address2': data['ship_add_2'],
-                        'city': data['ship_city'],
-                        'state': data['ship_state'],
-                        'zip_code': data['ship_zip'],
+                        'address1': data['add_1'],
+                        'address2': data['add_2'],
+                        'city': data['city'],
+                        'state': data['state'],
+                        'zip_code': data['zip'],
                     }
                 }
                 request.session['shipping_data'] = shipping_data
@@ -798,8 +813,9 @@ def create_payment(request):
     if pre_order:
         pre_order = unpack(pre_order)
     items = []
-    shipping_discount = 0
+    shipping_discount = session['paypal']['shipping_discount']
     item_count = 0
+    shipping_cost = session['paypal']['shipping']
     for item in cart:
         item_count += int(item['quantity'])
     for item in cart:
@@ -819,7 +835,7 @@ def create_payment(request):
             else:
                 percent = Decimal(float(price)) * Decimal('.' + amount[:-1])
                 price -= percent
-        if request.session['shipping_data'] == 'in_store':
+        if 'pre_deposit' in request.session['paypal'].keys() and request.session['paypal']['pre_deposit']:
             price = Decimal(float(price)) / Decimal('10')
         prod = {
             "name": obj.name,
@@ -848,7 +864,7 @@ def create_payment(request):
             else:
                 percent = Decimal(float(price)) * Decimal('.' + amount[:-1])
                 price -= percent
-        if request.session['shipping_data'] == 'in_store':
+        if 'pre_deposit' in request.session['paypal'].keys() and request.session['paypal']['pre_deposit']:
             price = Decimal(float(price)) / Decimal('10')
         prod = {
             "name": obj.name,
@@ -861,10 +877,6 @@ def create_payment(request):
     pay_pal_total = session['paypal']['total']
     pay_pal_subtotal = session['paypal']['subtotal']
     pay_pal_tax = session['paypal']['tax']
-    if request.session['shipping_data'] == 'in_store':
-        pay_pal_total = Decimal(float(pay_pal_total)) / Decimal('10')
-        pay_pal_subtotal = Decimal(float(pay_pal_subtotal)) / Decimal('10')
-        pay_pal_tax = Decimal(float(pay_pal_tax)) / Decimal('10')
     if '.' not in str(shipping_discount):
         shipping_discount = str(shipping_discount) + '.00'
     elif str(shipping_discount)[-2] == '.':
@@ -886,7 +898,7 @@ def create_payment(request):
                 "details": {
                     "subtotal": str(pay_pal_subtotal),
                     "tax": str(pay_pal_tax),
-                    "shipping": session['paypal']['shipping'],
+                    "shipping": shipping_cost,
                     "shipping_discount": str(shipping_discount),
                 }
             },
@@ -907,41 +919,71 @@ def create_order(request):
     """Create an order during payment processing."""
     shipping_data = ''
     address = ''
+    email = ''
+    phone = ''
+    user = User.objects.get(username='Guest')
+    account = Account.objects.get(user=user)
     if request.user.is_authenticated:
         user = request.user
         account = request.user.account
         cart = account.cart
     else:
-        user = User.objects.get(username='Guest')
-        account = Account.objects.get(user=user)
         cart = request.session['account']['cart']
     shipping_data = request.session['shipping_data']
-    if 'exists' in shipping_data.keys():
-        address = ShippingInfo.objects.get(id=shipping_data['exists'])
-    else:
-        address = ShippingInfo(
-            address1=shipping_data['shipping']['address1'],
-            address2=shipping_data['shipping']['address2'],
-            zip_code=shipping_data['shipping']['zip_code'],
-            city=shipping_data['shipping']['city'],
-            state=shipping_data['shipping']['state'])
-        address.save()
-        address.resident = Account.objects.get(user=user)
-        if request.user.is_authenticated:
-            address.name = 'Saved address ' + str(
-                len(ShippingInfo.objects.filter(resident=account)) + 1
+    due = Decimal('0.00')
+    if 'type' in shipping_data:
+        try:
+            address = ShippingInfo.objects.get(address1='11639 13th Ave SW')
+        except ShippingInfo.DoesNotExist:
+            address = ShippingInfo(
+                address1='11639 13th Ave SW',
+                zip_code='98146',
+                city='Burien',
+                state='WA'
             )
-        address.save()
-    email = shipping_data['info']['email']
-    name = (shipping_data['info']['first'] +
-            ', ' + shipping_data['info']['last'])
+            address.save()
+            guest_user = User.objects.get(username='Guest')
+            address.resident = Account.objects.get(user=guest_user)
+        if shipping_data['email']:
+            email = shipping_data['email']
+        if shipping_data['phone']:
+            phone = shipping_data['phone']
+        name = (shipping_data['first_name'] +
+                ', ' + shipping_data['last_name'])
+        if 'pre_deposit' in request.session['paypal'].keys():
+            due = Decimal(request.session['paypal']['pre_deposit']) - Decimal(request.session['paypal']['total'])
+    else:
+        if 'exists' in shipping_data.keys():
+            address = ShippingInfo.objects.get(id=shipping_data['exists'])
+        else:
+            address = ShippingInfo(
+                address1=shipping_data['shipping']['address1'],
+                address2=shipping_data['shipping']['address2'],
+                zip_code=shipping_data['shipping']['zip_code'],
+                city=shipping_data['shipping']['city'],
+                state=shipping_data['shipping']['state'])
+            address.save()
+            address.resident = account
+            if request.user.is_authenticated:
+                address.name = 'Saved address ' + str(
+                    len(ShippingInfo.objects.filter(resident=account)) + 1
+                )
+            address.save()
+        email = shipping_data['info']['email']
+        name = (shipping_data['info']['first'] +
+                ', ' + shipping_data['info']['last'])
     order = Order(
         buyer=account,
         order_content=cart,
-        recipient_email=email,
         recipient=name,
         ship_to=address,
+        amount_due=due,
     )
+    order.save()
+    if email:
+        order.email = email
+    if phone:
+        order.phone = phone
     order.save()
     request.session['order_num'] = order.id
     request.session.save()
@@ -981,6 +1023,7 @@ class CheckoutView(TemplateView):
         session = self.request.session
         cart = None
         pre_order = None
+        pay_pal_discount = None
         context['in_store'] = False
         if 'type' not in session['shipping_data']:
             context['shipping'] = session['shipping_data']['shipping']
@@ -1110,6 +1153,7 @@ no effect from".format(effected_prod.name)
                         if '$' in amount:
                             effect = amount
                             context['discount'] = Decimal(amount[1:]) * effected_quantity
+                            context['discount'] = Decimal(str(float("%.2f" % (context['discount']))))
                             if cart_effect:
                                 context['subtotal'] -= context['discount']
                             else:
@@ -1126,6 +1170,7 @@ no effect from".format(effected_prod.name)
                             effect = discount.value + '%'
                             percent = Decimal(float(effected_prod.price)) * Decimal('.' + amount)
                             context['discount'] = percent * int(effected_quantity)
+                            context['discount'] = Decimal(str(float("%.2f" % (context['discount']))))
                             if cart_effect:
                                 context['subtotal'] -= context['discount']
                             else:
@@ -1146,6 +1191,7 @@ no effect from".format(effected_prod.name)
                     if '$' in amount:
                         effect = amount
                         context['discount'] = Decimal(amount[1:])
+                        context['discount'] = Decimal(str(float("%.2f" % (context['discount']))))
                         context['total'] -= context['discount']
                     elif 'ship' in amount:
                         if 'free' in amount:
@@ -1158,39 +1204,65 @@ no effect from".format(effected_prod.name)
                     else:
                         effect = discount.value + '%'
                         context['discount'] = Decimal(float(context['total'])) * Decimal('.' + amount)
+                        context['discount'] = Decimal(str(float("%.2f" % (context['discount']))))
                         context['total'] -= context['discount']
+                        if context['shipping_cost'] > 0:
+                            pay_pal_discount = Decimal(float(context['subtotal'])) + Decimal(float(context['pre_subtotal']))
+                            pay_pal_discount = pay_pal_discount * Decimal('.' + amount)
+                            pay_pal_discount = Decimal(str(float("%.2f" % pay_pal_discount)))
             context['code'] = [discount.code, effect]
         tax = Decimal(str(tax_rate)) * context['total']
         context['tax'] = Decimal(str(float("%.2f" % (tax))))
         context['total'] += context['tax']
-        fields = ['subtotal', 'shipping_cost',
+        fields = ['subtotal', 'shipping_cost', 'discount',
                   'tax', 'total', 'pre_subtotal']
         for field in fields:
             if str(context[field])[-2] == '.':
                 context[field] = Decimal(str(context[field]) + '0')
         set_basic_context(context, 'cart')
+        context['deposit'] = str(round(context['total'] / 10, 2))
+        if not pay_pal_discount:
+            pay_pal_discount = context['discount']
         session['paypal'] = {
-            'subtotal': str(context['subtotal'] + context['pre_subtotal']),
+            'subtotal': str(
+                context['subtotal'] +
+                context['pre_subtotal'] -
+                pay_pal_discount
+            ),
             'total': str(context['total']),
             'tax': str(context['tax']),
-            'shipping': str(context['shipping_cost'])
+            'shipping': str(context['shipping_cost']),
+            'shipping_discount': str(context['discount'] - pay_pal_discount)
         }
         session.save()
-        context['deposit'] = str(round(context['total'] / 10, 2))
         return context
 
     def post(self, request, *args, **kwargs):
         """Apply shipping info for guest user."""
         session = request.session
         if 'type' in session['shipping_data'].keys():
+            if 'check_in_store' in request.POST.keys():
+                session['paypal']['pre_deposit'] = session['paypal']['total']
+                session['paypal']['total'] = str(
+                    round(float(session['paypal']['total']) / 10, 2)
+                )
+                session['paypal']['subtotal'] = str(
+                    round(float(session['paypal']['subtotal']) / 10, 2)
+                )
+                session['paypal']['tax'] = str(
+                    round(float(session['paypal']['tax']) / 10, 2)
+                )
+                session.save()
             count = 0
-            pick_up_fields = ['type', 'phone', 'in_store_email']
+            pick_up_fields = [
+                'type', 'phone', 'email', 'first_name', 'last_name'
+            ]
             for field in pick_up_fields:
                 if field in session['shipping_data'].keys():
                     count += 1
                     if not session['shipping_data'][field]:
                         count -= 1
-                if count >= 2:
+                if count >= 4:
                     return HttpResponseRedirect(self.success_url)
         else:
             field_count = 0
@@ -1232,8 +1304,15 @@ class CheckoutCompleteView(TemplateView):
                     if item['item'].stock:
                         item['item'].stock -= int(item['quantity'])
                         if item['item'].stock == 0:
-                            # TO-DO: send matt an email for out of stock
-                            pass
+                            subject = 'An item is out of stock'
+                            body = '{} is out of stock.'.format(item['item'].name.title())
+                            stock_email = EmailMessage(
+                                subject,
+                                body,
+                                'rvfmsite@gmail.com',
+                                ['Muninn@ravenvfm.com']
+                            )
+                            stock_email.send(fail_silently=True)
                     item['item'].save()
                 return super(view, self).get(self, request, *args, **kwargs)
         return HttpResponseRedirect(reverse_lazy('cart'))
@@ -1250,40 +1329,24 @@ class CheckoutCompleteView(TemplateView):
             cart = split_cart(session['account']['cart'])
         email = 'rvfmsite@gmail.com'
         subject = 'Order #{} Confirmation'.format(context['order'])
-        info = session['shipping_data']['info']
-        # Add in shipping info if matt wants that in the email.
-        name = info['first'] + ', ' + info['last']
-        owner_body = 'Purchased items:\n'
-        client_body = 'You will recieve an email with tracking info \
-when your order ships. Your purchases:\n\n'
-        prods = unpack(cart['prods'])
-        for prod in prods:
-            owner_body += prod['quantity'] + 'x ' + prod['item'].name
-            client_body += prod['quantity'] + 'x ' + prod['item'].name
-            if 'color' in prod.keys():
-                owner_body += ' color: ' + prod['color']
-                client_body += ' color: ' + prod['color']
-            if 'length' in prod.keys():
-                owner_body += ' length: ' + prod['length']
-                client_body += ' length: ' + prod['length']
-            if 'diameter' in prod.keys():
-                owner_body += ' diameter: ' + prod['diameter']
-                client_body += ' diameter: ' + prod['diameter']
-            if 'extras' in prod.keys():
-                owner_body += ' extras: ' + prod['extras'].split(': ')[0]
-                client_body += ' extras: ' + prod['extras'].split(': ')[0]
-            owner_body += '\n'
-            client_body += '\n'
-        owner_email = EmailMessage(subject,
-                                   owner_body,
-                                   email,
-                                   ['Creations@ravenvfm.com'])
-        client_email = EmailMessage(subject,
-                                    client_body,
-                                    email,
-                                    [info['email']])
-        owner_email.send(fail_silently=True)
-        client_email.send(fail_silently=True)
+        if 'pre_deposit' in session['paypal'].keys() and session['paypal']['pre_deposit']:
+            name = (
+                session['shipping_data']['first_name'] +
+                ', ' + session['shipping_data']['last_name']
+            )
+            client_email_address = session['shipping_data']['email']
+        else:
+            info = session['shipping_data']['info']
+            name = info['first'] + ', ' + info['last']
+            client_email_address = info['email']
+        owner_body = format_body('owner', cart, context['order_num'], name)
+        client_body = format_body('client', cart, context['order_num'], name)
+        EmailMessage(subject, owner_body,
+                     email, ['Muninn@ravenvfm.com']
+                     ).send(fail_silently=True)
+        EmailMessage(subject, client_body,
+                     email, [client_email_address]
+                     ).send(fail_silently=True)
         session_keys = [
             'shipping_data', 'code', 'paypal', 'order_num'
         ]
@@ -1308,18 +1371,18 @@ when your order ships. Your purchases:\n\n'
 def check_address(data, account):
     """Check if user is using an existing address."""
     types_data = {
-        'ship_address_name': ['ship_add_1', 'ship_add_2',
-                              'ship_city', 'ship_state', 'ship_zip'],
+        'address_name': ['add_1', 'add_2',
+                         'city', 'state', 'zip'],
     }
-    if 'ship_address_name' in data.keys():
-        add_id = data['ship_address_name'].split(', ')[0].split(': ')[1]
+    if 'address_name' in data.keys():
+        add_id = data['address_name'].split(', ')[0].split(': ')[1]
         address = ShippingInfo.objects.get(id=add_id)
     else:
         address = ShippingInfo.objects.get(resident=account)
     types_data['address'] = [address.address1, address.address2,
                              address.city, address.state, address.zip_code]
     equal = 0
-    for idx, item in enumerate(types_data['ship_address_name']):
+    for idx, item in enumerate(types_data['address_name']):
         if data[item] == types_data['address'][idx]:
             equal += 1
     if equal == 5:
@@ -1353,3 +1416,31 @@ def cart_repack(prods, request, total, pack_type):
             request.session['account']['pre_order'] = repack
             request.session['account']['pre_order_total'] = str(total)
             request.session.save()
+
+
+def format_body(recipient, cart, order_number, name):
+    """Format emails for oreder completion."""
+    if recipient == "owner":
+        body = '''
+Order # {} recieved from {}
+Purchased items:\n
+'''.format(order_number, name)
+    else:
+        body = '''Thank you for shopping with Ravenmoore Valley \
+Forge and Metalworks, {}.
+We have recieved your order # {} please allow 1 week for fulfillment.
+You will recieve an email with tracking info \
+when your order ships. Your purchases:\n
+'''.format(name, order_number)
+    prods = unpack(cart['prods'])
+    for prod in prods:
+        body += prod['quantity'] + 'x ' + prod['item'].name
+        if 'color' in prod.keys():
+            body += ' color: ' + prod['color']
+        if 'length' in prod.keys():
+            body += ' length: ' + prod['length']
+        if 'diameter' in prod.keys():
+            body += ' diameter: ' + prod['diameter']
+        if 'extras' in prod.keys():
+            body += ' extras: ' + prod['extras'].split(': ')[0]
+        body += '\n'

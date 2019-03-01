@@ -69,11 +69,15 @@ class Order(models.Model):
                                 blank=True, null=True)
     recipient = models.CharField(max_length=40, default='')
     recipient_email = models.CharField(max_length=40, default='')
+    recipient_phone = models.CharField(max_length=14, default='(000)-000-0000')
     tracking = models.CharField(max_length=35, default='')
     shipped = models.BooleanField(default=False)
     paid = models.BooleanField(default=False)
     order_content = models.TextField()
     complete = models.BooleanField(default=False)
+    amount_due = models.DecimalField(
+        max_digits=7, decimal_places=2, default=0.0
+    )
 
     def __str__(self):
         """Print for admin."""
