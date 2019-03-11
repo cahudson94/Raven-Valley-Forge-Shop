@@ -377,7 +377,7 @@ class AccountView(LoginRequiredMixin, ListView):
             context['saved_servs'] = [Service.objects.get(id=i) for i in
                                       account.saved_services.split(', ')]
         orders = {}
-        for order in Order.objects.filter(buyer=account):
+        for order in Order.objects.filter(buyer=account).filter(paid=True):
             content = unpack(order.order_content, unpack_as="history")
             if content:
                 orders[order.id] = content

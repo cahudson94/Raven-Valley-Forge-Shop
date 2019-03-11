@@ -18,7 +18,7 @@
     <tbody>
         {% for product in product_list %}
         <tr>
-            <td class="align-middle">{{ product.name }}</td>
+            <td class="align-middle"><a class="text-standard acc-item-link" href="{% url 'prod' pk=product.id %}">{{ product.name }}</a></td>
             <td class="align-middle">
             {% if product.stock == None %}
                 {{ product.stock }}
@@ -54,7 +54,7 @@
     <tbody>
         {% for service in services %}
         <tr>
-            <td class="align-middle">{{ service.name }}</td>
+            <td class="align-middle"><a class="text-standard acc-item-link" href="{% url 'serv' pk=service.id %}">{{ service.name }}</a></td>
             <td class="align-middle">
                 {% if service.published  == 'PB' %}
                 <a class="item-toggle btn btn-success serv {{ service.id }}">
@@ -76,13 +76,13 @@
 <script src="{% static 'js/update.js' %}"></script>
 <script type="text/javascript">
 $('.item-toggle').click(function (event) {
-  classes = event.target.classList
-  item_id = classes.length - 1
-  item_type = classes.length - 2
+  var classes = event.target.classList;
+  var item_id = classes.length - 1;
+  var item_type = classes.length - 2;
   console.log(item_id, item_type, classes);
   $.get('{% url "update_item" %}', {'state': event.target.innerText, 'item_id': classes[item_id], 'item_type': classes[item_type]},
     function(data) {
-      data = JSON.parse(data)
+      data = JSON.parse(data);
       event.target.innerHTML = data.new_state;
       event.target.className = data.new_class;
     }
