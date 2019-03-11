@@ -23,6 +23,21 @@ Orders
   </ul>
 {% else %}
 <h5 class="w-100 text-standard">There are no orders yet.</h5>
+{% endif %}
+{% if pre_order_list %}
+  <ul>
+  {% for pre_order in pre_order_list %}
+    <li>
+      <a class="text-standard link-font" href="{% url 'pre_order' pre_order.id %}">{{ pre_order }}</a>
+      <p class="text-standard">Status: {% if pre_order.shipped %}Shipped{% else %}In Progress{% endif %}</p>
+    </li>
+    {% if forloop.counter < 2 and forloop.last %}
+    <div class="placeholder"></div>
+    {% endif %}
+  {% endfor %}
+  </ul>
+{% else %}
+<h5 class="w-100 text-standard">There are no preorders yet.</h5>
 <div class="placeholder"></div>
 {% endif %}
 

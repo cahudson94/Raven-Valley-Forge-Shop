@@ -15,7 +15,9 @@ from django.views.generic.edit import (UpdateView, CreateView,
                                        DeleteView, FormView)
 from account.forms import (InfoRegForm, AddAddressForm,
                            OrderUpdateForm, ContactForm)
-from account.models import Account, ShippingInfo, SlideShowImage, Order
+from account.models import (
+    Account, ShippingInfo, SlideShowImage, Order, PreOrder
+)
 from catalog.models import Product, Service, Discount
 from django_registration.backends.activation.views import RegistrationView
 from django_registration.forms import RegistrationForm
@@ -726,6 +728,35 @@ class OrderView(UpdateView):
         return context
 
 
+class PreOrderView(UpdateView):
+    """Display the details of an order."""
+
+    template_name = 'order.html'
+    model = PreOrder
+    form_class = OrderUpdateForm
+    success_url = reverse_lazy('orders')
+
+    def get_context_data(self, **kwargs):
+        """Add context for active page."""
+        context = super(PreOrderView, self).get_context_data(**kwargs)
+        title = 'Preorder #' + str(context['object'].id)
+        if self.request.user.is_staff:
+            context['staff'] = True
+        context['title'] = title
+        if context['object'].ship_to:
+            context['address'] = context['object'].ship_to
+        content = unpack(context['object'].order_content)
+        context['prods'] = []
+        context['servs'] = []
+        for item in content:
+            if item['type'] == 'prod':
+                context['prods'].append(item)
+        context['item_fields'] = ['quantity', 'color', 'length', 'diameter',
+                                  'extras', 'files', 'description']
+        set_basic_context(context, 'preorder')
+        return context
+
+
 class OrdersView(ListView):
     """Display the details of an order."""
 
@@ -738,6 +769,9 @@ class OrdersView(ListView):
         context['order_list'] = (context['order_list'].filter(paid=True)
                                                       .filter(complete=False)
                                                       .order_by('id'))
+        context['pre_order_list'] = (PreOrder.objects.all().filter(paid=True)
+                                                           .filter(complete=False)
+                                                           .order_by('id'))
         set_basic_context(context, 'order')
         return context
 
