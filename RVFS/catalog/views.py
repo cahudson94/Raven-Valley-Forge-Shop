@@ -9,7 +9,7 @@ from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView, TemplateView, FormView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from account.models import Account, ShippingInfo, Order
+from account.models import Account, ShippingInfo, Order, PreOrder
 from account.views import (
     unpack, split_cart, set_basic_context,
     valid_staff, get_state
@@ -137,6 +137,13 @@ class SingleProductView(DetailView):
         set_basic_context(context, 'prods')
         return context
 
+    def get(self, request, *args, **kwargs):
+        """Allwo view of PV items only by staff."""
+        product = Product.objects.get(id=kwargs['pk'])
+        if product.published == 'PV' and not request.user.is_staff:
+            return HttpResponseRedirect(self.success_url)
+        return super(SingleProductView, self).get(request, **kwargs)
+
     def post(self, request, *args, **kwargs):
         """Add item to appropriate list."""
         data = request.POST
@@ -252,6 +259,13 @@ class SingleServiceView(DetailView):
             context['object'].extras = context['object'].extras.split(', ')
         set_basic_context(context, 'servs')
         return context
+
+        def get(self, request, *args, **kwargs):
+            """Allwo view of PV items only by staff."""
+            service = Service.objects.get(id=kwargs['pk'])
+            if service.published == 'PV' and not request.user.is_staff:
+                return HttpResponseRedirect(self.success_url)
+            return super(SingleServiceView, self).get(request, **kwargs)
 
     def post(self, request, *args, **kwargs):
         """Add item to appropriate list."""
@@ -833,10 +847,10 @@ def create_payment(request):
                 else:
                     shipping_discount = Decimal(amount[5:])
             else:
-                percent = Decimal(float(price)) * Decimal('.' + amount[:-1])
+                percent = Decimal(float(price)) * Decimal('.' + amount)
                 price -= percent
         if 'pre_deposit' in request.session['paypal'].keys() and request.session['paypal']['pre_deposit']:
-            price = Decimal(float(price)) / Decimal('10')
+            price = round(Decimal(float(price)) / Decimal('10'), 2)
         prod = {
             "name": obj.name,
             "description": item["description"],
@@ -862,10 +876,10 @@ def create_payment(request):
                 else:
                     shipping_discount = Decimal(amount[5:])
             else:
-                percent = Decimal(float(price)) * Decimal('.' + amount[:-1])
+                percent = Decimal(float(price)) * Decimal('.' + amount)
                 price -= percent
         if 'pre_deposit' in request.session['paypal'].keys() and request.session['paypal']['pre_deposit']:
-            price = Decimal(float(price)) / Decimal('10')
+            price = round(Decimal(float(price)) / Decimal('10'), 2)
         prod = {
             "name": obj.name,
             "description": item["description"],
@@ -927,8 +941,10 @@ def create_order(request):
         user = request.user
         account = request.user.account
         cart = account.cart
+        pre_order = account.pre_order
     else:
         cart = request.session['account']['cart']
+        pre_order = request.session['account']['pre_order']
     shipping_data = request.session['shipping_data']
     due = Decimal('0.00')
     if 'type' in shipping_data:
@@ -972,20 +988,62 @@ def create_order(request):
         email = shipping_data['info']['email']
         name = (shipping_data['info']['first'] +
                 ', ' + shipping_data['info']['last'])
-    order = Order(
-        buyer=account,
-        order_content=cart,
-        recipient=name,
-        ship_to=address,
-        amount_due=due,
-    )
-    order.save()
-    if email:
-        order.email = email
-    if phone:
-        order.phone = phone
-    order.save()
-    request.session['order_num'] = order.id
+    if cart and not pre_order:
+        order = Order(
+            buyer=account,
+            order_content=cart,
+            recipient=name,
+            ship_to=address,
+            amount_due=due,
+        )
+        order.save()
+    elif pre_order and not cart:
+        pre_order = PreOrder(
+            buyer=account,
+            order_content=pre_order,
+            recipient=name,
+            ship_to=address,
+            amount_due=due,
+        )
+        pre_order.save()
+    else:
+        order = Order(
+            buyer=account,
+            order_content=cart,
+            recipient=name,
+            ship_to=address,
+            amount_due=due,
+        )
+        order.save()
+        pre_order = PreOrder(
+            buyer=account,
+            order_content=pre_order,
+            recipient=name,
+            ship_to=address,
+            amount_due=due,
+            order=order
+        )
+        pre_order.save()
+
+    if order:
+        if email:
+            order.email = email
+        if phone:
+            order.phone = phone
+        order.save()
+    if pre_order:
+        if email:
+            pre_order.email = email
+        if phone:
+            pre_order.phone = phone
+        pre_order.save()
+    if order:
+        request.session['order_num'] = order.id
+    elif not order:
+        request.session['pre_order_num'] = pre_order.id
+    else:
+        request.session['order_num'] = order.id
+        request.session['pre_order_num'] = pre_order.id
     request.session.save()
 
 
@@ -1216,9 +1274,13 @@ no effect from".format(effected_prod.name)
         context['total'] += context['tax']
         fields = ['subtotal', 'shipping_cost', 'discount',
                   'tax', 'total', 'pre_subtotal']
+        if "discount" not in context.keys():
+            context["discount"] = Decimal("0.0")
         for field in fields:
             if str(context[field])[-2] == '.':
                 context[field] = Decimal(str(context[field]) + '0')
+            else:
+                context[field] = Decimal(str(context[field]))
         set_basic_context(context, 'cart')
         context['deposit'] = str(round(context['total'] / 10, 2))
         if not pay_pal_discount:
@@ -1243,14 +1305,22 @@ no effect from".format(effected_prod.name)
         if 'type' in session['shipping_data'].keys():
             if 'check_in_store' in request.POST.keys():
                 session['paypal']['pre_deposit'] = session['paypal']['total']
+                subtotal_round = str(float(session['paypal']['subtotal']) / 10)[-1]
+                tax_round = str(float(session['paypal']['tax']) / 10)[-1]
+                if int(subtotal_round) >= 5 and int(tax_round) >= 5:
+                    round_offset = -.01
+                elif int(subtotal_round) < 5 and int(tax_round) < 5:
+                    round_offset = .01
+                else:
+                    round_offset = 0
                 session['paypal']['total'] = str(
                     round(float(session['paypal']['total']) / 10, 2)
                 )
                 session['paypal']['subtotal'] = str(
-                    round(float(session['paypal']['subtotal']) / 10, 2)
+                    round(float(session['paypal']['subtotal']) / 10 - round_offset, 2)
                 )
                 session['paypal']['tax'] = str(
-                    round(float(session['paypal']['tax']) / 10, 2)
+                    round(float(session['paypal']['tax']) / 10 + round_offset, 2)
                 )
                 session.save()
             count = 0
@@ -1296,24 +1366,38 @@ class CheckoutCompleteView(TemplateView):
         if payment.execute({"payer_id": payer_id}):
             verify_payment = paypalrestsdk.Payment.find(payment_id)
             if verify_payment:
-                order = Order.objects.get(id=request.session['order_num'])
-                order.paid = True
-                order.save()
-                items = unpack(order.order_content)
-                for item in items:
-                    if item['item'].stock:
-                        item['item'].stock -= int(item['quantity'])
-                        if item['item'].stock == 0:
-                            subject = 'An item is out of stock'
-                            body = '{} is out of stock.'.format(item['item'].name.title())
-                            stock_email = EmailMessage(
-                                subject,
-                                body,
-                                'rvfmsite@gmail.com',
-                                ['Muninn@ravenvfm.com']
-                            )
-                            stock_email.send(fail_silently=True)
-                    item['item'].save()
+                order = None
+                if 'order_num' in keys and 'pre_order_num' not in keys:
+                    order = Order.objects.get(id=request.session['order_num'])
+                    order.paid = True
+                    order.save()
+                elif 'order_num' not in keys:
+                    pre_order = PreOrder.objects.get(id=request.session['pre_order_num'])
+                    pre_order.paid = True
+                    pre_order.save()
+                else:
+                    order = Order.objects.get(id=request.session['order_num'])
+                    order.paid = True
+                    order.save()
+                    pre_order = PreOrder.objects.get(id=request.session['pre_order_num'])
+                    pre_order.paid = True
+                    pre_order.save()
+                if order:
+                    items = unpack(order.order_content)
+                    for item in items:
+                        if item['item'].stock:
+                            item['item'].stock -= int(item['quantity'])
+                            if item['item'].stock == 0:
+                                subject = 'An item is out of stock'
+                                body = '{} is out of stock.'.format(item['item'].name.title())
+                                stock_email = EmailMessage(
+                                    subject,
+                                    body,
+                                    'rvfmsite@gmail.com',
+                                    ['Muninn@ravenvfm.com']
+                                )
+                                stock_email.send(fail_silently=True)
+                        item['item'].save()
                 return super(view, self).get(self, request, *args, **kwargs)
         return HttpResponseRedirect(reverse_lazy('cart'))
 
@@ -1321,14 +1405,30 @@ class CheckoutCompleteView(TemplateView):
         """Add context for active page."""
         context = super(CheckoutCompleteView, self).get_context_data(**kwargs)
         session = self.request.session
-        context['order'] = session['order_num']
+        if 'order_num' in session.keys() and 'pre_order_num' not in session.keys():
+            context['order'] = session['order_num']
+        elif 'order_num' not in session.keys():
+            context['pre_order'] = session['pre_order_num']
+        else:
+            context['order'] = session['order_num']
+            context['pre_order'] = session['pre_order_num']
         if self.request.user.is_authenticated:
             account = self.request.user.account
             cart = split_cart(account.cart)
+            pre_order = split_cart(account.pre_order)
         else:
             cart = split_cart(session['account']['cart'])
+            pre_order = split_cart(session['account']['pre_order'])
         email = 'rvfmsite@gmail.com'
-        subject = 'Order #{} Confirmation'.format(context['order'])
+        if 'order' in context.keys() and 'pre_order' not in context.keys():
+            subject = 'Order #{} Confirmation'.format(context['order'])
+        elif 'order_num' not in context.keys():
+            subject = 'Preorder #{} Confirmation'.format(context['pre_order'])
+        else:
+            subject = 'Order #{} and Preorder #{} Confirmation'.format(
+                context['order'],
+                context['pre_order']
+            )
         if 'pre_deposit' in session['paypal'].keys() and session['paypal']['pre_deposit']:
             name = (
                 session['shipping_data']['first_name'] +
@@ -1339,8 +1439,8 @@ class CheckoutCompleteView(TemplateView):
             info = session['shipping_data']['info']
             name = info['first'] + ', ' + info['last']
             client_email_address = info['email']
-        owner_body = format_body('owner', cart, context['order_num'], name)
-        client_body = format_body('client', cart, context['order_num'], name)
+        owner_body = format_body('owner', cart, pre_order, context['order_num'], name)
+        client_body = format_body('client', cart, pre_order, context['order_num'], name)
         EmailMessage(subject, owner_body,
                      email, ['Muninn@ravenvfm.com']
                      ).send(fail_silently=True)
@@ -1418,22 +1518,51 @@ def cart_repack(prods, request, total, pack_type):
             request.session.save()
 
 
-def format_body(recipient, cart, order_number, name):
+def format_body(recipient, cart, pre_order, name,
+                order_number=None, pre_order_number=None):
     """Format emails for oreder completion."""
     if recipient == "owner":
-        body = '''
-Order # {} recieved from {}
-Purchased items:\n
-'''.format(order_number, name)
+        if order_number and not pre_order_number:
+            body = 'Order #{}'.format(order_number)
+        elif not order_number:
+            body = 'Preorder #{}'.format(pre_order_number)
+        else:
+            body = 'Order #{} and preorder #{}'.format(
+                order_number, pre_order_number
+            )
+        body += ' recieved from {}.\nPurchased items:\n'.format(name)
     else:
         body = '''Thank you for shopping with Ravenmoore Valley \
 Forge and Metalworks, {}.
-We have recieved your order # {} please allow 1 week for fulfillment.
+We have recieved your '''.format(name)
+        if order_number and not pre_order_number:
+            body += 'order #{}'.format(order_number)
+        elif not order_number:
+            body += 'preorder #{}'.format(pre_order_number)
+        else:
+            body += 'order #{} and preorder #{}'.format(
+                order_number, pre_order_number
+            )
+        body += '''please allow 1 week for fulfillment \
+of orders and upto 4 weeks for preorders.
 You will recieve an email with tracking info \
-when your order ships. Your purchases:\n
-'''.format(name, order_number)
+when your order ships. Your purchases:\n'''
+
     prods = unpack(cart['prods'])
     for prod in prods:
+        body += prod['quantity'] + 'x ' + prod['item'].name
+        if 'color' in prod.keys():
+            body += ' color: ' + prod['color']
+        if 'length' in prod.keys():
+            body += ' length: ' + prod['length']
+        if 'diameter' in prod.keys():
+            body += ' diameter: ' + prod['diameter']
+        if 'extras' in prod.keys():
+            body += ' extras: ' + prod['extras'].split(': ')[0]
+        body += '\n'
+    body += 'Pre-ordered items:\n'
+    pre_order_prods = unpack(pre_order['prods'])
+    for prod in pre_order_prods:
         body += prod['quantity'] + 'x ' + prod['item'].name
         if 'color' in prod.keys():
             body += ' color: ' + prod['color']

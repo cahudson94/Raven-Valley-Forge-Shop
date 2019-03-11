@@ -84,6 +84,16 @@ class Order(models.Model):
         return 'Order Number %d' % self.id
 
 
+class PreOrder(Order):
+    """PreOrder detail model."""
+
+    order = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        """Print for admin."""
+        return 'Preorder Number %d' % self.id
+
+
 class SlideShowImage(models.Model):
     """Slide image model."""
 

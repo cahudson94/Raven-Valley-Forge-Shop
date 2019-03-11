@@ -41,8 +41,8 @@
         repo: https://github.com/cahudson94/Raven-Valley-Forge-Shop.git
         dest: /home/ubuntu/Raven-Valley-Forge-Shop
 
-    - name: create python3 virtual enviroment
-      command: python3 -m venv /home/ubuntu/ENV
+    - name: create python3.6 virtual enviroment
+      command: python3.6 -m venv /home/ubuntu/ENV
 
     - name: update pip
       pip:
